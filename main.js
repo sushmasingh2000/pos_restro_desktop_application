@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const path = require("path");
 const { spawn } = require("child_process");
 const fs = require("fs");
@@ -111,8 +112,25 @@ function createWindow() {
   }
 }
 
+// app.whenReady().then(() => {
+//   startBackend();
+// });
 app.whenReady().then(() => {
   startBackend();
+
+  // Auto Update Check
+  autoUpdater.checkForUpdatesAndNotify();
+
+  autoUpdater.on('update-downloaded', () => {
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Update Ready',
+      message: 'A new update has been downloaded. Restart now to install?',
+      buttons: ['Install Now', 'Later']
+    }).then((res) => {
+      if (res.response === 0) autoUpdater.quitAndInstall();
+    });
+  });
 });
 
 app.on("window-all-closed", () => {
@@ -173,51 +191,148 @@ async function fetchPrinters(token) {
   }
 }
 
-// ✅ Printer pe print karo — timeout added
+function createPrinterWrapper(type, rawPrinter) {
+  if (type === "network") {
+    // escpos — pehle jaisa same
+    return rawPrinter;
+  } else {
+    // node-thermal-printer — wrapper banao
+    return {
+      align: (a) => {
+        if (a === "CT") rawPrinter.alignCenter();
+        else if (a === "LT") rawPrinter.alignLeft();
+        else if (a === "RT") rawPrinter.alignRight();
+        return this;
+      },
+      style: (s) => {
+        if (s === "B") rawPrinter.bold(true);
+        else rawPrinter.bold(false);
+        return this;
+      },
+      text: (t) => { rawPrinter.println(t); return this; },
+      drawLine: () => { rawPrinter.drawLine(); return this; },
+      raw: () => { }, // ignore
+      size: () => { }, // ignore for now
+      cut: () => { rawPrinter.cut(); return this; },
+      close: (cb) => { rawPrinter.execute().then(cb); },
+    };
+  }
+}
+
 async function printOnPrinter(printer, buildContent) {
   console.log(`Printing on: ${printer.printer_type} -> ${printer.printer_value}`);
-  let device;
 
   if (printer.printer_type === "network") {
-    device = new escpos.Network(printer.printer_value, 9100);
-  } else {
-    const usbDevices = escpos.USB.findPrinter();
-    if (!usbDevices || usbDevices.length === 0)
-      throw new Error("USB printer not found");
-    const first = usbDevices[0];
-    device = new escpos.USB(
-      first.deviceDescriptor.idVendor,
-      first.deviceDescriptor.idProduct
-    );
-  }
+    // ✅ Network — bilkul pehle jaisa
+    let device = new escpos.Network(printer.printer_value, 9100);
 
-  return new Promise((resolve, reject) => {
-    // ✅ 8 second timeout — hang nahi karega
-    const timer = setTimeout(() => {
-      reject(new Error(`Printer timeout - ${printer.printer_value} reachable nahi hai`));
-    }, 8000);
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`Printer timeout - ${printer.printer_value} reachable nahi hai`));
+      }, 8000);
 
-    device.open((err) => {
-      clearTimeout(timer); // ✅ Timer clear karo
-      if (err) {
-        console.error("Device open error:", err.message);
-        return reject(err);
-      }
-      console.log("Device opened");
-      const printerObj = new escpos.Printer(device);
-      try {
-        buildContent(printerObj);
-        printerObj.cut().close(() => {
-          console.log("Print done");
-          resolve({ success: true });
-        });
-      } catch (e) {
-        console.error("Print content error:", e.message);
-        reject(e);
-      }
+      device.open((err) => {
+        clearTimeout(timer);
+        if (err) return reject(err);
+
+        const printerObj = new escpos.Printer(device);
+        try {
+          buildContent(printerObj);
+          printerObj.cut().close(() => {
+            resolve({ success: true });
+          });
+        } catch (e) {
+          reject(e);
+        }
+      });
     });
-  });
+
+  } else {
+    // ✅ USB — Windows printer name se, wrapper use karo
+    const { ThermalPrinter, PrinterTypes, CharacterSet } = require('node-thermal-printer');
+
+    const tp = new ThermalPrinter({
+      type: PrinterTypes.EPSON,
+      interface: `printer:${printer.printer_value}`,
+      characterSet: CharacterSet.PC437_USA,
+      removeSpecialCharacters: false,
+      lineCharacter: "-",
+      width: 48,
+    });
+
+    // Wrapper — buildContent ko same API milegi
+    const wrapper = {
+      align: (a) => {
+        if (a === "CT") tp.alignCenter();
+        else if (a === "LT") tp.alignLeft();
+        else tp.alignRight();
+        return wrapper;
+      },
+      style: (s) => {
+        if (s === "B") tp.bold(true);
+        else { tp.bold(false); tp.underlineOff(); }
+        return wrapper;
+      },
+      text: (t) => { tp.println(t); return wrapper; },
+      drawLine: () => { tp.drawLine(); return wrapper; },
+      raw: () => { return wrapper; }, // ignore
+      size: () => { return wrapper; }, // ignore
+      cut: () => { tp.cut(); return wrapper; },
+      close: (cb) => { tp.execute().then(() => cb()).catch(cb); },
+    };
+
+    buildContent(wrapper);
+    await tp.execute();
+    tp.clear();
+    return { success: true };
+  }
 }
+
+// // ✅ Printer pe print karo — timeout added
+// async function printOnPrinter(printer, buildContent) {
+//   console.log(`Printing on: ${printer.printer_type} -> ${printer.printer_value}`);
+//   let device;
+
+//   if (printer.printer_type === "network") {
+//     device = new escpos.Network(printer.printer_value, 9100);
+//   } else {
+//     const usbDevices = escpos.USB.findPrinter();
+//     if (!usbDevices || usbDevices.length === 0)
+//       throw new Error("USB printer not found");
+//     const first = usbDevices[0];
+//     device = new escpos.USB(
+//       first.deviceDescriptor.idVendor,
+//       first.deviceDescriptor.idProduct
+//     );
+//   }
+
+//   return new Promise((resolve, reject) => {
+//     // ✅ 8 second timeout — hang nahi karega
+//     const timer = setTimeout(() => {
+//       reject(new Error(`Printer timeout - ${printer.printer_value} reachable nahi hai`));
+//     }, 8000);
+
+//     device.open((err) => {
+//       clearTimeout(timer); // ✅ Timer clear karo
+//       if (err) {
+//         console.error("Device open error:", err.message);
+//         return reject(err);
+//       }
+//       console.log("Device opened");
+//       const printerObj = new escpos.Printer(device);
+//       try {
+//         buildContent(printerObj);
+//         printerObj.cut().close(() => {
+//           console.log("Print done");
+//           resolve({ success: true });
+//         });
+//       } catch (e) {
+//         console.error("Print content error:", e.message);
+//         reject(e);
+//       }
+//     });
+//   });
+// }
 
 function buildBillContent(p, billData) {
 
