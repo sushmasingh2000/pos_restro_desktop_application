@@ -1,0 +1,14 @@
+*{
+    font-family: "Inter", sans-serif;
+}
+
+:root {
+    --primary-color: #c5a377;
+}
+
+body,
+html {
+  width: 100vw;
+  overflow-x: hidden;
+
+}

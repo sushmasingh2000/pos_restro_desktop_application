@@ -1,0 +1,213 @@
+import React, { useState } from "react";
+import { useQuery } from "react-query";
+import { apiConnectorPost } from "../../utils/APIConnector";
+import { endpoint } from "../../utils/APIRoutes";
+import BillModal from "./Bill";
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+
+const CancelOrder = () => {
+    const [search, setSearch] = useState("");
+    const [open, setOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const limit = 5;
+
+    const [filters, setFilters] = useState({
+        startDate: "",
+        endDate: "",
+        orderType: ""
+    });
+
+    const { data, isLoading } = useQuery(
+        ["orders", filters, page],
+        () =>
+            apiConnectorPost(endpoint.order_branch_status_api, {
+                ...filters,
+                page,
+                limit,
+                status: ["cancelled"],
+
+            })
+    );
+    const orders = data?.data?.result?.orders || [];
+    const pagination = data?.data?.result?.pagination || {};
+
+    const formattedOrders = orders.map((order) => {
+        const createdAt = new Date(order.dg06_created_at);
+        return {
+            orderId: order.unique_order_id,
+            rawId: order.dg06_order_id,
+            date: createdAt.toLocaleDateString(),
+            time: createdAt.toLocaleTimeString(),
+            tableNo: order.dg06_table_id || "N/A",
+            subTotal: Number(order.dg06_subtotal || 0),
+            tax: Number(order.dg06_tax || 0),
+            charge: Number(order.dg06_charges || 0),
+            discount: Number(order.dg06_discount || 0),
+            totalAmount: Number(order.dg06_total_amount || 0),
+            status: order.dg06_status,
+            type: order.dg06_order_type,
+            items: order.items || [],
+        };
+    });
+
+    const filtered = formattedOrders.filter((o) =>
+        o.orderId?.toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
+        <div className="">
+            <div className="breadcrumbs">
+                <div>
+                <h3 className="main_heading">Cancelled Orders</h3>
+                <ul>
+                    <li>Home</li>
+                    <li>/</li>
+                    <li className="active">Cancelled Orders</li>
+                </ul>
+                </div>
+            </div>
+            
+            {/* CARD */}
+            <div className="table_box_main">
+                <Row>
+                    <Col md={4}>
+                        <div className="main_input">
+                            <label>Date <span className="text-red-500">*</span></label>
+                            <input type="date" onChange={(e) => setFilters({ ...filters, startDate: e.target.value }) }/>
+                        </div>
+                    </Col>
+                    <Col md={4}>
+                        <div className="main_input">
+                            <label>Date <span className="text-red-500">*</span></label>
+                            <input type="date" onChange={(e) => setFilters({ ...filters, endDate: e.target.value }) } />
+                        </div>
+                    </Col>
+                    <Col md={4}>
+                        <div className="main_input">
+                            <label>Order Type <span className="text-red-500">*</span></label>
+                             <select onChange={(e) => setFilters({ ...filters, orderType: e.target.value }) } >
+                                <option value="" >Order Type</option>
+                                <option value="dine_in" >DINE IN</option>
+                                <option value="takeaway" >TAKE AWAY</option>
+                                <option value="delivery">DOOR DELIVERY</option>
+                            </select>
+                        </div>
+                    </Col>
+                </Row>
+            </div>
+
+            {/* TABLE */}
+            <div className="main_table_container mt-3">
+                {/* SCROLL WRAPPER */}
+                <div className="overflow-x-auto" style={{borderRadius: '14px'}}>
+
+                    <table className="w-full">
+                        <thead>
+                            <tr>
+                                {["S.No.",
+                                    "Order Id", "Date", "Time", "Type", "Table No", "SubTotal", "Discount", "Charge",
+                                    "Tax", "Paid", "Status"
+                                ].map((h) => (
+                                    <th key={h}>{h}</th>
+                                ))}
+
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="14" className="text-center p-6 text-white/50">
+                                        Loading orders...
+                                    </td>
+                                </tr>
+                            ) : formattedOrders.length === 0 ? (
+                                <tr>
+                                    <td colSpan="14" className="text-center p-6 text-white/40">
+                                        No cancelled orders found
+                                    </td>
+                                </tr>
+                            ) : (
+                                filtered
+                                    .map((order, index) => (
+                                        <tr
+                                            key={order.orderId}
+                                            className="border-b border-white/5 hover:bg-white/5 transition text-center"
+                                        >
+                                            <td>{(page - 1) * limit + index + 1}</td>
+                                            <td>
+                                                {order.orderId}
+                                            </td>
+                                            <td>{order.date}</td>
+                                            <td>{order.time}</td>
+                                            <td>{order.type === "dine_in" ? "Dine In" :
+                                                order.type === "takeaway" ? "TakeAway" : order.type === "delivery" ? "Door Delivery" : "--"}</td>
+                                            <td>{order.tableNo}</td>
+                                            <td>₹{order.subTotal}</td>
+                                            <td>₹{order.discount}</td>
+                                            <td>₹{order.charge}</td>
+                                            <td>₹{order.tax}</td>
+                                            <td>
+                                                ₹{order.totalAmount}
+                                            </td>
+
+                                            <td className="p-2">
+                                                <span className={` ${order.status === "completed"
+                                                    ? "green_bg"
+                                                    : "yellow_bg"
+                                                    }`}>
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="flex items-center justify-between p-3 ">
+
+                    {/* LEFT INFO */}
+                    <div className="pagination_number">
+                        Page <span className="pagintation_text">{page}</span> of{" "}
+                        <span className="pagintation_text">
+                        {pagination?.totalPages || 1}
+                        </span>
+                    </div>
+
+                    {/* BUTTONS */}
+                    <div className="flex items-center gap-2">
+
+                        {/* PREV */}
+                        <button
+                        disabled={page === 1}
+                        onClick={() => setPage(page - 1)}
+                        className="prev_btn "
+                        >
+                        ← Prev
+                        </button>
+
+                        {/* CURRENT PAGE */}
+                        <div className="current_page">
+                        {page}
+                        </div>
+
+                        {/* NEXT */}
+                        <button
+                        disabled={page === pagination?.totalPages}
+                        onClick={() => setPage(page + 1)}
+                        className="right_btn  "
+                        >
+                        Next →
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default CancelOrder;

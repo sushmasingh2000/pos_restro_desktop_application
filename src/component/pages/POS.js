@@ -1,0 +1,571 @@
+
+import { Edit, Person } from "@mui/icons-material";
+import React, { useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { apiConnectorPost } from "../../utils/APIConnector";
+import { endpoint } from "../../utils/APIRoutes";
+import { useQuery, useQueryClient } from "react-query";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+import BillModal from "./Bill";
+import CancelOrderModal from "./Cancel";
+import AddQtyRemarkModal from "./AddQtyRemark";
+import KOTPrintSlip from "./KOTPrintSlip";
+import PosTab from "../Layout/PosTab";
+import { Col } from "react-bootstrap";
+import Row from 'react-bootstrap/Row';
+
+function formatReceiptDateTime() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}, ${hh}:${min}:${ss}`;
+}
+
+const POS = () => {
+  const location = useLocation();
+  const { type } = useParams();
+  const table = location.state?.table;
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [orderItems, setOrderItems] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [address, setAddress] = useState("");
+  const [modifyMode, setModifyMode] = useState(false);
+  const [tableNameMap, setTableNameMap] = useState({});
+  const [showQtyModal, setShowQtyModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showBillModal, setShowBillModal] = useState(false);
+  const [savedOrderId, setSavedOrderId] = useState(null);
+  const [existingBillId, setExistingBillId] = useState(null);
+  const [existingBillNo, setExistingBillNo] = useState(null);
+  const [allOrders, setAllOrders] = useState([]);
+  const [activeOrderIndex, setActiveOrderIndex] = useState(0);
+  const [kotPrintData, setKotPrintData] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const navigate = useNavigate();
+  const client = useQueryClient();
+
+  // ── Fetch tables ──────────────────────────────────────────
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const res = await apiConnectorPost(endpoint.table_branch_api);
+        const tables = res?.data?.result || [];
+        const map = {};
+        tables.forEach((t) => { map[t.dg05_table_id] = t.dg05_table_name; });
+        setTableNameMap(map);
+      } catch (err) {
+        console.error("Error fetching tables:", err);
+      }
+    };
+    fetchTables();
+  }, []);
+
+  const currentDateTime = new Date().toLocaleString();
+
+  // ── Fetch menu ────────────────────────────────────────────
+  const { data } = useQuery(
+    ["getMenuByBranch"],
+    () => apiConnectorPost(endpoint.menu_branch_api),
+    { refetchOnMount: false, refetchOnWindowFocus: false, retry: false }
+  );
+
+  const categories = data?.data?.result?.categories || [];
+  const itemsData = data?.data?.result?.menus || [];
+
+  const filteredItems = React.useMemo(() => {
+    if (!itemsData || itemsData.length === 0) return [];
+    let items = itemsData;
+    // category filter
+    if (selectedCategory !== "All") {
+      const category = categories.find(
+        (cat) => cat.dg08_category_name === selectedCategory
+      );
+      if (category) {
+        items = items.filter(
+          (item) => item.dg09_category_id === category.dg08_category_id
+        );
+      }
+    }
+    // search filter
+    if (searchTerm.trim() !== "") {
+      items = items.filter((item) =>
+        item.dg09_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    return items;
+  }, [selectedCategory, itemsData, categories, searchTerm]);
+
+  // ── Fetch existing order (dine-in) ────────────────────────
+  const { data: orderData } = useQuery(
+    ["getOrdersByTable", table],
+    () => apiConnectorPost(endpoint.get_orders_by_table_api, { tableId: table }),
+    { enabled: !!table && type === "dine-in" }
+  );
+
+  useEffect(() => {
+    setAllOrders([]);
+    setOrderItems([]);
+    setSavedOrderId(null);
+    setExistingBillId(null);
+    setExistingBillNo(null);
+    setActiveOrderIndex(0);
+  }, [type]);
+
+  useEffect(() => {
+    const orders = orderData?.data?.result?.orders;
+    if (!orders || orders.length === 0) return;
+    const ordersToUse = orders.filter((o) => {
+      return o.dg06_status !== "closed" && o.dg06_status !== "cancelled";
+    });
+
+    if (ordersToUse.length === 0) return;
+
+    const formattedOrders = ordersToUse.map((order) => ({
+      orderId: order.dg06_order_id,
+      billId: order.dg06_bill_id || null,
+      billNo: order.dg06_bill_no || null,
+      uniqueId: order.unique_order_id,
+      isSplit: order.unique_order_id?.startsWith("SPLIT"),
+      items: (order.items || []).map((item) => ({
+        id: item.dg07_menu_id,
+        dg09_name: item.dg07_menu_name_snapshot,
+        qty: item.dg07_quantity,
+        price: parseFloat(item.dg07_price),
+        qtyRemark: item.dg07_item_remark || "",
+        globalRemark: item.dg07_global_remark || "",
+        predefinedRemarks: item.dg07_predefined_remark
+          ? item.dg07_predefined_remark.split(", ").filter(Boolean)
+          : [],
+      })),
+    }));
+
+    const mainOrder = formattedOrders.find((o) => !o.isSplit);
+    const splitOrders = formattedOrders.filter((o) => o.isSplit);
+
+    const finalOrders = [
+      ...(mainOrder ? [mainOrder] : []),
+      ...splitOrders,
+    ];
+
+    setAllOrders(finalOrders);
+
+    const firstOrder = finalOrders[0];
+
+    if (firstOrder) {
+      setOrderItems(firstOrder.items || []);
+      setSavedOrderId(firstOrder.orderId || null);
+      setExistingBillId(firstOrder.billId || null);
+      setExistingBillNo(firstOrder.billNo || null);
+      setActiveOrderIndex(0);
+    }
+  }, [orderData]);
+
+  const handleOrderTabSwitch = (index) => {
+    const order = allOrders[index];
+    setActiveOrderIndex(index);
+    setOrderItems(order.items);
+    setSavedOrderId(order.orderId);
+    setExistingBillId(order.billId);
+    setExistingBillNo(order.billNo);
+  };
+
+  const addToOrder = (item) => {
+    const existing = orderItems.find((i) => i.id === item.dg09_menu_id);
+    if (existing) {
+      setOrderItems(orderItems.map((i) =>
+        i.id === item.dg09_menu_id ? { ...i, qty: i.qty + 1 } : i
+      ));
+    } else {
+      setOrderItems([
+        ...orderItems,
+        { ...item, qty: 1, id: item.dg09_menu_id, price: parseFloat(item.dg09_price) },
+      ]);
+    }
+  };
+
+  // const totalAmount = orderItems.reduce((acc, item) => acc + item.price * item.qty, 0);
+  const totalAmount = parseFloat(
+    orderItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2)
+  );
+
+  const updateQty = (id, qty) => {
+    if (qty < 1) return;
+    setOrderItems(orderItems.map((i) => (i.id === id ? { ...i, qty } : i)));
+  };
+
+  const removeItem = (id) => setOrderItems(orderItems.filter((i) => i.id !== id));
+
+  const getOrderTypeEnum = () => {
+    if (type === "dine-in") return "dine_in";
+    if (type === "take-away") return "takeaway";
+    if (type === "delivery") return "delivery";
+    return "";
+  };
+
+  // const getTableId = () => {
+  //   if (type === "dine-in") return table;
+  //   if (type === "take-away") return 10001;
+  //   if (type === "delivery") return 10002;
+  //   return null;
+  // };
+
+  const getTableId = () => {
+    if (type === "dine-in") return table;
+
+    // takeaway & delivery ke liye DB me NULL save hoga
+    return null;
+  };
+
+  const handleSaveKOT = async () => {
+    if (!orderItems.length) { toast.error("Please add items first"); return; }
+    if (type === "delivery" && !address.trim()) { toast.error("Delivery address is required"); return; }
+
+    try {
+      const res = await apiConnectorPost(endpoint.add_update_order_api, {
+        tableId: getTableId(),
+        customerName: type === "delivery" ? address : "",
+        paymentMethod: "",
+        orderType: getOrderTypeEnum(),
+        items: orderItems.map((item) => ({
+          menu_id: item.id,
+          menu_name: item.dg09_name,
+          quantity: item.qty,
+          price: item.price,
+          qtyRemark: item.qtyRemark || "",
+          globalRemark: item.globalRemark || "",
+          predefinedRemarks: item.predefinedRemarks || [],
+        })),
+      });
+
+      if (res?.data?.success) {
+        // const orderId = res?.data?.order?.orderId;
+        const orderId = res?.data?.order?.orderId || res?.data?.order?.offlineOrderId;
+        const kotNo = res?.data?.order?.kotNo || 1;
+        const captainName = res?.data?.order?.captainName || "—";
+        const orderUniqueNo = res?.data?.order?.uniqueOrderId || `CBC-R${orderId}`;
+
+        setSavedOrderId(orderId);
+
+        await apiConnectorPost(endpoint.generate_kot_api, { orderId });
+
+                if (type === "dine-in" && table) {
+          await apiConnectorPost(endpoint.update_table_status_api, {
+            tableId: table,
+            status: "Busy",
+            busySince: new Date().toISOString(),
+          });
+        }
+
+        toast.success("KOT sent to Kitchen 🍳");
+        client.refetchQueries("get_table");
+
+        setKotPrintData({
+          orderNo: orderUniqueNo,
+          tableNo: type === "dine-in"
+            ? tableNameMap[table] || table
+            : type === "take-away" ? "TakeAway" : "Delivery",
+          kotNo,
+          captainName,
+          type: savedOrderId ? "Reprint-Added" : "New",
+          dateTime: formatReceiptDateTime(),
+          items: orderItems.map((item) => ({
+            name: item.dg09_name,
+            qty: item.qty,
+            qtyRemark: item.qtyRemark || "",
+            globalRemark: item.globalRemark || "",
+            predefinedRemarks: item.predefinedRemarks || [],
+          })),
+        });
+      } else {
+        toast.error(res?.data?.message || "Failed to save KOT");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save KOT");
+    }
+  };
+
+  // ── Open Bill ─────────────────────────────────────────────
+  const handleOpenBill = () => {
+    if (!orderItems.length) { toast.error("Please add items first"); return; }
+    if (!savedOrderId) { toast.error("Please save KOT first"); return; }
+    setShowBillModal(true);
+  };
+
+  // ── After Bill Done ───────────────────────────────────────
+  const handleBillDone = () => {
+    setOrderItems([]);
+    setSavedOrderId(null);
+    setExistingBillId(null);
+    setExistingBillNo(null);
+    client.refetchQueries("get_table");
+    setTimeout(() => navigate("/userdashboard"), 500);
+  };
+
+
+  // ── UI ────────────────────────────────────────────────────
+  return (
+    <div>
+      <PosTab />
+      <div className="flex">
+        {/* LEFT — CATEGORIES */}
+        <div className="w-[15%] h-full list_category_btnt">
+          <div
+            className="list_items_btn"
+            onClick={() => setSelectedCategory("All")}
+          >
+            All
+          </div>
+          {categories.map((cat) => (
+            <div
+              key={cat.dg08_category_id}
+              onClick={() => setSelectedCategory(cat.dg08_category_name)}
+              className={`list_items_btn
+                  ${selectedCategory === cat.dg08_category_name
+                  ? "gold_bg"
+                  : ""}`}
+            >
+              {cat.dg08_category_name}
+            </div>
+          ))}
+        </div>
+
+        {/* CENTER — MENU ITEMS */}
+        <div className="w-3/5 h-full overflow-y-auto p-3 grid grid-cols-3 gap-3 content-start">
+          {/* SEARCH BAR */}
+          <div className="main_input mt-0 w-full col-span-3">
+            <input
+              type="text"
+              placeholder="Search menu items..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className=""
+            />
+          </div>
+          {filteredItems.map((item) => (
+            <div
+              key={item.dg09_menu_id}
+              onClick={() => addToOrder(item)}
+              className="main_card main_card_2"
+            >
+
+              <h6>{item.dg09_name}</h6>
+              <h3>₹{item.dg09_price}</h3>
+            </div>
+          ))}
+        </div>
+
+        {/* RIGHT — BILL PANEL */}
+        <div className="w-2/6 bg-white/10 backdrop-blur-xl border-l border-white/10 p-4 flex flex-col">
+
+          {/* Split order tabs */}
+          {allOrders.length > 1 && (
+            <div className="flex gap-2 mb-3 flex-wrap">
+              {allOrders.map((order, index) => (
+                <button
+                  key={order.orderId}
+                  onClick={() => handleOrderTabSwitch(index)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition
+                      ${activeOrderIndex === index
+                      ? "bg-purple-500/40 border-purple-400 text-white"
+                      : "bg-white/10 border-white/10 text-white/60 hover:bg-white/20"}`}
+                >
+                  {order.isSplit ? `✂️ Split` : `📋 Main`} — #{order.orderId}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Info bar */}
+          <div className="flex flex-wrap justify-start gap-2 items-center mb-3">
+            <button className="main_food_type_btn">
+              {getOrderTypeEnum() === "dine_in" ? "Dine In"
+                : getOrderTypeEnum() === "takeaway" ? "TakeAway"
+                  : getOrderTypeEnum() === "delivery" ? "Door Delivery" : "-"}
+            </button>
+            <span className="main_food_type_btn-2">
+              {type === "dine-in" ? tableNameMap[table] || table
+                : type === "take-away" ? "Table: 1001"
+                  : type === "delivery" ? "Table: 1002" : "N/A"}
+            </span>
+            {type === "delivery" && (
+              <div
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 cursor-pointer bg-white/10 px-3 py-1 rounded-full"
+              >
+                <Person className="!text-white" />
+              </div>
+            )}
+            <span className="text-xs text-white/60 ml-auto">{currentDateTime}</span>
+          </div>
+
+          {/* ORDER TABLE */}
+          <div className="main_table_container">
+            <div className="flex-1 overflow-auto" style={{ borderRadius: "15px" }}>
+              <table className="w-full text-sm">
+                <thead className="bg-white/10 text-white">
+                  <tr>
+                    <th >Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Required</th>
+                    {modifyMode && <th>X</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderItems.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="text-center text-white/40 p-4">No items</td>
+                    </tr>
+                  )}
+                  {orderItems.map((item) => (
+                    <tr key={item.id} className="border-t border-white/10">
+                      <td>{item.dg09_name}</td>
+                      <td>
+                        {modifyMode ? (
+                          <input
+                            type="number"
+                            value={item.qty}
+                            onChange={(e) => updateQty(item.id, +e.target.value)}
+                            className="w-14 text-center bg-white/10 border border-white/10 rounded"
+                          />
+                        ) : item.qty}
+                      </td>
+                      <td>₹{item.price}</td>
+                      <td>₹{(item.price * item.qty).toFixed(2)}</td>
+                      <td className="cursor-pointer">
+                        <Edit onClick={() => { setSelectedItem(item); setShowQtyModal(true); }} />
+                      </td>
+                      {modifyMode && (
+                        <td>
+                          <button onClick={() => removeItem(item.id)} className="text-red-400">✕</button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* TOTAL */}
+          <div className="flex justify-between items-center">
+            {modifyMode && savedOrderId && (
+              <button className="bg-red-600 text-white p-2 rounded-lg text-sm" onClick={() => setShowCancelModal(true)}>
+                Cancel Order
+              </button>
+            )}
+            <div className="mt-2 text-right font-semibold text-gold ml-auto">
+              Total: ₹{totalAmount.toFixed(2)}
+            </div>
+          </div>
+
+          {savedOrderId && (
+            <div className="ordr_lsitst">
+              KOT Saved — Order #{savedOrderId}
+            </div>
+          )}
+
+          {/* ACTION BUTTONS */}
+          <div className="mt-3 flex flex-col gap-2 ">
+            <button
+              onClick={handleSaveKOT}
+              className="main_btn flex justify-center items-center "
+            >
+              {savedOrderId ? "Update KOT & Print" : "Save KOT & Print"}
+            </button>
+
+            <button
+              onClick={handleOpenBill}
+              className={`main_btn_2 flex justify-center items-center
+                  ${savedOrderId
+                  ? "gold_bg"
+                  : " cursor-not-allowed"}`}
+            >
+              🖨 View / Print Bill
+            </button>
+
+            <button
+              onClick={() => setModifyMode(!modifyMode)}
+              className="main_btn_3 d-flex justify-center items-center"
+            >
+              {modifyMode ? " Done" : "✏️ Modify"}
+            </button>
+          </div>
+        </div>
+
+        {/* KOT Print Modal */}
+        {kotPrintData && (
+          <KOTPrintSlip kotData={kotPrintData} onClose={() => setKotPrintData(null)} />
+        )}
+
+        <AddQtyRemarkModal
+          isOpen={showQtyModal}
+          onClose={() => setShowQtyModal(false)}
+          item={selectedItem}
+          orderItems={orderItems}
+          onUpdate={setOrderItems}
+        />
+
+        <BillModal
+          isOpen={showBillModal}
+          onClose={() => setShowBillModal(false)}
+          orderItems={orderItems}
+          orderId={savedOrderId}
+          tableId={table}
+          orderType={getOrderTypeEnum()}
+          tableNameMap={tableNameMap}
+          onBillDone={handleBillDone}
+          existingBillId={existingBillId}
+          existingBillNo={existingBillNo}
+        />
+
+        <CancelOrderModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          orderId={savedOrderId}
+          onCancelled={() => {
+            setOrderItems([]);
+            setSavedOrderId(null);
+            navigate("/userdashboard");
+          }}
+        />
+
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+            <div className="Order_Details_modal">
+              <Row className="p-3">
+                <Col md={12}>
+                  <div className="main_input">
+                    <label>Enter Address <span className="text-red-500">*</span></label>
+                    <textarea
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="Enter delivery address..." />
+                  </div>
+                </Col>
+              </Row>
+
+
+              <div className="flex justify-between gap-3 modal_footer px-3 py-3">
+                <button onClick={() => setShowModal(false)} className="cancel_btn">✕ Cancel</button>
+                <button onClick={() => setShowModal(false)} className="update_btn">✓ Save</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default POS;

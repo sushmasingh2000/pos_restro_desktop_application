@@ -1,0 +1,509 @@
+const { app, BrowserWindow, ipcMain } = require("electron");
+const path = require("path");
+const { spawn } = require("child_process");
+const fs = require("fs");
+const os = require("os");
+const axios = require("axios");
+
+
+// EPIPE error handle karo
+process.stdout.on('error', (err) => { if (err.code === 'EPIPE') return; });
+process.stderr.on('error', (err) => { if (err.code === 'EPIPE') return; });
+
+const escpos = require("escpos");
+escpos.USB = require("escpos-usb");
+escpos.Network = require("escpos-network");
+
+let backendProcess;
+let mainWindow;
+
+const API_BASE = "http://localhost:9047";
+
+// ✅ Auto detect node.exe based on Windows version
+function getNodeExec() {
+  if (app.isPackaged) {
+    const release = parseFloat(os.release());
+    if (release < 6.3) {
+      return path.join(process.resourcesPath, "node_win7.exe"); // Windows 7
+    } else {
+      return path.join(process.resourcesPath, "node.exe"); // Windows 10+
+    }
+  }
+  return process.execPath;
+}
+
+// ✅ Backend start with fallback window creation
+function startBackend() {
+  const backendPath = app.isPackaged
+    ? path.join(process.resourcesPath, "backend", "server.js")
+    : path.join(__dirname, "..", "backend", "index.js");
+
+  const nodeExec = getNodeExec();
+
+  const envPath = app.isPackaged
+    ? path.join(process.resourcesPath, "backend", ".env")
+    : path.join(__dirname, "..", "backend", ".env");
+
+  const dotenv = require("dotenv");
+  const envConfig = dotenv.config({ path: envPath }).parsed || {};
+
+  console.log(`Using node: ${nodeExec}`);
+
+  backendProcess = spawn(nodeExec, [backendPath], {
+    env: {
+      ...process.env,
+      ...envConfig,
+      PORT: "9047",
+      NODE_SKIP_PLATFORM_CHECK: "1",
+    },
+  });
+
+  let windowCreated = false;
+
+  backendProcess.stdout.on("data", (data) => {
+    const msg = data.toString();
+    console.log("Backend:", msg);
+    if (
+      !windowCreated &&
+      (msg.includes("SERVER_READY") || msg.includes("Server listening on port"))
+    ) {
+      windowCreated = true;
+      createWindow();
+    }
+  });
+
+  backendProcess.stderr.on("data", (data) => {
+    console.error("Backend Error:", data.toString());
+  });
+
+  backendProcess.on("error", (err) => {
+    console.error("Backend spawn error:", err.message);
+  });
+
+  // ✅ Fallback — 8 second baad bhi window nahi bani toh force karo
+  setTimeout(() => {
+    if (!windowCreated) {
+      console.log("Fallback: force creating window after timeout");
+      windowCreated = true;
+      createWindow();
+    }
+  }, 8000);
+
+  console.log("Backend starting...");
+}
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      devTools: true,
+      preload: path.join(__dirname, "preload.js"),
+    },
+  });
+
+  if (app.isPackaged) {
+    mainWindow.loadFile(path.join(__dirname, "build/index.html"));
+  } else {
+    mainWindow.loadURL("http://localhost:3000");
+  }
+}
+
+app.whenReady().then(() => {
+  startBackend();
+});
+
+app.on("window-all-closed", () => {
+  if (backendProcess) backendProcess.kill();
+  if (process.platform !== "darwin") app.quit();
+});
+
+// ✅ Printer list API se fetch — dynamic import
+
+// async function fetchPrinters(token) {
+//   try {
+//     const res = await axios.get(`${API_BASE}/api/v1/printer-list`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//       timeout: 3000, // ✅ 3 sec timeout
+//     });
+//     return res.data?.result || [];
+//   } catch (err) {
+//     console.log("Printer fetch failed (offline?):", err.message);
+//     return []; // ✅ Crash nahi karega
+//   }
+// }
+
+async function fetchPrinters(token) {
+  try {
+    const res = await axios.get(`${API_BASE}/api/v1/printer-list`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      timeout: 3000,
+    });
+
+    return res.data?.result || [];
+
+  } catch (err) {
+    console.log("🖨️ Online printer fetch failed, local cache try...");
+
+    try {
+      const localDB = require("../backend/config/localdatabase");
+
+      const [[row]] = await localDB.query(
+        "SELECT data FROM offline_printer_config LIMIT 1"
+      );
+
+      if (row?.data) {
+        const printers = JSON.parse(row.data);
+        console.log("✅ Cached printer use ho raha hai —", printers.length, "printers");
+        return printers;
+      }
+    } catch (e) {
+      console.log("❌ Local printer cache bhi nahi mila:", e.message);
+    }
+
+    return [];
+  }
+}
+
+// ✅ Printer pe print karo — timeout added
+async function printOnPrinter(printer, buildContent) {
+  console.log(`Printing on: ${printer.printer_type} -> ${printer.printer_value}`);
+  let device;
+
+  if (printer.printer_type === "network") {
+    device = new escpos.Network(printer.printer_value, 9100);
+  } else {
+    const usbDevices = escpos.USB.findPrinter();
+    if (!usbDevices || usbDevices.length === 0)
+      throw new Error("USB printer not found");
+    const first = usbDevices[0];
+    device = new escpos.USB(
+      first.deviceDescriptor.idVendor,
+      first.deviceDescriptor.idProduct
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    // ✅ 8 second timeout — hang nahi karega
+    const timer = setTimeout(() => {
+      reject(new Error(`Printer timeout - ${printer.printer_value} reachable nahi hai`));
+    }, 8000);
+
+    device.open((err) => {
+      clearTimeout(timer); // ✅ Timer clear karo
+      if (err) {
+        console.error("Device open error:", err.message);
+        return reject(err);
+      }
+      console.log("Device opened");
+      const printerObj = new escpos.Printer(device);
+      try {
+        buildContent(printerObj);
+        printerObj.cut().close(() => {
+          console.log("Print done");
+          resolve({ success: true });
+        });
+      } catch (e) {
+        console.error("Print content error:", e.message);
+        reject(e);
+      }
+    });
+  });
+}
+
+function buildBillContent(p, billData) {
+
+  const name = billData.restaurant_name || "Chai Bolo Chai";
+
+  const address = billData.restaurant_address || "Indiranagar";
+
+  const gstin = billData.gstin || "51575785745";
+
+  const captain = billData.captain_name || "Captain";
+
+  const PAD = "  "; // ✅ Left padding for all lines
+
+  p.raw(Buffer.from([0x1B, 0x6C, 0x04]));
+  p.align("CT").style("B").text(name);
+  p.style("NORMAL").text(address);
+  p.drawLine();
+
+  p.align("CT");
+  p.text(`GSTIN - ${gstin}`);
+  p.text(`INVOICE NO. - ${billData.billNo || billData.orderId}`);
+  p.text(`TABLE NO. - ${billData.table_no || "Takeaway"}`);
+  p.drawLine();
+
+  p.align("LT");
+
+  p.text(`${PAD}Captain Name: ${captain}`);
+
+  p.drawLine();
+
+  p.text(`${PAD}Time         ${billData.date_time}`);
+
+  p.drawLine();
+
+  // ── COLUMN HEADER ───────────────────────────────────
+
+  p.align("LT").style("B");
+
+  p.text(`${PAD}ITEM             QTY    RATE   AMOUNT`);
+
+  p.style("NORMAL").drawLine();
+
+  // ── FOOD ITEMS ──────────────────────────────────────
+
+  p.align("LT").style("B").text(`${PAD}Food`).style("NORMAL");
+
+  billData.items.forEach((item) => {
+
+    const fullName = item.name || "";
+
+    const qty = String(item.qty).padStart(4);
+
+    const rate = Number(item.price || item.rate || 0).toFixed(2).padStart(7);
+
+    const total = Number(item.total || 0).toFixed(2).padStart(8);
+
+    const firstName = fullName.substring(0, 16).padEnd(16);
+
+    p.text(`${PAD}${firstName} ${qty}  ${rate} ${total}`);
+
+    if (fullName.length > 16) {
+
+      p.text(`${PAD}  ${fullName.substring(16)}`);
+
+    }
+
+    if (item.remark) p.text(`${PAD}  Note: ${item.remark}`);
+
+  });
+
+  p.drawLine();
+
+  // ── SUB TOTAL ───────────────────────────────────────
+
+  // ✅ "Sub Total :" left, value right — like image 2
+
+  p.align("LT");
+
+  const subLabel = `${PAD}Sub Total :`;
+
+  const subVal = Number(billData.subtotal || 0).toFixed(2);
+
+  p.text(`${subLabel.padEnd(28)}${subVal.padStart(10)}`);
+
+  p.drawLine();
+
+  // ── TAXES ───────────────────────────────────────────
+
+  if (billData.tax_breakdown?.length > 0) {
+
+    billData.tax_breakdown.forEach((t) => {
+
+      const label = `${PAD}${t.name}(${t.pct}%):`;
+
+      const amount = Number(t.amount).toFixed(2);
+
+      p.align("LT").text(`${label.padEnd(28)}${amount.padStart(10)}`);
+
+    });
+
+    p.drawLine();
+
+  }
+
+  // ── TOTAL + ROUND OFF ───────────────────────────────
+
+  p.align("LT");
+
+  p.text(`${"      Total :".padEnd(28)}${String(billData.total_amount).padStart(10)}`);
+
+  const rv = billData.round_off || 0;
+
+  p.text(`${"      Round Off :".padEnd(28)}${String(rv).padStart(10)}`);
+
+  // ── PAYMENT SPLITS ──────────────────────────────────
+
+  // ✅ Each payment mode on its own line with left padding
+
+  if (billData.payment_splits?.length > 0) {
+
+    billData.payment_splits.forEach((s) => {
+
+      if (s.mode && s.amount) {
+
+        const modeLabel = `${PAD}${String(s.mode)}`;
+
+        const modeAmt = `: ${String(s.amount)}`;
+
+        p.text(`${modeLabel.padEnd(28)}${modeAmt.padStart(10)}`);
+
+      }
+
+    });
+
+  }
+
+  if (parseFloat(billData.wallet_used || 0) > 0)
+
+    p.text(`${"      Wallet Applied :".padEnd(28)}${("-" + billData.wallet_used).padStart(10)}`);
+
+  if (parseFloat(billData.advance_used || 0) > 0)
+
+    p.text(`${"      Advance Applied :".padEnd(28)}${("-" + billData.advance_used).padStart(10)}`);
+
+  if (billData.is_lending && parseFloat(billData.remaining_amount || 0) > 0) {
+
+    p.drawLine();
+
+    p.align("CT").style("B").text(`DUE: Rs.${billData.remaining_amount}`).style("NORMAL");
+
+  }
+
+  p.drawLine();
+
+  // ── GRAND TOTAL ─────────────────────────────────────
+
+  p.align("CT").style("B");
+
+  p.text(`Grand Total:(INR) ${billData.total_amount}`);
+
+  p.style("NORMAL");
+
+  p.drawLine();
+
+  p.align("CT").text("Thank You..").text("Visit Again!!!");
+
+  p.drawLine();
+
+}
+
+
+function buildKotContent(p, kotData) {
+  // ── HEADER ──────────────────────────────────────────
+  p.align("CT").style("B").size(1, 1);
+  p.text("KOT");
+  p.size(0, 0).style("NORMAL");
+  p.drawLine();
+
+  // ── META INFO ────────────────────────────────────────
+  p.align("LT");
+  p.text(`ORDER NO.-    ${kotData.orderId || kotData.orderNo || "—"}`);
+  p.text(`TABLE NO.-    ${kotData.table_no || kotData.tableNo || "Takeaway"}`);
+  p.text(`KOT NO.-      ${kotData.kotNo || "1"}`);
+  p.text(`CAPTAIN NAME- ${kotData.captainName || kotData.captain_name || "—"}`);
+  p.text(`TYPE-         ${kotData.type || "New"}`);
+  p.text(`DATE & TIME-  ${kotData.dateTime || kotData.date_time || new Date().toLocaleString("en-IN")}`);
+  p.drawLine();
+
+  // ── COLUMN HEADER ────────────────────────────────────
+  p.align("LT").style("B");
+  p.text("ITEM                           QTY");
+  p.style("NORMAL").drawLine();
+
+  // ── ITEMS + ADD-ONS ──────────────────────────────────
+  (kotData.items || []).forEach((item) => {
+    const fullName = item.name || "";
+    const qty = String(item.qty || 1);
+
+    if (fullName.length <= 30) {
+      // Single line
+      p.style("B").text(`${fullName.padEnd(30)} ${qty.padStart(3)}`).style("NORMAL");
+    } else {
+      // Long name — wrap
+      const first = fullName.substring(0, 30);
+      const rest = fullName.substring(30);
+      p.style("B").text(`${first.padEnd(30)} ${qty.padStart(3)}`).style("NORMAL");
+      p.text(`  ${rest}`);
+    }
+
+    // ── Add-ons / Remarks ────────────────────────────
+    // predefinedRemarks array
+    if (item.predefinedRemarks?.length > 0) {
+      item.predefinedRemarks.forEach((r) => {
+        p.text(`  -> ${r}`);
+      });
+    }
+
+    // qtyRemark (single string)
+    if (item.qtyRemark?.trim()) {
+      p.text(`  -> ${item.qtyRemark.trim()}`);
+    }
+
+    // globalRemark / remark
+    const gRemark = item.globalRemark || item.remark;
+    if (gRemark?.trim()) {
+      p.text(`  Note: ${gRemark.trim()}`);
+    }
+  });
+
+  p.drawLine();
+}
+
+
+ipcMain.handle("print-bill", async (event, { billData, token }) => {
+  console.log("print-bill IPC received, orderId:", billData?.orderId);
+  try {
+    const printers = await fetchPrinters(token);
+    const billPrinters = printers.filter((p) => p.printer_tab === "BILL");
+    console.log("All printers raw data:", JSON.stringify(printers));
+    console.log("BILL printers found:", billPrinters.length);
+
+    if (billPrinters.length === 0)
+      return { success: false, message: "No BILL printer configured in backend!" };
+
+    const errors = [];
+    for (const printer of billPrinters) {
+      try {
+        await printOnPrinter(printer, (p) => buildBillContent(p, billData));
+        console.log(`Bill printed on ${printer.printer_value}`);
+      } catch (err) {
+        console.error(`Failed on ${printer.printer_value}:`, err.message);
+        errors.push(err.message);
+      }
+    }
+    return errors.length
+      ? { success: false, message: errors.join(" | ") }
+      : { success: true };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+});
+
+// ✅ IPC KOT PRINT
+ipcMain.handle("print-kot", async (event, { kotData, token }) => {
+  console.log("print-kot IPC received, orderId:", kotData?.orderId);
+  try {
+    const printers = await fetchPrinters(token);
+    const kotPrinters = printers.filter((p) => p.printer_tab === "KOT");
+
+    if (kotPrinters.length === 0)
+      return { success: false, message: "No KOT printer configured in backend!" };
+
+    const errors = [];
+    for (const printer of kotPrinters) {
+      try {
+        await printOnPrinter(printer, (p) => buildKotContent(p, kotData));
+        console.log(`KOT printed on ${printer.printer_value}`);
+      } catch (err) {
+        console.error(`Failed on ${printer.printer_value}:`, err.message);
+        errors.push(err.message);
+      }
+    }
+    return errors.length
+      ? { success: false, message: errors.join(" | ") }
+      : { success: true };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+});
