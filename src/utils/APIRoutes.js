@@ -62,4 +62,9 @@ export const endpoint = {
   expense_delete_api: `${domain}/api/v1/delete-expenses`,
   expense_categroy_get_api: `${domain}/api/v1/get-expense-category`,
 
+  // app
+  get_customer_placed_orders: `${domain}/api/v1/order-customer-placed`,
+  confirm_customer_order: `${domain}/api/v1/order-confirm-customer`,
+  cancel_customer_order: `${domain}/api/v1/order-cancel-customer`,
+
 };

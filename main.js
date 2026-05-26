@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog  } = require("electron");
 const { autoUpdater } = require("electron-updater");
 const path = require("path");
 const { spawn } = require("child_process");
@@ -110,6 +110,10 @@ function createWindow() {
   } else {
     mainWindow.loadURL("http://localhost:3000");
   }
+   // Window banne ke baad check karo
+  setTimeout(() => {
+    autoUpdater.checkForUpdatesAndNotify();
+  }, 3000);
 }
 
 // app.whenReady().then(() => {
@@ -117,10 +121,6 @@ function createWindow() {
 // });
 app.whenReady().then(() => {
   startBackend();
-
-  // Auto Update Check
-  autoUpdater.checkForUpdatesAndNotify();
-
   autoUpdater.on('update-downloaded', () => {
     dialog.showMessageBox({
       type: 'info',
@@ -275,8 +275,8 @@ async function printOnPrinter(printer, buildContent) {
       },
       text: (t) => { tp.println(t); return wrapper; },
       drawLine: () => { tp.drawLine(); return wrapper; },
-      raw: () => { return wrapper; }, // ignore
-      size: () => { return wrapper; }, // ignore
+      raw: () => { return wrapper; }, 
+      size: () => { return wrapper; }, 
       cut: () => { tp.cut(); return wrapper; },
       close: (cb) => { tp.execute().then(() => cb()).catch(cb); },
     };
