@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { domain } from "../../domain";
+import toast from "react-hot-toast";
 
 const QrMenuPage = () => {
   const { token } = useParams();
@@ -15,6 +16,8 @@ const QrMenuPage = () => {
   const [orderId, setOrderId] = useState(null);
   const [placing, setPlacing] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [orderStatus, setOrderStatus] = useState("customer_placed");
+  const [tableBusy, setTableBusy] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -26,7 +29,15 @@ const QrMenuPage = () => {
         axios.get(`${domain}/api/v1/public/table/${token}`),
         axios.get(`${domain}/api/v1/public/menu/${token}`)
       ]);
-      setTable(tableRes.data.result);
+
+      const tableData = tableRes.data.result;
+      setTable(tableData);
+
+      // ❌ Table busy hai toh menu mat dikho
+      if (tableData.dg05_status === "busy") {
+        setTableBusy(true);
+      }
+
       setMenu({
         categories: menuRes.data.result.categories || [],
         items: menuRes.data.result.menus || []
@@ -105,6 +116,25 @@ const QrMenuPage = () => {
     return "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80";
   };
 
+  useEffect(() => {
+    if (!orderId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await axios.get(`${domain}/api/v1/public/order-status/${orderId}`);
+        const status = res.data.status;
+        setOrderStatus(status);
+        if (status === "preparing" || status === "completed" || status === "cancelled") {
+          clearInterval(interval);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [orderId]);
+
   const placeOrder = async () => {
     setPlacing(true);
     try {
@@ -129,6 +159,9 @@ const QrMenuPage = () => {
         setOrderPlaced(true);
         setShowCart(false);
       }
+      else {
+        toast(res.data.message);
+      }
     } catch {
       alert("Order failed. Please try again.");
     } finally {
@@ -136,25 +169,84 @@ const QrMenuPage = () => {
     }
   };
 
+  const [activeView, setActiveView] = useState("menu"); // "menu" | "orders"
+  const [myOrders, setMyOrders] = useState([]);
+
+  const fetchMyOrders = async () => {
+    try {
+      const res = await axios.get(`${domain}/api/v1/public/my-orders/${token}`);
+      setMyOrders(res.data.result || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (table) fetchMyOrders();
+  }, [table]);
+
+  // Har 10 sec mein refresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (table) fetchMyOrders();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [table]);
+
+
   if (loading) return (
     <div style={styles.loading}>
-      <div style={styles.spinner}></div>
       <p>Loading menu...</p>
+    </div>
+  );
+
+  // ✅ Table busy screen
+  if (tableBusy) return (
+    <div style={styles.successScreen}>
+      <div style={{ fontSize: 60, marginBottom: 20 }}>🪑</div>
+      <h2 style={styles.successTitle}>Order Already Placed!</h2>
+      <p style={styles.successSub}>
+        This table already has an active order.<br />
+        Please ask staff if you want to add more items.
+      </p>
+      <div style={{ ...styles.pendingBadge, marginTop: 20 }}>
+        ⏳ Order in progress
+      </div>
     </div>
   );
 
   if (orderPlaced) return (
     <div style={styles.successScreen}>
-      <div style={styles.successIcon}>✓</div>
+      <div style={styles.successIcon}>
+        {orderStatus === "preparing" ? "🍳" : orderStatus === "completed" ? "✅" : "✓"}
+      </div>
       <h2 style={styles.successTitle}>Order Placed!</h2>
       <p style={styles.successSub}>Your order has been sent.<br />Staff will confirm shortly.</p>
       <div style={styles.orderIdBox}>
-        Order ID<strong style={{ display: "block", fontSize: 18, marginTop: 4 }}>#{orderId}</strong>
+        Order ID
+        <strong style={{ display: "block", fontSize: 18, marginTop: 4 }}>#{orderId}</strong>
       </div>
-      <div style={styles.pendingBadge}>Waiting for staff confirmation</div>
+
+      {orderStatus === "customer_placed" && (
+        <div style={styles.pendingBadge}>⏳ Waiting for staff confirmation</div>
+      )}
+      {orderStatus === "preparing" && (
+        <div style={{ ...styles.pendingBadge, background: "#dcfce7", color: "#166534", border: "1px solid #bbf7d0" }}>
+          🍳 Your order is being prepared!
+        </div>
+      )}
+      {orderStatus === "completed" && (
+        <div style={{ ...styles.pendingBadge, background: "#dcfce7", color: "#166534", border: "1px solid #bbf7d0" }}>
+          ✅ Order Ready! Enjoy your meal!
+        </div>
+      )}
+      {orderStatus === "cancelled" && (
+        <div style={{ ...styles.pendingBadge, background: "#fee2e2", color: "#991b1b", border: "1px solid #fecaca" }}>
+          ❌ Order cancelled by staff
+        </div>
+      )}
     </div>
   );
-
   return (
     <div style={styles.app}>
       {/* HEADER */}
@@ -166,59 +258,131 @@ const QrMenuPage = () => {
         </div>
         <div style={styles.statusBadge}>Open</div>
       </div>
-
-      {/* CATEGORIES */}
-      <div style={styles.cats}>
-        {["All", ...menu.categories.map(c => c.dg08_category_name)].map(cat => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCat(cat)}
-            style={{ ...styles.catBtn, ...(selectedCat === cat ? styles.catBtnActive : {}) }}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* TAB BAR */}
+      <div style={styles.tabBar}>
+        <button
+          onClick={() => setActiveView("menu")}
+          style={{ ...styles.tabBtn, ...(activeView === "menu" ? styles.tabBtnActive : {}) }}
+        >
+          Menu
+        </button>
+        <button
+          onClick={() => { setActiveView("orders"); fetchMyOrders(); }}
+          style={{ ...styles.tabBtn, ...(activeView === "orders" ? styles.tabBtnActive : {}) }}
+        >
+          My Orders
+          {myOrders.filter(o => o.dg06_status === "customer_placed").length > 0 && (
+            <span style={styles.badge}>
+              {myOrders.filter(o => o.dg06_status === "customer_placed").length}
+            </span>
+          )}
+        </button>
       </div>
-
-      {/* MENU ITEMS */}
-      {Object.entries(grouped).map(([cat, items]) => (
-        <div key={cat}>
-          <div style={styles.sectionTitle}>{cat}</div>
-          <div style={styles.itemsGrid}>
-            {items.map(item => {
-              const qty = cart[item.dg09_menu_id] || 0;
-              return (
-                <div key={item.dg09_menu_id} style={styles.itemCard}>
-                  <div style={styles.itemImg}>
-                    <img
-                      src={item.dg09_image_url || getFoodImage(item.dg09_name, item.dg08_category_name)}
-                      alt={item.dg09_name}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      onError={(e) => {
-                        e.target.src = "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80";
-                      }}
-                    />
-                  </div>
-                  <div style={styles.itemBody}>
-                    <div style={styles.itemName}>{item.dg09_name}</div>
-                    <div style={styles.itemFooter}>
-                      <span style={styles.itemPrice}>₹{item.dg09_price}</span>
-                      {qty === 0
-                        ? <button style={styles.addBtn} onClick={() => addItem(item.dg09_menu_id)}>+</button>
-                        : <div style={styles.qtyCtrl}>
-                          <button style={styles.qtyBtn} onClick={() => removeItem(item.dg09_menu_id)}>−</button>
-                          <span style={styles.qtyNum}>{qty}</span>
-                          <button style={styles.qtyBtn} onClick={() => addItem(item.dg09_menu_id)}>+</button>
-                        </div>
-                      }
-                    </div>
-                  </div>
+      {activeView === "orders" && (
+        <div style={{ padding: 16 }}>
+          {myOrders.length === 0 ? (
+            <div style={{ textAlign: "center", color: "#aaa", marginTop: 60 }}>
+              <div style={{ fontSize: 40 }}>🧾</div>
+              <p style={{ marginTop: 12 }}>No orders yet</p>
+            </div>
+          ) : (
+            myOrders.map((order, i) => (
+              <div key={i} style={styles.orderCard}>
+                <div style={styles.orderCardHeader}>
+                  <span style={{ fontWeight: 500, fontSize: 14 }}>#{order.unique_order_id}</span>
+                  <span style={{
+                    ...styles.statusPill,
+                    background: order.dg06_status === "preparing" ? "#dcfce7"
+                      : order.dg06_status === "completed" ? "#e0f2fe"
+                        : order.dg06_status === "cancelled" ? "#fee2e2"
+                          : "#fef3c7",
+                    color: order.dg06_status === "preparing" ? "#166534"
+                      : order.dg06_status === "completed" ? "#0369a1"
+                        : order.dg06_status === "cancelled" ? "#991b1b"
+                          : "#92400e",
+                  }}>
+                    {order.dg06_status === "customer_placed" ? "⏳ Pending"
+                      : order.dg06_status === "preparing" ? "🍳 Preparing"
+                        : order.dg06_status === "completed" ? "✅ Ready"
+                          : order.dg06_status === "cancelled" ? "❌ Cancelled"
+                            : order.dg06_status}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+                <div style={{ fontSize: 12, color: "#888", marginTop: 6 }}>
+                  {order.items?.map((item, j) => (
+                    <span key={j}>{item.dg07_menu_name_snapshot} x{item.dg07_quantity}{j < order.items.length - 1 ? ", " : ""}</span>
+                  ))}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                  <span style={{ fontSize: 12, color: "#aaa" }}>
+                    {new Date(order.dg06_created_at).toLocaleTimeString()}
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: "#c9a84c" }}>
+                    ₹{order.dg06_total_amount}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      ))}
+      )}
+
+      {/* CATEGORIES — sirf menu tab mein dikhe */}
+      {activeView === "menu" && (
+        <>
+          <div style={styles.cats}>
+            {["All", ...menu.categories.map(c => c.dg08_category_name)].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCat(cat)}
+                style={{ ...styles.catBtn, ...(selectedCat === cat ? styles.catBtnActive : {}) }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* MENU ITEMS */}
+          {Object.entries(grouped).map(([cat, items]) => (
+            <div key={cat}>
+              <div style={styles.sectionTitle}>{cat}</div>
+              <div style={styles.itemsGrid}>
+                {items.map(item => {
+                  const qty = cart[item.dg09_menu_id] || 0;
+                  return (
+                    <div key={item.dg09_menu_id} style={styles.itemCard}>
+                      <div style={styles.itemImg}>
+                        <img
+                          src={item.dg09_image_url || getFoodImage(item.dg09_name, item.dg08_category_name)}
+                          alt={item.dg09_name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={(e) => {
+                            e.target.src = "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80";
+                          }}
+                        />
+                      </div>
+                      <div style={styles.itemBody}>
+                        <div style={styles.itemName}>{item.dg09_name}</div>
+                        <div style={styles.itemFooter}>
+                          <span style={styles.itemPrice}>₹{item.dg09_price}</span>
+                          {qty === 0
+                            ? <button style={styles.addBtn} onClick={() => addItem(item.dg09_menu_id)}>+</button>
+                            : <div style={styles.qtyCtrl}>
+                              <button style={styles.qtyBtn} onClick={() => removeItem(item.dg09_menu_id)}>−</button>
+                              <span style={styles.qtyNum}>{qty}</span>
+                              <button style={styles.qtyBtn} onClick={() => addItem(item.dg09_menu_id)}>+</button>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </>
+      )}
 
       {/* CART BAR */}
       {cartCount > 0 && (
@@ -327,6 +491,13 @@ const styles = {
   successSub: { fontSize: 14, color: "#888", marginTop: 8, lineHeight: 1.6 },
   orderIdBox: { background: "#f5f5f0", borderRadius: 10, padding: "12px 20px", marginTop: 20, fontSize: 13, color: "#555" },
   pendingBadge: { background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 14px", fontSize: 12, marginTop: 16 },
+  tabBar: { display: "flex", background: "#fff", borderBottom: "0.5px solid #eee", position: "sticky", top: 73, zIndex: 9 },
+  tabBtn: { flex: 1, padding: "12px", border: "none", background: "transparent", fontSize: 14, cursor: "pointer", color: "#888", position: "relative" },
+  tabBtnActive: { color: "#1a1a1a", fontWeight: 500, borderBottom: "2px solid #1a1a1a" },
+  badge: { background: "#ef4444", color: "#fff", borderRadius: "50%", fontSize: 10, padding: "1px 5px", marginLeft: 6 },
+  orderCard: { background: "#fff", border: "0.5px solid #eee", borderRadius: 12, padding: 14, marginBottom: 12 },
+  orderCardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  statusPill: { fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 500 },
 };
 
 export default QrMenuPage;

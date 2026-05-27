@@ -21,7 +21,7 @@ export const domain = isElectron
   // ? (isOnline 
   //     ? 'http://192.168.18.101:9047'  // Net hai → Live
   //     : 'http://192.168.18.101:9047')         // Net nahi → Local
-  // : 'http://192.168.18.101:9047'; 
+  // : 'http://192.168.18.101:9048'; 
 
 export const frontend = domain;
 export const rupees = "₹";
