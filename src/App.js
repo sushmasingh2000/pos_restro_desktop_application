@@ -18,7 +18,7 @@ const App = () => {
 
     if (branchToken) {
       console.log("Branch Token मिला:", branchToken);
-
+                
       // ✅ overwrite correct token
       localStorage.setItem("token", branchToken);
       localStorage.setItem("role", "branch_admin");

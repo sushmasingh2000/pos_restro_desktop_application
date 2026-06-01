@@ -1,6 +1,6 @@
 {
   "name": "restro-panel",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "Restaurant management desktop panel",
   "author": "Your Name",
   "private": true,
@@ -93,6 +93,10 @@
       {
         "from": "../backend/.env",
         "to": "resources/backend/.env"
+      },
+      {
+        "from": "../backend/node_modules/sql.js/dist/sql-wasm.wasm",
+        "to": "resources/backend/sql-wasm.wasm"
       },
       {
         "from": "resources/node.exe",
