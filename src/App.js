@@ -32,11 +32,8 @@ const App = () => {
     <Router>
       <Routes>
         {/* Public Routes */}
+        <Route path="/menu/:token" element={<QrMenuPage />} />
         <Route path="/" element={<Login role="staff" />} />
-        <Route
-          path="/menu/:token"
-          element={<QrMenuPage />}
-        />
         {
           // user ? (
           routes.map((route, i) => (
