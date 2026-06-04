@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const path = require("path");
 const { spawn } = require("child_process");
 const fs = require("fs");
@@ -109,10 +110,27 @@ function createWindow() {
   } else {
     mainWindow.loadURL("http://localhost:3000");
   }
+  // Window banne ke baad check karo
+  setTimeout(() => {
+    autoUpdater.checkForUpdatesAndNotify();
+  }, 3000);
 }
 
+// app.whenReady().then(() => {
+//   startBackend();
+// });
 app.whenReady().then(() => {
   startBackend();
+  autoUpdater.on('update-downloaded', () => {
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Update Ready',
+      message: 'A new update has been downloaded. Restart now to install?',
+      buttons: ['Install Now', 'Later']
+    }).then((res) => {
+      if (res.response === 0) autoUpdater.quitAndInstall();
+    });
+  });
 });
 
 app.on("window-all-closed", () => {
@@ -122,6 +140,22 @@ app.on("window-all-closed", () => {
 
 // ✅ Printer list API se fetch — dynamic import
 
+// async function fetchPrinters(token) {
+//   try {
+//     const res = await axios.get(`${API_BASE}/api/v1/printer-list`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//       timeout: 3000, // ✅ 3 sec timeout
+//     });
+//     return res.data?.result || [];
+//   } catch (err) {
+//     console.log("Printer fetch failed (offline?):", err.message);
+//     return []; // ✅ Crash nahi karega
+//   }
+// }
+
 async function fetchPrinters(token) {
   try {
     const res = await axios.get(`${API_BASE}/api/v1/printer-list`, {
@@ -129,294 +163,358 @@ async function fetchPrinters(token) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      timeout: 3000, // ✅ 3 sec timeout
+      timeout: 3000,
     });
+
     return res.data?.result || [];
+
   } catch (err) {
-    console.log("Printer fetch failed (offline?):", err.message);
-    return []; // ✅ Crash nahi karega
+    console.log("🖨️ Online printer fetch failed, local cache try...");
+
+    try {
+      const localDB = require("../backend/config/localdatabase");
+
+      const [[row]] = await localDB.query(
+        "SELECT data FROM offline_printer_config LIMIT 1"
+      );
+
+      if (row?.data) {
+        const printers = JSON.parse(row.data);
+        console.log("✅ Cached printer use ho raha hai —", printers.length, "printers");
+        return printers;
+      }
+    } catch (e) {
+      console.log("❌ Local printer cache bhi nahi mila:", e.message);
+    }
+
+    return [];
   }
 }
 
-// ✅ Printer pe print karo — timeout added
+function createPrinterWrapper(type, rawPrinter) {
+  if (type === "network") {
+    // escpos — pehle jaisa same
+    return rawPrinter;
+  } else {
+    // node-thermal-printer — wrapper banao
+    return {
+      align: (a) => {
+        if (a === "CT") rawPrinter.alignCenter();
+        else if (a === "LT") rawPrinter.alignLeft();
+        else if (a === "RT") rawPrinter.alignRight();
+        return this;
+      },
+      style: (s) => {
+        if (s === "B") rawPrinter.bold(true);
+        else rawPrinter.bold(false);
+        return this;
+      },
+      text: (t) => { rawPrinter.println(t); return this; },
+      drawLine: () => { rawPrinter.drawLine(); return this; },
+      raw: () => { }, // ignore
+      size: () => { }, // ignore for now
+      cut: () => { rawPrinter.cut(); return this; },
+      close: (cb) => { rawPrinter.execute().then(cb); },
+    };
+  }
+}
+
 async function printOnPrinter(printer, buildContent) {
   console.log(`Printing on: ${printer.printer_type} -> ${printer.printer_value}`);
-  let device;
 
   if (printer.printer_type === "network") {
-    device = new escpos.Network(printer.printer_value, 9100);
-  } else {
-    const usbDevices = escpos.USB.findPrinter();
-    if (!usbDevices || usbDevices.length === 0)
-      throw new Error("USB printer not found");
-    const first = usbDevices[0];
-    device = new escpos.USB(
-      first.deviceDescriptor.idVendor,
-      first.deviceDescriptor.idProduct
-    );
-  }
+    // ✅ Network — bilkul pehle jaisa
+    let device = new escpos.Network(printer.printer_value, 9100);
 
-  return new Promise((resolve, reject) => {
-    // ✅ 8 second timeout — hang nahi karega
-    const timer = setTimeout(() => {
-      reject(new Error(`Printer timeout - ${printer.printer_value} reachable nahi hai`));
-    }, 8000);
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`Printer timeout - ${printer.printer_value} reachable nahi hai`));
+      }, 8000);
 
-    device.open((err) => {
-      clearTimeout(timer); // ✅ Timer clear karo
-      if (err) {
-        console.error("Device open error:", err.message);
-        return reject(err);
-      }
-      console.log("Device opened");
-      const printerObj = new escpos.Printer(device);
-      try {
-        buildContent(printerObj);
-        printerObj.cut().close(() => {
-          console.log("Print done");
-          resolve({ success: true });
-        });
-      } catch (e) {
-        console.error("Print content error:", e.message);
-        reject(e);
-      }
+      device.open((err) => {
+        clearTimeout(timer);
+        if (err) return reject(err);
+
+        const printerObj = new escpos.Printer(device);
+        try {
+          buildContent(printerObj);
+          printerObj.cut().close(() => {
+            resolve({ success: true });
+          });
+        } catch (e) {
+          reject(e);
+        }
+      });
     });
-  });
+
+  } else {
+    // ✅ USB — Windows printer name se, wrapper use karo
+    const { ThermalPrinter, PrinterTypes, CharacterSet } = require('node-thermal-printer');
+
+    const tp = new ThermalPrinter({
+      type: PrinterTypes.EPSON,
+      interface: `printer:${printer.printer_value}`,
+      characterSet: CharacterSet.PC437_USA,
+      removeSpecialCharacters: false,
+      lineCharacter: "-",
+      width: 48,
+    });
+
+    // Wrapper — buildContent ko same API milegi
+    const wrapper = {
+      align: (a) => {
+        if (a === "CT") tp.alignCenter();
+        else if (a === "LT") tp.alignLeft();
+        else tp.alignRight();
+        return wrapper;
+      },
+      style: (s) => {
+        if (s === "B") tp.bold(true);
+        else { tp.bold(false); tp.underlineOff(); }
+        return wrapper;
+      },
+      text: (t) => { tp.println(t); return wrapper; },
+      drawLine: () => { tp.drawLine(); return wrapper; },
+      raw: () => { return wrapper; },
+      size: () => { return wrapper; },
+      cut: () => { tp.cut(); return wrapper; },
+      close: (cb) => { tp.execute().then(() => cb()).catch(cb); },
+    };
+
+    buildContent(wrapper);
+    await tp.execute();
+    tp.clear();
+    return { success: true };
+  }
 }
 
+// // ✅ Printer pe print karo — timeout added
+// async function printOnPrinter(printer, buildContent) {
+//   console.log(`Printing on: ${printer.printer_type} -> ${printer.printer_value}`);
+//   let device;
+
+//   if (printer.printer_type === "network") {
+//     device = new escpos.Network(printer.printer_value, 9100);
+//   } else {
+//     const usbDevices = escpos.USB.findPrinter();
+//     if (!usbDevices || usbDevices.length === 0)
+//       throw new Error("USB printer not found");
+//     const first = usbDevices[0];
+//     device = new escpos.USB(
+//       first.deviceDescriptor.idVendor,
+//       first.deviceDescriptor.idProduct
+//     );
+//   }
+
+//   return new Promise((resolve, reject) => {
+//     // ✅ 8 second timeout — hang nahi karega
+//     const timer = setTimeout(() => {
+//       reject(new Error(`Printer timeout - ${printer.printer_value} reachable nahi hai`));
+//     }, 8000);
+
+//     device.open((err) => {
+//       clearTimeout(timer); // ✅ Timer clear karo
+//       if (err) {
+//         console.error("Device open error:", err.message);
+//         return reject(err);
+//       }
+//       console.log("Device opened");
+//       const printerObj = new escpos.Printer(device);
+//       try {
+//         buildContent(printerObj);
+//         printerObj.cut().close(() => {
+//           console.log("Print done");
+//           resolve({ success: true });
+//         });
+//       } catch (e) {
+//         console.error("Print content error:", e.message);
+//         reject(e);
+//       }
+//     });
+//   });
+// }
+
 function buildBillContent(p, billData) {
-  const name    = billData.restaurant_name    || "Chai Bolo Chai";
+  p.raw(Buffer.from([0x1D, 0x4C, 0x08, 0x00]));
+  const name = billData.restaurant_name || "Chai Bolo Chai";
+
   const address = billData.restaurant_address || "Indiranagar";
-  const gstin   = billData.gstin              || "51575785745";
-  const captain = billData.captain_name       || "Captain";
 
-  // ✅ Epson margin fix
+  const gstin = billData.gstin || "51575785745";
+
+  const captain = billData.captain_name || "Captain";
+
+  const PAD = "  "; // ✅ Left padding for all lines
+
   p.raw(Buffer.from([0x1B, 0x6C, 0x04]));
-
-  // ── HEADER ──────────────────────────────────────────
   p.align("CT").style("B").text(name);
   p.style("NORMAL").text(address);
   p.drawLine();
 
-  // ── INFO ────────────────────────────────────────────
   p.align("CT");
   p.text(`GSTIN - ${gstin}`);
   p.text(`INVOICE NO. - ${billData.billNo || billData.orderId}`);
   p.text(`TABLE NO. - ${billData.table_no || "Takeaway"}`);
   p.drawLine();
 
-  p.align("LT").text(`Captain Name: ${captain}`);
+  p.align("LT");
+
+  p.text(`${PAD}Captain Name: ${captain}`);
+
   p.drawLine();
-  p.text(`Time`);
-  p.align("CT").text(`${billData.date_time}`);
+
+  p.text(`${PAD}Time         ${billData.date_time}`);
+
   p.drawLine();
 
   // ── COLUMN HEADER ───────────────────────────────────
+
   p.align("LT").style("B");
-  p.text("ITEM             QTY    RATE   AMOUNT");
+
+  p.text(`${PAD}ITEM             QTY    RATE   AMOUNT`);
+
   p.style("NORMAL").drawLine();
 
   // ── FOOD ITEMS ──────────────────────────────────────
-  p.style("B").text("Food").style("NORMAL");
+
+  p.align("LT").style("B").text(`${PAD}Food`).style("NORMAL");
 
   billData.items.forEach((item) => {
+
     const fullName = item.name || "";
-    const qty   = String(item.qty).padStart(4);
-    const rate  = Number(item.price || item.rate || 0).toFixed(2).padStart(7);
+
+    const qty = String(item.qty).padStart(4);
+
+    const rate = Number(item.price || item.rate || 0).toFixed(2).padStart(7);
+
     const total = Number(item.total || 0).toFixed(2).padStart(8);
 
-    // pehli line — max 16 chars naam + columns
     const firstName = fullName.substring(0, 16).padEnd(16);
-    p.text(`${firstName} ${qty}  ${rate} ${total}`);
 
-    // agar naam 16 se lamba hai toh wrap
+    p.text(`${PAD}${firstName} ${qty}  ${rate} ${total}`);
+
     if (fullName.length > 16) {
-      p.text(`  ${fullName.substring(16)}`);
+
+      p.text(`${PAD}  ${fullName.substring(16)}`);
+
     }
 
-    if (item.remark) p.text(`  Note: ${item.remark}`);
+    if (item.remark) p.text(`${PAD}  Note: ${item.remark}`);
+
   });
 
   p.drawLine();
 
   // ── SUB TOTAL ───────────────────────────────────────
-  p.align("CT").text(`Sub Total : ${Number(billData.subtotal || 0).toFixed(2)}`);
+
+  // ✅ "Sub Total :" left, value right — like image 2
+
+  p.align("LT");
+
+  const subLabel = `${PAD}Sub Total :`;
+
+  const subVal = Number(billData.subtotal || 0).toFixed(2);
+
+  p.text(`${subLabel.padEnd(28)}${subVal.padStart(10)}`);
+
   p.drawLine();
 
   // ── TAXES ───────────────────────────────────────────
+
   if (billData.tax_breakdown?.length > 0) {
+
     billData.tax_breakdown.forEach((t) => {
-      const label  = `${t.name}(${t.pct}%):`;
+
+      const label = `${PAD}${t.name}(${t.pct}%):`;
+
       const amount = Number(t.amount).toFixed(2);
-      p.align("CT").text(`${label.padEnd(16)}${amount.padStart(10)}`);
+
+      p.align("LT").text(`${label.padEnd(28)}${amount.padStart(10)}`);
+
     });
+
     p.drawLine();
+
   }
 
   // ── TOTAL + ROUND OFF ───────────────────────────────
-  p.align("CT");
-  p.text(`${"Total :".padEnd(16)}${String(billData.total_amount).padStart(10)}`);
+
+  p.align("LT");
+
+  p.text(`${"      Total :".padEnd(28)}${String(billData.total_amount).padStart(10)}`);
+
   const rv = billData.round_off || 0;
-  p.text(`${"Round Off :".padEnd(16)}${String(rv).padStart(10)}`);
+
+  p.text(`${"      Round Off :".padEnd(28)}${String(rv).padStart(10)}`);
 
   // ── PAYMENT SPLITS ──────────────────────────────────
+
+  // ✅ Each payment mode on its own line with left padding
+
   if (billData.payment_splits?.length > 0) {
+
     billData.payment_splits.forEach((s) => {
+
       if (s.mode && s.amount) {
-        p.text(`${String(s.mode).padEnd(16)}${String(s.amount).padStart(10)}`);
+
+        const modeLabel = `${PAD}${String(s.mode)}`;
+
+        const modeAmt = `: ${String(s.amount)}`;
+
+        p.text(`${modeLabel.padEnd(28)}${modeAmt.padStart(10)}`);
+
       }
+
     });
+
   }
 
   if (parseFloat(billData.wallet_used || 0) > 0)
-    p.text(`${"Wallet Applied :".padEnd(16)}${("-" + billData.wallet_used).padStart(10)}`);
+
+    p.text(`${"      Wallet Applied :".padEnd(28)}${("-" + billData.wallet_used).padStart(10)}`);
+
   if (parseFloat(billData.advance_used || 0) > 0)
-    p.text(`${"Advance Applied :".padEnd(16)}${("-" + billData.advance_used).padStart(10)}`);
+
+    p.text(`${"      Advance Applied :".padEnd(28)}${("-" + billData.advance_used).padStart(10)}`);
 
   if (billData.is_lending && parseFloat(billData.remaining_amount || 0) > 0) {
+
     p.drawLine();
+
     p.align("CT").style("B").text(`DUE: Rs.${billData.remaining_amount}`).style("NORMAL");
+
   }
 
   p.drawLine();
 
-  // ── GRAND TOTAL — normal bold, no size(1,1) ─────────
+  // ── GRAND TOTAL ─────────────────────────────────────
+
   p.align("CT").style("B");
-  p.text(`Grand Total:(INR) ${billData.total_amount}`);
+
+  p.text(`Grand Total:(INR) ${Number(billData.total_amount).toFixed(2)}`);
+
   p.style("NORMAL");
 
   p.drawLine();
+
   p.align("CT").text("Thank You..").text("Visit Again!!!");
+
   p.drawLine();
+
 }
 
-// function buildBillContent(p, billData) {
-//   const name = billData.restaurant_name || "Chai Bolo Chai";
-//   const address = billData.restaurant_address || "Indiranagar";
-//   const gstin = billData.gstin || "";
-//   const captain = billData.captain_name || "Captain";
-
-//   // ── HEADER ──────────────────────────────────────────
-//   p.align("CT").style("B").size(1, 1).text(name);
-//   p.size(0, 0).style("NORMAL").text(address);
-//   p.drawLine();
-
-//   // ── INFO BLOCK ──────────────────────────────────────
-//   p.align("CT");
-//   p.text(`GSTIN - ${gstin}`);
-//   p.text(`INVOICE NO. - ${billData.billNo || billData.orderId}`);
-//   p.text(`TABLE NO. - ${billData.table_no || "Takeaway"}`);
-//   p.drawLine();
-
-//   p.align("LT");
-//   p.text(`Captain Name: ${captain}`);
-//   p.drawLine();
-//   p.text(`Time`);
-//   p.align("CT").text(`${billData.date_time}`);
-//   p.drawLine();
-
-//   // ── COLUMN HEADER ───────────────────────────────────
-//   // 48 chars: ITEM(20) QTY(4) RATE(7) AMOUNT(8) + spaces
-//   p.align("LT").style("B");
-//   p.text("ITEM                 QTY   RATE  AMOUNT");
-//   p.style("NORMAL").drawLine();
-
-//   // ── FOOD SECTION ────────────────────────────────────
-//   p.style("B").text("Food").style("NORMAL");
-
-//   billData.items.forEach((item) => {
-//     const fullName = item.name || "";
-//     const qty = String(item.qty);
-//     const rate = Number(item.price || item.rate || 0).toFixed(2);
-//     const total = Number(item.total || 0).toFixed(2);
-
-//     if (fullName.length <= 16) {
-//       // ── Single line fit ho jaaye ──
-//       // ITEM(16) + space + QTY(4) + RATE(7) + AMOUNT(8)
-//       const n = fullName.padEnd(16);
-//       const q = qty.padStart(4);
-//       const r = rate.padStart(7);
-//       const t = total.padStart(8);
-//       p.text(`${n} ${q} ${r} ${t}`);
-//     } else {
-//       // ── Naam lambi hai — wrap karo ──
-//       const firstLine = fullName.substring(0, 16).padEnd(16);
-//       const restName = fullName.substring(16);
-//       const q = qty.padStart(4);
-//       const r = rate.padStart(7);
-//       const t = total.padStart(8);
-//       p.text(`${firstLine} ${q} ${r} ${t}`);
-//       p.text(`  ${restName}`); // indent ke saath wrap
-//     }
-
-//     if (item.remark) p.text(`  Note: ${item.remark}`);
-//   });
-
-//   p.drawLine();
-
-//   // ── SUB TOTAL (sirf ek baar) ────────────────────────
-//   const subtotalVal = String(
-//     Number(billData.subtotal || 0).toFixed(2)
-//   );
-//   p.align("CT").text(`Sub Total : ${subtotalVal}`);
-//   p.drawLine();
-
-//   // ── TAXES ───────────────────────────────────────────
-//   if (billData.tax_breakdown?.length > 0) {
-//     billData.tax_breakdown.forEach((t) => {
-//       const label = `${t.name}(${t.pct}%):`;
-//       const amount = Number(t.amount).toFixed(2);
-//       p.align("CT").text(`${label.padEnd(16)}${amount.padStart(10)}`);
-//     });
-//     p.drawLine();
-//   }
-
-//   // ── TOTAL + ROUND OFF ───────────────────────────────
-//   p.align("CT");
-//   p.text(`${"Total :".padEnd(16)}${String(billData.total_amount).padStart(10)}`);
-//   const rv = billData.round_off || 0;
-//   p.text(`${"Round Off :".padEnd(16)}${String(rv).padStart(10)}`);
-
-//   // ── PAYMENT SPLITS ──────────────────────────────────
-//   if (billData.payment_splits?.length > 0) {
-//     billData.payment_splits.forEach((s) => {
-//       if (s.mode && s.amount) {
-//         const modeLabel = String(s.mode).padEnd(16);
-//         const modeAmt = String(s.amount).padStart(10);
-//         p.text(`${modeLabel}${modeAmt}`);  // "Cash            :     10.00"
-//       }
-//     });
-//   }
-
-//   if (parseFloat(billData.wallet_used || 0) > 0)
-//     p.text(`${"Wallet Applied :".padEnd(16)}${("-" + billData.wallet_used).padStart(10)}`);
-//   if (parseFloat(billData.advance_used || 0) > 0)
-//     p.text(`${"Advance Applied :".padEnd(16)}${("-" + billData.advance_used).padStart(10)}`);
-
-//   if (billData.is_lending && parseFloat(billData.remaining_amount || 0) > 0) {
-//     p.drawLine();
-//     p.align("CT").style("B").text(`DUE: Rs.${billData.remaining_amount}`).style("NORMAL");
-//   }
-
-//   p.drawLine();
-
-//   // ── GRAND TOTAL ─────────────────────────────────────
-//   p.align("CT").style("B").size(1, 1);
-//   p.text(`Grand Total:(INR)  ${billData.total_amount}`);
-//   p.size(0, 0).style("NORMAL");
-
-//   p.drawLine();
-//   p.align("CT").text("Thank You..").text("Visit Again!!!");
-//   p.drawLine();
-// }
 
 function buildKotContent(p, kotData) {
+  p.raw(Buffer.from([0x1D, 0x4C, 0x08, 0x00]));
+
   // ── HEADER ──────────────────────────────────────────
   p.align("CT").style("B").size(1, 1);
   p.text("KOT");
+  p.raw(Buffer.from([0x1D, 0x21, 0x00]));
+
   p.size(0, 0).style("NORMAL");
   p.drawLine();
- 
+
   // ── META INFO ────────────────────────────────────────
   p.align("LT");
   p.text(`ORDER NO.-    ${kotData.orderId || kotData.orderNo || "—"}`);
@@ -426,17 +524,17 @@ function buildKotContent(p, kotData) {
   p.text(`TYPE-         ${kotData.type || "New"}`);
   p.text(`DATE & TIME-  ${kotData.dateTime || kotData.date_time || new Date().toLocaleString("en-IN")}`);
   p.drawLine();
- 
+
   // ── COLUMN HEADER ────────────────────────────────────
   p.align("LT").style("B");
   p.text("ITEM                           QTY");
   p.style("NORMAL").drawLine();
- 
+
   // ── ITEMS + ADD-ONS ──────────────────────────────────
   (kotData.items || []).forEach((item) => {
     const fullName = item.name || "";
     const qty = String(item.qty || 1);
- 
+
     if (fullName.length <= 30) {
       // Single line
       p.style("B").text(`${fullName.padEnd(30)} ${qty.padStart(3)}`).style("NORMAL");
@@ -447,7 +545,7 @@ function buildKotContent(p, kotData) {
       p.style("B").text(`${first.padEnd(30)} ${qty.padStart(3)}`).style("NORMAL");
       p.text(`  ${rest}`);
     }
- 
+
     // ── Add-ons / Remarks ────────────────────────────
     // predefinedRemarks array
     if (item.predefinedRemarks?.length > 0) {
@@ -455,125 +553,21 @@ function buildKotContent(p, kotData) {
         p.text(`  -> ${r}`);
       });
     }
- 
+
     // qtyRemark (single string)
     if (item.qtyRemark?.trim()) {
       p.text(`  -> ${item.qtyRemark.trim()}`);
     }
- 
+
     // globalRemark / remark
     const gRemark = item.globalRemark || item.remark;
     if (gRemark?.trim()) {
       p.text(`  Note: ${gRemark.trim()}`);
     }
   });
- 
+
   p.drawLine();
 }
-
-// function buildBillContent(p, billData) {
-//   const name = billData.restaurant_name || "Chai Bolo Chai";
-//   const address = billData.restaurant_address || "Indiranagar";
-//   const gstin = billData.gstin || "245454";
-//   const captain = billData.captain_name || "Captain";
-
-//   // Header
-//   p.align("CT").style("B").text(name);
-//   p.style("NORMAL").text(address);
-//   p.drawLine();
-
-//   // Info
-//   p.align("LT");
-//   p.text(`GSTIN      : ${gstin}`);
-//   p.text(`INVOICE NO.: ${billData.billNo || billData.orderId}`);
-//   p.text(`TABLE NO.  : ${billData.table_no || "Takeaway"}`);
-//   p.drawLine();
-//   p.text(`Captain    : ${captain}`);
-//   p.text(`Time       : ${billData.date_time}`);
-//   p.drawLine();
-
-//   // Items header — 48 char wide
-//   p.style("B").text("ITEM             QTY   RATE    AMT");
-//   p.style("NORMAL").drawLine();
-//   p.style("B").text("Food").style("NORMAL");
-
-//   // Items
-//   billData.items.forEach((item) => {
-//     const iName = (item.name || "").substring(0, 16).padEnd(16);
-//     const qty   = String(item.qty).padStart(4);
-//     const rate  = String(Number(item.price || item.rate || 0).toFixed(2)).padStart(7);
-//     const total = String(Number(item.total || 0).toFixed(2)).padStart(7);
-//     p.text(`${iName}${qty} ${rate} ${total}`);
-//     if (item.remark) p.text(`  Note: ${item.remark}`);
-//   });
-
-//   p.drawLine();
-
-//   // Subtotal — sirf ek baar
-//   p.text(`${"Sub Total :".padEnd(28)}${String(billData.subtotal || "0.00").padStart(8)}`);
-//   p.drawLine();
-
-//   // Taxes
-//   if (billData.tax_breakdown?.length > 0) {
-//     billData.tax_breakdown.forEach((t) => {
-//       const label = `${t.name}(${t.pct}%):`;
-//       p.text(`${label.padEnd(28)}${String(Number(t.amount).toFixed(2)).padStart(8)}`);
-//     });
-//     p.drawLine();
-//   }
-
-//   // Total + Round off
-//   p.text(`${"Total :".padEnd(28)}${String(billData.total_amount).padStart(8)}`);
-//   const rv = billData.round_off || 0;
-//   p.text(`${"Round Off :".padEnd(28)}${String((rv >= 0 ? "+" : "") + rv).padStart(8)}`);
-
-//   // Payment splits
-//   if (billData.payment_splits?.length > 0) {
-//     p.drawLine();
-//     billData.payment_splits.forEach((s) => {
-//       if (s.mode && s.amount)
-//         p.text(`${s.mode.padEnd(28)}${String(s.amount).padStart(8)}`);
-//     });
-//   }
-
-//   if (parseFloat(billData.wallet_used || 0) > 0)
-//     p.text(`${"Wallet Applied :".padEnd(28)}${("-" + billData.wallet_used).padStart(8)}`);
-//   if (parseFloat(billData.advance_used || 0) > 0)
-//     p.text(`${"Advance Applied :".padEnd(28)}${("-" + billData.advance_used).padStart(8)}`);
-
-//   if (billData.is_lending && parseFloat(billData.remaining_amount || 0) > 0) {
-//     p.drawLine();
-//     p.align("CT").style("B").text(`DUE: Rs.${billData.remaining_amount}`).style("NORMAL");
-//   }
-
-//   p.drawLine();
-
-//   // ✅ Grand Total — normal size, nahi wrap hoga
-//   p.align("CT").style("B");
-//   p.text(`Grand Total:(INR) ${billData.total_amount}`);
-//   p.style("NORMAL");
-
-//   p.drawLine();
-//   p.align("CT").text("Thank You..").text("Visit Again!!!");
-// }
-
-// function buildKotContent(p, kotData) {
-//   p.align("CT").style("B").size(1, 1);
-//   p.text("KOT");
-//   p.style("NORMAL").size(0, 0);
-//   p.drawLine();
-//   p.text(`Order: ${kotData.orderId}`);
-//   p.text(`Table: ${kotData.table_no || "Takeaway"}`);
-//   p.text(`Time : ${new Date().toLocaleTimeString("en-IN")}`);
-//   p.drawLine();
-//   kotData.items.forEach((item) => {
-//     p.style("B").text(`${item.qty} x ${item.name}`).style("NORMAL");
-//     if (item.remark) p.text(`  Note: ${item.remark}`);
-//   });
-//   p.drawLine();
-// }
-
-// ✅ IPC BILL PRINT
 
 
 ipcMain.handle("print-bill", async (event, { billData, token }) => {

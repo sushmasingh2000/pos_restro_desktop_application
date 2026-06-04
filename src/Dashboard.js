@@ -658,8 +658,8 @@ const MoveModal = ({ fromTable, tables, onClose, onConfirm }) => {
             <button
               onClick={() => setSelectedTable(t)}
               className={`main_table_action_btn ${selectedTable?.dg05_table_id === t.dg05_table_id
-                  ? "gold_bg"
-                  : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                ? "gold_bg"
+                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
                 }`}
             >
               {t.dg05_table_name}
@@ -697,8 +697,8 @@ const MergeModal = ({ mainTable, tables, onClose, onConfirm }) => {
             <button
               onClick={() => setSelectedTable(t)}
               className={`main_table_action_btn ${selectedTable?.dg05_table_id === t.dg05_table_id
-                  ? "bg_red"
-                  : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                ? "bg_red"
+                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
                 }`}
             >
               {t.dg05_table_name}
@@ -762,15 +762,15 @@ const SplitModal = ({ table, onClose, onConfirm }) => {
               key={item.dg07_item_id}
               onClick={() => toggle(item.dg07_item_id)}
               className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${selectedIds.includes(item.dg07_item_id)
-                  ? "gold_bg"
-                  : "bg-white/5 border-white/10 hover:bg-white/10"
+                ? "gold_bg"
+                : "bg-white/5 border-white/10 hover:bg-white/10"
                 }`}
             >
               <div className="flex items-center gap-3 p-3">
                 <div
                   className={`w-4 h-4 rounded border-2 flex items-center justify-center transition ${selectedIds.includes(item.dg07_item_id)
-                      ? "bg-purple-500 border-purple-400"
-                      : "border-white/30"
+                    ? "bg-purple-500 border-purple-400"
+                    : "border-white/30"
                     }`}
                 >
                   {selectedIds.includes(item.dg07_item_id) && (
@@ -847,6 +847,8 @@ const ConfirmBtn = ({ onClick, label, disabled, color = "purple" }) => (
 const Dashboard = () => {
   const navigate = useNavigate();
   const client = useQueryClient();
+  const [qrModal, setQrModal] = useState(null);
+  const [allQrModal, setAllQrModal] = useState(false);
 
   const [moveModal, setMoveModal] = useState(null);
   const [mergeModal, setMergeModal] = useState(null);
@@ -982,6 +984,7 @@ const Dashboard = () => {
     <div className="main_dashboard">
       {/* LEGEND */}
       <PosTab />
+     
       <div className="flex items-center gap-6 mb-6 text-sm text-white mt-3">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 bg-green-400 rounded-full"></span> Available
@@ -989,6 +992,35 @@ const Dashboard = () => {
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 bg-red-400 rounded-full"></span> Busy
         </div>
+
+        {/* NEW BUTTON */}
+        <button
+          onClick={() => setAllQrModal(true)}
+          style={{
+            marginLeft: "auto",
+            background: "gray",
+            border: "none",
+            borderRadius: "8px",
+            color: "white",
+            padding: "6px 14px",
+            fontSize: "13px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="5" y="5" width="3" height="3" fill="white" stroke="none" />
+            <rect x="16" y="5" width="3" height="3" fill="white" stroke="none" />
+            <rect x="5" y="16" width="3" height="3" fill="white" stroke="none" />
+            <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17v3" />
+          </svg>
+          All QR 
+        </button>
       </div>
 
       {/* GRID */}
@@ -997,14 +1029,14 @@ const Dashboard = () => {
           <Col
             md={3} sm={6} xs={12}
             key={table.dg05_table_id}
-            onClick={() => handleTableClick(table)}
+
           >
             <div
               className={`table_card ${table.dg05_status === "Available"
-                  ? "table_available"
-                  : table.dg05_status === "Busy"
-                    ? "table_busy"
-                    : "table_pending"
+                ? "table_available"
+                : table.dg05_status === "Busy"
+                  ? "table_busy"
+                  : "table_pending"
                 }`}
             >
               {/* 3-dot action dropdown */}
@@ -1040,25 +1072,51 @@ const Dashboard = () => {
               )}
 
               {table.dg05_status === "Available" ? (
-                <img src={table_avialable} alt="table" className="w-20 mx-auto mb-3 opacity-50" />
+                <img onClick={() => handleTableClick(table)} src={table_avialable} alt="table" className="w-20 cursor-pointer mx-auto mb-3 opacity-50" />
               ) : (
-                <img src={table_busy} alt="table" className="w-20 mx-auto mb-3 opacity-50" />
+                <img onClick={() => handleTableClick(table)} src={table_busy} alt="table" className="w-20 cursor-pointer mx-auto mb-3 opacity-50" />
               )}
 
-              <h2>{table.dg05_table_name}</h2>
-              <div className="flex justify-center items-center">
-                <img
-                  src={table.dg05_qr_image}
-                  width={120}
-                />
-              </div>
+              <h2 >{table.dg05_table_name}</h2>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setQrModal({ tableName: table.dg05_table_name, qrImage: table.dg05_qr_image });
+                }}
+                title="View QR Code"
+                style={{
+                  position: "absolute",
+                  top: "8px",
+                  left: "8px",
+                  width: "28px",
+                  height: "28px",
+                  background: "gray",
+                  border: "none",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  zIndex: 5,
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="5" y="5" width="3" height="3" fill="white" stroke="none" />
+                  <rect x="16" y="5" width="3" height="3" fill="white" stroke="none" />
+                  <rect x="5" y="16" width="3" height="3" fill="white" stroke="none" />
+                  <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17v3" />
+                </svg>
+              </button>
 
               <button
-                className={`table_status_btn ${table.dg05_status === "Available"
-                    ? "available_btn"
-                    : table.dg05_status === "Busy"
-                      ? "busy_btn"
-                      : "panding_btn"
+                onClick={() => handleTableClick(table)}
+                className={`table_status_btn cursor-pointer ${table.dg05_status === "Available"
+                  ? "available_btn"
+                  : table.dg05_status === "Busy"
+                    ? "busy_btn"
+                    : "panding_btn"
                   }`}
               >
                 <span className="badge-dot"></span>
@@ -1073,6 +1131,121 @@ const Dashboard = () => {
         ))}
       </Row>
 
+      {/* All QR Modal */}
+      {allQrModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.9)", backdropFilter: "blur(8px)" }}
+          onClick={() => setAllQrModal(false)}
+        >
+          <div
+            style={{
+              background: "#1a1a1a",
+              borderRadius: "16px",
+              padding: "20px",
+              maxWidth: "90vw",
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setAllQrModal(false)}
+              style={{
+                position: "absolute",
+                top: "-12px",
+                right: "-12px",
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                background: "#333",
+                border: "2px solid #555",
+                color: "white",
+                fontSize: "14px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10,
+              }}
+            >
+              ×
+            </button>
+
+            {/* Grid of all QRs */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "center" }}>
+              {tables.map((table) => (
+                <div key={table.dg05_table_id} style={{ textAlign: "center" }}>
+                  <div style={{ background: "white", borderRadius: "8px", padding: "6px", display: "inline-block" }}>
+                    <img
+                      src={table.dg05_qr_image}
+                      alt={table.dg05_table_name}
+                      style={{ width: 150, height: 150, display: "block" }}
+                    />
+                  </div>
+                  <p style={{ color: "white", fontSize: "12px", marginTop: "6px" }}>
+                    {table.dg05_table_name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Modal */}
+      {qrModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+          onClick={() => setQrModal(null)}
+        >
+          <div
+            style={{
+              position: "relative",
+              background: "white",
+              borderRadius: "12px",
+              padding: "8px",
+              display: "inline-block",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setQrModal(null)}
+              style={{
+                position: "absolute",
+                top: "-12px",
+                right: "-12px",
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                background: "#333",
+                border: "2px solid #555",
+                color: "white",
+                fontSize: "14px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10,
+                lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+
+            {/* QR Image - bada */}
+            <img
+              src={qrModal.qrImage}
+              alt="QR Code"
+              style={{ width: 240, height: 260, display: "block", borderRadius: "8px" }}
+            />
+          </div>
+        </div>
+      )}
       {/* Move Modal */}
       {moveModal && (
         <MoveModal

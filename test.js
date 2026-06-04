@@ -3,7 +3,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 const fs = require("fs");
 
-// ✅ EPIPE error handle karo
+// ✅ EPIPE 
 process.stdout.on('error', (err) => { if (err.code === 'EPIPE') return; });
 process.stderr.on('error', (err) => { if (err.code === 'EPIPE') return; });
 

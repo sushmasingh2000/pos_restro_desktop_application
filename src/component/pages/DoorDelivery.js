@@ -155,7 +155,7 @@ const DoorDelivery = () => {
             <thead>
               <tr>
                 {["S.No.",
-                  "Order Id", "Date", "Time", "Table No", "SubTotal", "Charge",
+                  "Order Id", "Date", "Time",  "SubTotal", "Charge",
                   "Tax", "Discount", "Paid", "MOP", "Status", "Action"
                 ].map((h) => (
                   <th key={h} >{h}</th>
@@ -194,7 +194,6 @@ const DoorDelivery = () => {
                       </td>
                       <td>{order.date}</td>
                       <td>{order.time}</td>
-                      <td>{order.tableNo}</td>
                       <td>₹{order.subTotal}</td>
                       <td>₹{order.charge}</td>
                       <td>₹{order.tax}</td>
