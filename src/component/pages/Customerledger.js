@@ -463,7 +463,7 @@ const CustomerLedger = () => {
             <div className="rounded-xl mx-3 p-3 mb-5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center justify-between cursor-pointer" onClick={() => setRegWalletToggle((p) => !p)}>
                 <div>
-                  <div className="text-sm font-medium text-white"> add advance Wallet ?</div>
+                  <div className="text-sm font-medium"> add advance Wallet ?</div>
                   <div className="text-xs text-white/30 mt-0.5">Optional</div>
                 </div>
                 <div className="relative flex-shrink-0 w-10 h-6 rounded-full transition-colors" style={{ background: regWalletToggle ? "rgba(124,58,237,0.8)" : "rgba(255,255,255,0.1)" }}>

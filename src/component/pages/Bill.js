@@ -74,54 +74,54 @@ export default function BillModal({
   const navigate = useNavigate();
 
   // ── Sirf Close Table ke liye validation ──
-const validateForClose = () => {
-  if (!paymentSplits[0]?.mode?.trim()) {
-    toast.error("Select payment method!");
-    return false;
-  }
-  if (!isLending && !isAdvance && paymentSplits.length > 1) {
-    const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
-    if (!allModesSelected) {
-      toast.error("Select split methods!");
+  const validateForClose = () => {
+    if (!paymentSplits[0]?.mode?.trim()) {
+      toast.error("Select payment method!");
       return false;
     }
-    const totalSplitPaid = paymentSplits.reduce(
-      (s, p) => s + parseFloat(p.amount || 0), 0
-    );
-    if (Math.abs(totalSplitPaid - afterWalletTotal) > 0.5) {
-      toast.error(`Split total ₹${afterWalletTotal.toFixed(2)} hona chahiye!`);
+    if (!isLending && !isAdvance && paymentSplits.length > 1) {
+      const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
+      if (!allModesSelected) {
+        toast.error("Select split methods!");
+        return false;
+      }
+      const totalSplitPaid = paymentSplits.reduce(
+        (s, p) => s + parseFloat(p.amount || 0), 0
+      );
+      if (Math.abs(totalSplitPaid - afterWalletTotal) > 0.5) {
+        toast.error(`Split total ₹${afterWalletTotal.toFixed(2)} hona chahiye!`);
+        return false;
+      }
+    }
+    if (isLending && !customer.phone.trim()) {
+      toast.error("Customer phone required for Lending!");
       return false;
     }
-  }
-  if (isLending && !customer.phone.trim()) {
-    toast.error("Customer phone required for Lending!");
-    return false;
-  }
-  if (isLending && !customer.name.trim()) {
-    toast.error("Customer name required for Lending!");
-    return false;
-  }
-  if (isAdvance && !selectedCustomerId) {
-    toast.error("Customer select for Advance payment!");
-    return false;
-  }
-  if (isAdvance && walletBalance <= 0) {
-    toast.error("Your wallet balance is zero!");
-    return false;
-  }
-  if (useWallet && !selectedCustomerId) {
-    toast.error("Wallet use ke liye customer select karo!");
-    return false;
-  }
-  return true;
-};
+    if (isLending && !customer.name.trim()) {
+      toast.error("Customer name required for Lending!");
+      return false;
+    }
+    if (isAdvance && !selectedCustomerId) {
+      toast.error("Customer select for Advance payment!");
+      return false;
+    }
+    if (isAdvance && walletBalance <= 0) {
+      toast.error("Your wallet balance is zero!");
+      return false;
+    }
+    if (useWallet && !selectedCustomerId) {
+      toast.error("Wallet use ke liye customer select karo!");
+      return false;
+    }
+    return true;
+  };
 
-// ── Print Bill ke liye — sirf basic check ──
-const validateForPrint = () => {
-  if (isReprint) return true;
-  // payment method optional for print
-  return true;
-};
+  // ── Print Bill ke liye — sirf basic check ──
+  const validateForPrint = () => {
+    if (isReprint) return true;
+    // payment method optional for print
+    return true;
+  };
   useEffect(() => {
     if (!customerSearch.trim()) return;
     const fetchCustomers = async () => {
@@ -284,14 +284,24 @@ const validateForPrint = () => {
   const charges = chargesData?.data?.result || [];
 
   // ── Calculations ──────────────────────────────────
-  const subTotal = orderItems.reduce((acc, i) => acc + i.price * i.qty, 0);
+  // Sirf taxable items ka total
+  const taxableSubTotal = orderItems.reduce((acc, i) =>
+    i.tax_group_id ? acc + parseFloat(i.basePrice) * i.qty : acc, 0
+  );
 
+  // Non-taxable items ka total  
+  const nonTaxableSubTotal = orderItems.reduce((acc, i) =>
+    !i.tax_group_id ? acc + i.price * i.qty : acc, 0
+  );
+
+  // SubTotal = dono ka sum (basePrice use karo taxable ke liye)
+  const subTotal = taxableSubTotal + nonTaxableSubTotal;
+
+  // Tax sirf taxable items pe
   const taxBreakdown = taxes.map((t) => ({
     name: t.dg032_name,
     pct: parseFloat(t.dg032_percentage),
-    amount:
-      Math.round(((subTotal * parseFloat(t.dg032_percentage)) / 100) * 100) /
-      100, // ← 2.42 exact
+    amount: Math.round(((taxableSubTotal * parseFloat(t.dg032_percentage)) / 100) * 100) / 100,
   }));
   const totalTax = taxBreakdown.reduce((s, t) => s + t.amount, 0);
 
@@ -471,7 +481,7 @@ const validateForPrint = () => {
 
   const handlePrintBill = async () => {
     if (loading) return;
-  if (!isReprint && !validateForPrint()) return; // ← sirf basic check
+    if (!isReprint && !validateForPrint()) return; // ← sirf basic check
     setLoading(true);
 
     try {
@@ -592,11 +602,12 @@ const validateForPrint = () => {
 
   const handleCloseTable = async () => {
     if (loading) return;
-  if (!validateForClose()) return; // ← strict validation
+    if (!validateForClose()) return;
     setLoading(true);
 
     try {
       if (!savedBillId) {
+        // Naya bill banao
         const billRes = await saveBill();
         if (!billRes?.data?.success) {
           toast.error(billRes?.data?.message || "Bill save failed");
@@ -607,11 +618,26 @@ const validateForPrint = () => {
         const newBillNo = billRes?.data?.billNo || billRes?.data?.bill?.billNo;
         if (newBillId) setSavedBillId(newBillId);
         if (newBillNo) setSavedBillNo(newBillNo);
-
-        // ← offline mein wallet deduct nahi hoga
         if (!billRes?.data?.offline) {
           await deductWalletIfNeeded(newBillId);
         }
+      } else {
+        // ✅ Bill exist karta hai — payment method update karo
+        await apiConnectorPost(
+          `${endpoint.update_bill_details_api}/${savedBillId}`,
+          {
+            paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
+            payment_splits: paymentSplits,
+            customer_name: customer.name,
+            customer_phone: customer.phone,
+            customer_address: customer.address,
+            discount: discountAmount,
+            paid_amount: isLending ? givenAmt : isAdvance ? maxWalletUse : grandTotal,
+            remaining_amount: isLending ? lendingRemaining : isAdvance ? advanceRemaining : 0,
+            wallet_used: useWallet && !isAdvance ? maxWalletUse : 0,
+            advance_used: isAdvance ? maxWalletUse : 0,
+          }
+        );
       }
 
       if (orderType === "dine_in" && tableId) {

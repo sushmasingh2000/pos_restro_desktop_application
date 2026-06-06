@@ -30,6 +30,7 @@ const POS = () => {
   const location = useLocation();
   const { type } = useParams();
   const table = location.state?.table;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -136,17 +137,22 @@ const POS = () => {
       billNo: order.dg06_bill_no || null,
       uniqueId: order.unique_order_id,
       isSplit: order.unique_order_id?.startsWith("SPLIT"),
-      items: (order.items || []).map((item) => ({
-        id: item.dg07_menu_id,
-        dg09_name: item.dg07_menu_name_snapshot,
-        qty: item.dg07_quantity,
-        price: parseFloat(item.dg07_price),
-        qtyRemark: item.dg07_item_remark || "",
-        globalRemark: item.dg07_global_remark || "",
-        predefinedRemarks: item.dg07_predefined_remark
-          ? item.dg07_predefined_remark.split(", ").filter(Boolean)
-          : [],
-      })),
+      items: (order.items || []).map((item) => {
+        const menuItem = itemsData.find(m => m.dg09_menu_id === item.dg07_menu_id);
+        return {
+          id: item.dg07_menu_id,
+          dg09_name: item.dg07_menu_name_snapshot,
+          qty: item.dg07_quantity,
+          tax_group_id: menuItem?.dg09_tax_group_id || null,        // ← menu se lo
+          basePrice: parseFloat(menuItem?.dg09_price || item.dg07_price),  // ← menu se lo
+          price: parseFloat(item.dg07_price),
+          qtyRemark: item.dg07_item_remark || "",
+          globalRemark: item.dg07_global_remark || "",
+          predefinedRemarks: item.dg07_predefined_remark
+            ? item.dg07_predefined_remark.split(", ").filter(Boolean)
+            : [],
+        };
+      }),
     }));
 
     const mainOrder = formattedOrders.find((o) => !o.isSplit);
@@ -189,7 +195,15 @@ const POS = () => {
     } else {
       setOrderItems([
         ...orderItems,
-        { ...item, qty: 1, id: item.dg09_menu_id, price: parseFloat(item.dg09_price) },
+        {
+          ...item, qty: 1, id: item.dg09_menu_id,
+          tax_group_id: item.dg09_tax_group_id || null,
+          basePrice: parseFloat(item.dg09_price),
+          price: item.dg09_tax_group_id
+            ? parseFloat(item.dg09_amount_after_tax)
+            : parseFloat(item.dg09_price)
+          // price: parseFloat(item.dg09_price)
+        },
       ]);
     }
   };
@@ -219,7 +233,9 @@ const POS = () => {
 
   const handleSaveKOT = async () => {
     if (!orderItems.length) { toast.error("Please add items first"); return; }
+    if (isSubmitting) return;
 
+    setIsSubmitting(true);
     const newItems = orderItems.filter((item) => {
       const prev = previousItems.find((p) => p.id === item.id);
       if (!prev) return true;
@@ -306,12 +322,15 @@ const POS = () => {
       console.error(err);
       toast.error("Failed to save KOT");
     }
+    finally {
+      setIsSubmitting(false); // ← hamesha reset karo
+    }
   };
 
   // ── Open Bill ─────────────────────────────────────────────
   const handleOpenBill = () => {
-    if (!orderItems.length) { toast.error("Please add items first"); return; }
-    if (!savedOrderId) { toast.error("Please save KOT first"); return; }
+    if (!orderItems.length) { toast.error("Please add items first", { id: 1 }); return; }
+    if (!savedOrderId) { toast.error("Please save KOT first", { id: 1 }); return; }
     setShowBillModal(true);
   };
 

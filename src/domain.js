@@ -2,8 +2,9 @@
 const isElectronApp = navigator.userAgent.toLowerCase().includes('electron');
 
 export const domain = isElectronApp
-  ? 'https://cbc.ferryinfotech.in'      // ✅ Electron app — local backend
-  : 'https://cbc.ferryinfotech.in'; // ✅ Browser — remote
+  ? 'https://cbc.ferryinfotech.in'   
+  : 'https://cbc.ferryinfotech.in';
+  // : 'https://cbc.ferryinfotech.in'; 
 
 export const frontend = domain; 
 export const rupees = "₹";
