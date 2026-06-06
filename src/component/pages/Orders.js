@@ -143,19 +143,6 @@ const Orders = () => {
               </select>
               </div>
             </Col>
-            <Col md={3}>
-              <div className="main_input">
-                <select
-                  onChange={(e) =>
-                    setFilters({ ...filters, paymentStatus: e.target.value })
-                  }>
-                  <option>Payment Status</option>
-                  <option value="paid" >Paid</option>
-                  <option value="unpaid" >Pending</option>
-                </select>
-              </div>
-            </Col>
-            
         </Row>
       </div>
 

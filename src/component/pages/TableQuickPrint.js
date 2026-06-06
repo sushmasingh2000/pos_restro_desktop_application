@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "react-query";
 import { apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
@@ -8,11 +8,20 @@ export default function TableQuickPrintModal({
     isOpen,
     onClose,
     orderId,
+    uniqueOrderId,
     tableId,
     tableNameMap = {},
     orderItems = [],
 }) {
     const [loading, setLoading] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
+
+    const { data: branchData } = useQuery(
+        ["branch_profile"],
+        () => apiConnectorGet(endpoint.branch_profile_api),
+        { enabled: isOpen, refetchOnWindowFocus: false }
+    );
+    const branch = branchData?.data?.result || {};
 
     // ── Fetch taxes ───────────────────────────────────
     const { data: taxData } = useQuery(
@@ -36,23 +45,19 @@ export default function TableQuickPrintModal({
     const taxBreakdown = taxes.map((t) => ({
         name: t.dg032_name,
         pct: parseFloat(t.dg032_percentage),
-        amount:
-            Math.round(((subTotal * parseFloat(t.dg032_percentage)) / 100) * 100) /
-            100,
+        amount: Math.round(((subTotal * parseFloat(t.dg032_percentage)) / 100) * 100) / 100,
     }));
     const totalTax = taxBreakdown.reduce((s, t) => s + t.amount, 0);
 
     const chargeBreakdown = charges.map((c) => ({
         name: c.dg035_name,
-        amount:
-            c.dg035_type === "Percentage"
-                ? (subTotal * parseFloat(c.dg035_value)) / 100
-                : parseFloat(c.dg035_value),
+        amount: c.dg035_type === "Percentage"
+            ? (subTotal * parseFloat(c.dg035_value)) / 100
+            : parseFloat(c.dg035_value),
     }));
     const totalCharges = chargeBreakdown.reduce((s, c) => s + c.amount, 0);
 
-    const beforeRound =
-        Math.round((subTotal + totalTax + totalCharges) * 100) / 100;
+    const beforeRound = Math.round((subTotal + totalTax + totalCharges) * 100) / 100;
     const grandTotal = Math.round(beforeRound);
     const roundOff = parseFloat((grandTotal - beforeRound).toFixed(2));
 
@@ -60,10 +65,13 @@ export default function TableQuickPrintModal({
     const handlePrint = async () => {
         if (loading) return;
         setLoading(true);
-
         try {
             const billData = {
-                orderId,
+                restaurant_name: branch.branch_name || "Restaurant",
+                restaurant_address: branch.address || "",
+                gstin: branch.gst_no || "",
+                captain_name: branch.captain_name || "",
+                orderId: uniqueOrderId || orderId,
                 table_no: tableId ? tableNameMap[tableId] || tableId : null,
                 date_time: new Date().toLocaleString("en-IN"),
                 tax_breakdown: taxBreakdown,
@@ -77,18 +85,13 @@ export default function TableQuickPrintModal({
                     rate: Number(i.price).toFixed(2),
                     total: (i.price * i.qty).toFixed(2),
                     remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""]
-                        .filter(Boolean)
-                        .join(", "),
+                        .filter(Boolean).join(", "),
                 })),
             };
 
             const token = localStorage.getItem("token");
-
             if (window.electronAPI?.printBill) {
-                const printResult = await window.electronAPI.printBill({
-                    billData,
-                    token,
-                });
+                const printResult = await window.electronAPI.printBill({ billData, token });
                 if (printResult.success) {
                     toast.success("Print successful!");
                     onClose();
@@ -97,78 +100,228 @@ export default function TableQuickPrintModal({
                 }
             } else {
                 toast.success("Bill data ready (no Electron)");
-                console.log("billData:", billData);
             }
         } catch (err) {
             console.error(err);
             toast.error("Print failed");
         }
-
         setLoading(false);
     };
 
     if (!isOpen) return null;
 
+    // ── THERMAL PREVIEW ───────────────────────────────
+    if (showPreview) {
+        return (
+            <div style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 9999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(0,0,0,0.85)",
+                backdropFilter: "blur(6px)",
+            }}>
+                <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 16,
+                    maxHeight: "95vh",
+                    overflowY: "auto",
+                }}>
+                    {/* Label */}
+                    <div style={{
+                        color: "rgba(255,255,255,0.5)",
+                        fontSize: 13,
+                        letterSpacing: 2,
+                        textTransform: "uppercase",
+                    }}>
+                        Bill Preview
+                    </div>
+
+                    {/* Thermal Receipt */}
+                    <div style={{
+                        background: "#fff",
+                        width: 300,
+                        fontFamily: "'Courier New', Courier, monospace",
+                        fontSize: 12,
+                        color: "#111",
+                        padding: "20px 14px 16px",
+                        boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                        borderRadius: 2,
+                        clipPath: "polygon(0 4px,4px 0,8px 4px,12px 0,16px 4px,20px 0,24px 4px,28px 0,32px 4px,36px 0,40px 4px,44px 0,48px 4px,52px 0,56px 4px,60px 0,64px 4px,68px 0,72px 4px,76px 0,80px 4px,84px 0,88px 4px,92px 0,96px 4px,100% 4px,100% 100%,0 100%)",
+                    }}>
+                        {/* Header */}
+                        <div style={{ textAlign: "center", marginBottom: 6 }}>
+                            <div style={{ fontWeight: "bold", fontSize: 15, letterSpacing: 1 }}>
+                                {branch.branch_name || "Restaurant"}
+                            </div>
+                            <div style={{ fontSize: 11 }}>{branch.address || ""}</div>
+                        </div>
+
+                        <QDivider />
+
+                        {/* GSTIN + Invoice + Table */}
+                        <div style={{ textAlign: "center", fontSize: 11, marginBottom: 2 }}>
+                            {branch.gst_no && <div>GSTIN &nbsp;&nbsp; {branch.gst_no}</div>}
+                            <div>INVOICE NO. &nbsp;&nbsp; {uniqueOrderId || orderId}</div>
+                            <div>TABLE NO. &nbsp;&nbsp; {tableId ? tableNameMap[tableId] || tableId : "Takeaway"}</div>
+                        </div>
+
+                        <QDivider />
+
+                        {/* Captain + Time */}
+                        <QLeftRow label="Captain" value={branch.captain_name || "—"} />
+                        <QLeftRow label="Time" value={new Date().toLocaleString("en-IN")} />
+
+                        <QDivider />
+
+                        {/* Items Header */}
+                        <div style={{ display: "flex", fontWeight: "bold", fontSize: 11, marginBottom: 4 }}>
+                            <span style={{ flex: 1 }}>ITEM</span>
+                            <span style={{ width: 30, textAlign: "right" }}>QTY</span>
+                            <span style={{ width: 50, textAlign: "right" }}>RATE</span>
+                            <span style={{ width: 55, textAlign: "right" }}>AMT</span>
+                        </div>
+
+                        <QDivider />
+
+                        <div style={{ fontWeight: "bold", fontSize: 11, marginBottom: 4 }}>Food</div>
+
+                        {/* Items */}
+                        {orderItems.map((item, i) => {
+                            const remark = [...(item.predefinedRemarks || []), item.qtyRemark || ""].filter(Boolean).join(", ");
+                            return (
+                                <div key={i}>
+                                    <div style={{ display: "flex", fontSize: 11, marginBottom: 2 }}>
+                                        <span style={{ flex: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+                                            {item.dg09_name}
+                                        </span>
+                                        <span style={{ width: 30, textAlign: "right" }}>{item.qty}</span>
+                                        <span style={{ width: 50, textAlign: "right" }}>{Number(item.price).toFixed(2)}</span>
+                                        <span style={{ width: 55, textAlign: "right" }}>{(item.price * item.qty).toFixed(2)}</span>
+                                    </div>
+                                    {remark && (
+                                        <div style={{ fontSize: 10, color: "#555", paddingLeft: 8, marginBottom: 2 }}>
+                                            Note: {remark}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+
+                        <QDivider />
+
+                        <QAmtRow label="Sub Total" value={subTotal.toFixed(2)} />
+
+                        <QDivider />
+
+                        <QAmtRow label="Sub Total" value={subTotal.toFixed(2)} />
+
+                        {taxBreakdown.map((t, i) => (
+                            <QAmtRow key={i} label={`${t.name}(${t.pct}%)`} value={t.amount?.toFixed(2)} muted />
+                        ))}
+
+                        <QDivider />
+
+                        <QAmtRow label="Total" value={grandTotal.toFixed(2)} />
+                        <QAmtRow label="Round Off" value={`${roundOff >= 0 ? "+" : ""}${roundOff}`} muted />
+
+                        <QDivider />
+
+                        <div style={{ textAlign: "center", fontWeight: "bold", fontSize: 13, margin: "6px 0" }}>
+                            Grand Total:(INR)&nbsp;&nbsp;{grandTotal}
+                        </div>
+
+                        <QDivider />
+
+                        <div style={{ textAlign: "center", fontWeight: "bold", fontSize: 12, marginTop: 6 }}>
+                            Thank You..
+                        </div>
+                        <div style={{ textAlign: "center", fontWeight: "bold", fontSize: 12 }}>
+                            Visit Again!!!
+                        </div>
+                        <div style={{ textAlign: "center", fontSize: 9, color: "#aaa", marginTop: 4 }}>
+                            powered by FerryRestro v1.0.1
+                        </div>
+
+                        <div style={{ height: 12 }} />
+                    </div>
+
+                    {/* Buttons */}
+                    <div style={{ display: "flex", gap: 12 }}>
+                        <button
+                            onClick={() => setShowPreview(false)}
+                            style={{
+                                padding: "10px 24px",
+                                borderRadius: 10,
+                                border: "1px solid rgba(255,255,255,0.2)",
+                                background: "rgba(255,255,255,0.08)",
+                                color: "#fff",
+                                fontSize: 14,
+                                cursor: "pointer",
+                            }}
+                        >
+                            ← Back
+                        </button>
+                        <button
+                            onClick={handlePrint}
+                            disabled={loading}
+                            style={{
+                                padding: "10px 28px",
+                                borderRadius: 10,
+                                border: "none",
+                                background: loading ? "rgba(124,58,237,0.4)" : "rgba(124,58,237,0.9)",
+                                color: "#fff",
+                                fontSize: 14,
+                                fontWeight: "bold",
+                                cursor: loading ? "not-allowed" : "pointer",
+                            }}
+                        >
+                            {loading ? "Printing..." : "🖨️ Print"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ── DARK MODAL — default view ─────────────────────
     return (
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
-
         >
-            <div
-                style={{
-                    background: "linear-gradient(145deg, #1f1a17, #2a221d)",
-                    border: "1px solid rgba(197,163,119,0.25)",
-                    borderRadius: "16px",
-                    width: "100%",
-                    maxWidth: "480px",
-                    overflow: "hidden",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
-                }}
-            >
+            <div style={{
+                background: "linear-gradient(145deg, #1f1a17, #2a221d)",
+                border: "1px solid rgba(197,163,119,0.25)",
+                borderRadius: "16px",
+                width: "100%",
+                maxWidth: "480px",
+                overflow: "hidden",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
+            }}>
                 {/* Header */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "16px 20px",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                >
+                <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px 20px",
+                    borderBottom: "1px solid rgba(255,255,255,0.08)",
+                }}>
                     <div>
-                        <h2
-                            style={{
-                                margin: 0,
-                                fontSize: "16px",
-                                fontWeight: 600,
-                                color: "#f5deb3",
-                            }}
-                        >
-                            🧾 Order #{orderId}
+                        <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: "#f5deb3" }}>
+                            🧾 Order #{uniqueOrderId}
                         </h2>
-
-                        <p
-                            style={{
-                                margin: "2px 0 0",
-                                fontSize: "13px",
-                                color: "rgba(197,163,119,0.65)",
-                            }}
-                        >
+                        <p style={{ margin: "2px 0 0", fontSize: "13px", color: "rgba(197,163,119,0.65)" }}>
                             Table: {tableNameMap[tableId] || tableId}
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        style={{
-                            background: "none",
-                            border: "none",
-                            color: "rgba(255,255,255,0.5)",
-                            fontSize: "22px",
-                            cursor: "pointer",
-                            lineHeight: 1,
-                            padding: "4px",
-                        }}
+                        style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: "22px", cursor: "pointer" }}
                     >
                         ×
                     </button>
@@ -180,18 +333,15 @@ export default function TableQuickPrintModal({
                         <thead>
                             <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                                 {["Item", "Qty", "Rate", "Total"].map((h) => (
-                                    <th
-                                        key={h}
-                                        style={{
-                                            padding: "8px 6px",
-                                            textAlign: h === "Item" ? "left" : "right",
-                                            color: "rgba(255,255,255,0.4)",
-                                            fontWeight: 500,
-                                            fontSize: "11px",
-                                            textTransform: "uppercase",
-                                            letterSpacing: "0.05em",
-                                        }}
-                                    >
+                                    <th key={h} style={{
+                                        padding: "8px 6px",
+                                        textAlign: h === "Item" ? "left" : "right",
+                                        color: "rgba(255,255,255,0.4)",
+                                        fontWeight: 500,
+                                        fontSize: "11px",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.05em",
+                                    }}>
                                         {h}
                                     </th>
                                 ))}
@@ -199,42 +349,18 @@ export default function TableQuickPrintModal({
                         </thead>
                         <tbody>
                             {orderItems.map((item, i) => {
-                                const remarks = [
-                                    ...(item.predefinedRemarks || []),
-                                    item.qtyRemark || "",
-                                ]
-                                    .filter(Boolean)
-                                    .join(", ");
+                                const remarks = [...(item.predefinedRemarks || []), item.qtyRemark || ""].filter(Boolean).join(", ");
                                 return (
                                     <>
-                                        <tr
-                                            key={i}
-                                            style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
-                                        >
-                                            <td style={{ padding: "10px 6px", color: "#fff" }}>
-                                                {item.dg09_name}
-                                            </td>
-                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "rgba(255,255,255,0.7)" }}>
-                                                {item.qty}
-                                            </td>
-                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "rgba(255,255,255,0.7)" }}>
-                                                ₹{Number(item.price).toFixed(2)}
-                                            </td>
-                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "#fff", fontWeight: 500 }}>
-                                                ₹{(item.price * item.qty).toFixed(2)}
-                                            </td>
+                                        <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                            <td style={{ padding: "10px 6px", color: "#fff" }}>{item.dg09_name}</td>
+                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "rgba(255,255,255,0.7)" }}>{item.qty}</td>
+                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "rgba(255,255,255,0.7)" }}>₹{Number(item.price).toFixed(2)}</td>
+                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "#fff", fontWeight: 500 }}>₹{(item.price * item.qty).toFixed(2)}</td>
                                         </tr>
                                         {remarks && (
                                             <tr key={`r-${i}`}>
-                                                <td
-                                                    colSpan={4}
-                                                    style={{
-                                                        padding: "0 6px 8px",
-                                                        fontSize: "12px",
-                                                        color: "rgba(252,211,77,0.7)",
-                                                        fontStyle: "italic",
-                                                    }}
-                                                >
+                                                <td colSpan={4} style={{ padding: "0 6px 8px", fontSize: "12px", color: "rgba(252,211,77,0.7)", fontStyle: "italic" }}>
                                                     Remark: {remarks}
                                                 </td>
                                             </tr>
@@ -247,87 +373,44 @@ export default function TableQuickPrintModal({
                 </div>
 
                 {/* Totals */}
-                <div
-                    style={{
-                        margin: "0 20px 16px",
-                        borderRadius: "10px",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        overflow: "hidden",
-                        fontSize: "13px",
-                    }}
-                >
+                <div style={{ margin: "0 20px 16px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", fontSize: "13px" }}>
                     <TotalRow label="Sub-Total" value={`₹${subTotal.toFixed(2)}`} />
                     {taxBreakdown.map((t, i) => (
-                        <TotalRow
-                            key={i}
-                            label={`${t.name} (${t.pct}%)`}
-                            value={`₹${t.amount.toFixed(2)}`}
-                            muted
-                        />
+                        <TotalRow key={i} label={`${t.name} (${t.pct}%)`} value={`₹${t.amount.toFixed(2)}`} muted />
                     ))}
                     {chargeBreakdown.map((c, i) => (
-                        <TotalRow
-                            key={i}
-                            label={`${c.name}`}
-                            value={`₹${c.amount.toFixed(2)}`}
-                            muted
-                        />
+                        <TotalRow key={i} label={c.name} value={`₹${c.amount.toFixed(2)}`} muted />
                     ))}
                     {roundOff !== 0 && (
-                        <TotalRow
-                            label="Round Off"
-                            value={`${roundOff >= 0 ? "+" : ""}${roundOff}`}
-                            muted
-                        />
+                        <TotalRow label="Round Off" value={`${roundOff >= 0 ? "+" : ""}${roundOff}`} muted />
                     )}
-                    <TotalRow
-                        label="Grand Total"
-                        value={`₹${grandTotal}`}
-                        bold
-                    />
+                    <TotalRow label="Grand Total" value={`₹${grandTotal}`} bold />
                 </div>
 
                 {/* Footer Buttons */}
-                <div
-                    style={{
-                        display: "flex",
-                        gap: "10px",
-                        padding: "0 20px 20px",
-                    }}
-                >
+                <div style={{ display: "flex", gap: "10px", padding: "0 20px 20px" }}>
                     <button
                         onClick={onClose}
                         style={{
-                            flex: 1,
-                            padding: "10px",
-                            borderRadius: "10px",
+                            flex: 1, padding: "10px", borderRadius: "10px",
                             border: "1px solid rgba(197,163,119,0.25)",
                             color: "rgba(255,235,210,0.75)",
                             background: "rgba(255,255,255,0.03)",
-                            fontSize: "14px",
-                            cursor: "pointer",
+                            fontSize: "14px", cursor: "pointer",
                         }}
                     >
                         Cancel
                     </button>
                     <button
-                        onClick={handlePrint}
-                        disabled={loading}
+                        onClick={() => setShowPreview(true)}
                         style={{
-                            flex: 2,
-                            padding: "10px",
-                            borderRadius: "10px",
-                            border: "none",
-                            background: loading
-                                ? "rgba(197,163,119,0.45)"
-                                : "#c5a377",
-                            color: "#1b1b1b",
-                            fontSize: "14px",
-                            fontWeight: 600,
-                            cursor: loading ? "not-allowed" : "pointer",
+                            flex: 2, padding: "10px", borderRadius: "10px",
+                            border: "none", background: "#c5a377",
+                            color: "#1b1b1b", fontSize: "14px",
+                            fontWeight: 600, cursor: "pointer",
                         }}
                     >
-                        {loading ? "Printing..." : "🖨 Print"}
+                        🖨 Print
                     </button>
                 </div>
             </div>
@@ -335,36 +418,40 @@ export default function TableQuickPrintModal({
     );
 }
 
+// ── Helper Components ─────────────────────────
+
+function QDivider() {
+    return <div style={{ borderTop: "1px dashed #999", margin: "5px 0" }} />;
+}
+
+function QLeftRow({ label, value }) {
+    return (
+        <div style={{ display: "flex", justifyContent: "flex-start", gap: 6, fontSize: 11, marginBottom: 2 }}>
+            <span style={{ color: "#333" }}>{label} :</span>
+            <span>{value}</span>
+        </div>
+    );
+}
+
+function QAmtRow({ label, value, muted }) {
+    return (
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 2 }}>
+            <span style={{ color: muted ? "#555" : "#111" }}>{label} :</span>
+            <span style={{ color: muted ? "#555" : "#111" }}>{value}</span>
+        </div>
+    );
+}
+
 function TotalRow({ label, value, bold, muted }) {
     return (
-        <div
-            style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "8px 12px",
-                borderBottom: "1px solid rgba(255,255,255,0.05)",
-                // background: bold ? "rgba(124,58,237,0.12)" : "transparent",
-            }}
-        >
-            <span
-                style={{
-                    color: bold
-                        ? "#ffe7bf"
-                        : muted
-                            ? "rgba(255,240,220,0.6)"
-                            : "#f8e7c9",
-                    fontWeight: bold ? 600 : 400,
-                }}
-            >
+        <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}>
+            <span style={{ color: bold ? "#ffe7bf" : muted ? "rgba(255,240,220,0.6)" : "#f8e7c9", fontWeight: bold ? 600 : 400 }}>
                 {label}
             </span>
-            <span
-                style={{
-                    color: bold ? "#e9d5ff" : muted ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)",
-                    fontWeight: bold ? 700 : 500,
-                }}
-            >
+            <span style={{ color: bold ? "#e9d5ff" : muted ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)", fontWeight: bold ? 700 : 500 }}>
                 {value}
             </span>
         </div>

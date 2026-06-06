@@ -67,4 +67,6 @@ export const endpoint = {
   confirm_customer_order: `${domain}/api/v1/order-confirm-customer`,
   cancel_customer_order: `${domain}/api/v1/order-cancel-customer`,
 
+  branch_profile_api: `${domain}/api/v1/branch-profile`,
+
 };

@@ -8,22 +8,29 @@ import "./assets/css/common.css";
 import Login from "./authentication/login";
 import { routes } from "./routes/Routes";
 import { useEffect } from "react";
-import QrMenuPage from "./component/pages/QRMenu";
+import { isTokenValid } from "./authentication/authexpiry";
+import { Navigate } from "react-router-dom";
+
+const getDashboardRoute = () => {
+  const role = localStorage.getItem("role");
+  if (role === "master_admin") return "/masterdashboard";
+  if (role === "business_owner") return "/ownerdashboard";
+  if (role === "branch_admin") return "/admindashboard";
+  if (role === "staff") return "/userdashboard";
+  return "/";
+};
+
+const ProtectedRoute = ({ element }) => {
+  return isTokenValid() ? element : <Navigate to="/" replace />;
+};
 
 const App = () => {
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const branchToken = params.get("branch_token");
-
     if (branchToken) {
-      console.log("Branch Token मिला:", branchToken);
-                
-      // ✅ overwrite correct token
       localStorage.setItem("token", branchToken);
       localStorage.setItem("role", "branch_admin");
-
-      // ✅ URL clean kar do (important)
       window.history.replaceState({}, document.title, "/admindashboard");
     }
   }, []);
@@ -31,19 +38,25 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/menu/:token" element={<QrMenuPage />} />
-        <Route path="/" element={<Login role="staff" />} />
-        {
-          // user ? (
-          routes.map((route, i) => (
-            <Route key={i} path={route.path} element={route.element} />
-          ))
-          // ) : (
-          //   <Route path="*" element={<Dashboard />} />
-          // )
-        }
+        {/* ✅ Root pe token check */}
+        <Route
+          path="/"
+          element={
+            isTokenValid()
+              ? <Navigate to={getDashboardRoute()} replace />
+              : <Login role="staff" />
+          }
+        />
 
+        {routes.map((route, i) => (
+          <Route
+            key={i}
+            path={route.path}
+            element={<ProtectedRoute element={route.element} />}
+          />
+        ))}
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

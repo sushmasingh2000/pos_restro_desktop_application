@@ -21,7 +21,7 @@ export default function Sidebar() {
         <img src="../assets/images/logo/logo.png" alt="Logo" />
         <div>
           <h3 className="text-lg font-bold">CBC Restro Panel</h3>
-          <p className="text-xs text-white/50">Welcome, {role.replace("_", " ").toUpperCase()}</p>
+          {/* <p className="text-xs text-white/50">Welcome, {role.replace("_", " ").toUpperCase()}</p> */}
         </div>
       </div>
 

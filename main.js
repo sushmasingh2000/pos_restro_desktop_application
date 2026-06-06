@@ -912,10 +912,9 @@ async function printOnPrinter(printer, buildContent) {
 // ✅ Bill print content builder 
 function buildBillContent(p, billData) {
   p.raw(Buffer.from([0x1D, 0x4C, 0x08, 0x00]));
-  const name = billData.restaurant_name || "Chai Bolo Chai";
-  const address = billData.restaurant_address || "Indiranagar";
-  const gstin = billData.gstin || "51575785745";
-  const captain = billData.captain_name || "Captain";
+  const name = billData.restaurant_name || "";
+  const address = billData.restaurant_address || "";
+  const gstin = billData.gstin || "";
   const PAD = "  ";
 
   p.raw(Buffer.from([0x1B, 0x6C, 0x04]));
@@ -925,15 +924,22 @@ function buildBillContent(p, billData) {
 
   p.align("CT");
   p.text(`GSTIN - ${gstin}`);
-  p.text(`INVOICE NO. - ${billData.billNo || billData.orderId}`);
+  p.text(`INVOICE NO. - ${billData.uniqueOrderId}`);
   p.text(`TABLE NO. - ${billData.table_no || "Takeaway"}`);
   p.drawLine();
 
   p.align("LT");
-  p.text(`${PAD}Captain Name: ${captain}`);
-  p.drawLine();
+  p.text(`${PAD}Captain Name : ${billData.captain_name || "—"}`);
   p.text(`${PAD}Time         ${billData.date_time}`);
   p.drawLine();
+
+  if (billData.customer_name || billData.customer_phone) {
+    if (billData.customer_name)
+      p.text(`${PAD}Customer     : ${billData.customer_name}`);
+    if (billData.customer_phone)
+      p.text(`${PAD}Mobile       : ${billData.customer_phone}`);
+    p.drawLine();
+  }
 
   p.align("LT").style("B");
   p.text(`${PAD}ITEM             QTY    RATE   AMOUNT`);
@@ -1004,6 +1010,8 @@ function buildBillContent(p, billData) {
   p.text(ty.padStart(Math.floor((48 + ty.length) / 2)));
   p.text(va.padStart(Math.floor((48 + va.length) / 2)));
   p.drawLine();
+  const powered = "powered by FerryRestro v1.0.1";
+  p.align("CT").text(powered);
 }
 
 // ✅ KOT print content builder

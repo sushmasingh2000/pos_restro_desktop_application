@@ -11,6 +11,7 @@ export default function BillModal({
   onClose,
   orderItems = [],
   orderId,
+  uniqueOrderId,
   tableId,
   orderType,
   tableNameMap = {},
@@ -62,15 +63,65 @@ export default function BillModal({
   const isReprint = !!savedBillId;
   const [reprintRemainingDue, setReprintRemainingDue] = useState(0);
 
+  const { data: branchData } = useQuery(
+    ["branch_profile"],
+    () => apiConnectorGet(endpoint.branch_profile_api),
+    { enabled: isOpen, refetchOnWindowFocus: false }
+  );
+
+  const branch = branchData?.data?.result || {};
+
   const navigate = useNavigate();
-  // const isLending = selectedMode?.toLowerCase() === "lending";
 
-  // ─────────────────────────────────────────────────
-  //ADVANCE — yahi hai naya
-  // ─────────────────────────────────────────────────
-  // const isAdvance = selectedMode?.toLowerCase() === "advance";
+  // ── Sirf Close Table ke liye validation ──
+const validateForClose = () => {
+  if (!paymentSplits[0]?.mode?.trim()) {
+    toast.error("Select payment method!");
+    return false;
+  }
+  if (!isLending && !isAdvance && paymentSplits.length > 1) {
+    const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
+    if (!allModesSelected) {
+      toast.error("Select split methods!");
+      return false;
+    }
+    const totalSplitPaid = paymentSplits.reduce(
+      (s, p) => s + parseFloat(p.amount || 0), 0
+    );
+    if (Math.abs(totalSplitPaid - afterWalletTotal) > 0.5) {
+      toast.error(`Split total ₹${afterWalletTotal.toFixed(2)} hona chahiye!`);
+      return false;
+    }
+  }
+  if (isLending && !customer.phone.trim()) {
+    toast.error("Customer phone required for Lending!");
+    return false;
+  }
+  if (isLending && !customer.name.trim()) {
+    toast.error("Customer name required for Lending!");
+    return false;
+  }
+  if (isAdvance && !selectedCustomerId) {
+    toast.error("Customer select for Advance payment!");
+    return false;
+  }
+  if (isAdvance && walletBalance <= 0) {
+    toast.error("Your wallet balance is zero!");
+    return false;
+  }
+  if (useWallet && !selectedCustomerId) {
+    toast.error("Wallet use ke liye customer select karo!");
+    return false;
+  }
+  return true;
+};
 
-  // ── Customer Search ───────────────────────────────
+// ── Print Bill ke liye — sirf basic check ──
+const validateForPrint = () => {
+  if (isReprint) return true;
+  // payment method optional for print
+  return true;
+};
   useEffect(() => {
     if (!customerSearch.trim()) return;
     const fetchCustomers = async () => {
@@ -300,7 +351,7 @@ export default function BillModal({
   const validate = () => {
     if (isReprint) return true;
     if (!paymentSplits[0]?.mode?.trim()) {
-      toast.error("Payment method select karo!");
+      toast.error("Please select payment method!");
       return false;
     }
 
@@ -308,7 +359,7 @@ export default function BillModal({
     if (!isLending && !isAdvance && paymentSplits.length > 1) {
       const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
       if (!allModesSelected) {
-        toast.error("Sabhi splits ka payment method select karo!");
+        toast.error("Please select payment method for all splits!");
         return false;
       }
       const totalSplitPaid = paymentSplits.reduce(
@@ -336,15 +387,15 @@ export default function BillModal({
     //ADVANCE validations
     // ─────────────────────────────────────────────────
     if (isAdvance && !selectedCustomerId) {
-      toast.error("Advance ke liye customer select karo!");
+      toast.error("Select Customer  for Advance payment!");
       return false;
     }
     if (isAdvance && walletBalance <= 0) {
-      toast.error("wallet balance zero hai!");
+      toast.error("Your wallet balance is zero!");
       return false;
     }
     if (useWallet && !selectedCustomerId) {
-      toast.error("Wallet use ke liye customer select karo!");
+      toast.error("Select Customer for Wallet payment!");
       return false;
     }
     return true;
@@ -418,295 +469,179 @@ export default function BillModal({
     }
   };
 
-//  const handlePrintBill = async () => {
-//   if (loading) return;
-//   if (!isReprint && !validate()) return;
-//   setLoading(true);
+  const handlePrintBill = async () => {
+    if (loading) return;
+  if (!isReprint && !validateForPrint()) return; // ← sirf basic check
+    setLoading(true);
 
-//   try {
-//     let finalBillId = savedBillId;
-//     let finalBillNo = savedBillNo;
+    try {
+      let finalBillId = savedBillId;
+      let finalBillNo = savedBillNo;
 
-//       // ── Bill Save (agar reprint nahi hai) ────────────
-//       if (!isReprint) {
-//         const billRes = await saveBill();
-//         if (!billRes?.data?.success) {
-//           toast.error(billRes?.data?.message || "Bill save failed");
-//           setLoading(false);
-//           return;
-//         }
-//         finalBillId = billRes?.data?.billId || billRes?.data?.bill?.billId;
-//         finalBillNo = billRes?.data?.billNo || billRes?.data?.bill?.billNo;
-//         if (finalBillId) setSavedBillId(finalBillId);
-//         if (finalBillNo) setSavedBillNo(finalBillNo);
-//         await deductWalletIfNeeded(finalBillId);
-//       } else {
-//         // ── Reprint — bill update ─────────────────────
-//         await apiConnectorPost(
-//           `${endpoint.update_bill_details_api}/${savedBillId}`,
-//           {
-//             paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
-//             payment_splits: paymentSplits,
-//             customer_name: customer.name,
-//             customer_phone: customer.phone,
-//             customer_address: customer.address,
-//             discount: discountAmount,
-//             paid_amount: isLending
-//               ? givenAmt
-//               : isAdvance
-//               ? maxWalletUse
-//               : grandTotal,
-//             remaining_amount: isLending
-//               ? lendingRemaining
-//               : isAdvance
-//               ? advanceRemaining
-//               : 0,
-//             wallet_used: useWallet && !isAdvance ? maxWalletUse : 0,
-//             advance_used: isAdvance ? maxWalletUse : 0,
-//           }
-//         );
-//       }
+      // ── Bill Save ────────────────────────────
+      if (!isReprint) {
+        const billRes = await saveBill();
+        if (!billRes?.data?.success) {
+          toast.error(billRes?.data?.message || "Bill save failed");
+          setLoading(false);
+          return;
+        }
+        finalBillId = billRes?.data?.billId || billRes?.data?.bill?.billId;
+        finalBillNo = billRes?.data?.billNo || billRes?.data?.bill?.billNo;
+        if (finalBillId) setSavedBillId(finalBillId);
+        if (finalBillNo) setSavedBillNo(finalBillNo);
 
-//       // ── Bill Data for Print ───────────────────────────
-//       const billData = {
-//         billNo: finalBillNo || finalBillId,
-//         orderId,
-//         table_no: tableId ? tableNameMap[tableId] || tableId : null,
-//         date_time: new Date().toLocaleString("en-IN"),
-//         tax_breakdown: taxBreakdown,
-//         customer_name: customer.name,
-//         customer_phone: customer.phone,
-//         subtotal: subTotal.toFixed(2),
-//         discount: discountAmount.toFixed(2),
-//         wallet_used: useWallet || isAdvance ? maxWalletUse.toFixed(2) : 0,
-//         advance_used: isAdvance ? maxWalletUse.toFixed(2) : 0,
-//         total_amount: grandTotal.toFixed(2),
-//         paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
-//         payment_splits: paymentSplits,
-//         paid_amount: isLending
-//           ? givenAmt.toFixed(2)
-//           : isAdvance
-//           ? maxWalletUse.toFixed(2)
-//           : grandTotal.toFixed(2),
-//         remaining_amount: isLending
-//           ? lendingRemaining.toFixed(2)
-//           : isAdvance
-//           ? advanceRemaining.toFixed(2)
-//           : 0,
-//         is_lending: isLending,
-//         is_advance: isAdvance,
-//         round_off: roundOff,
-//         items: orderItems.map((i) => ({
-//           name: i.dg09_name,
-//           qty: i.qty,
-//           rate: Number(i.price).toFixed(2),
-//           total: (i.price * i.qty).toFixed(2),
-//           remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""]
-//             .filter(Boolean)
-//             .join(", "),
-//         })),
-//       };
+        // ── OFFLINE — printData seedha response mein hai ──
+        if (billRes?.data?.offline) {
+          const offlinePrintData = {
+            ...billRes.data.printData,
+            billNo: billRes.data.billNo,
+            table_no: tableId ? tableNameMap[tableId] || tableId : null,
+            date_time: new Date().toLocaleString("en-IN"),
+            tax_breakdown: taxBreakdown,
+          };
 
-//       // ── ACTUAL PRINT ─────────────────────────────────
-//       // Electron (Desktop app) mein print
-//       const token = localStorage.getItem("token"); // ← ADD
-
-//       if (window.electronAPI?.printBill) {
-//         const printResult = await window.electronAPI.printBill({
-//           billData,
-//           token,
-//         }); // ← token pass
-//         if (printResult.success) {
-//           toast.success(
-//             isReprint ? "Bill reprinted!" : "Bill printed successfully!"
-//           );
-//         } else {
-//           toast.error(`Print failed: ${printResult.message}`);
-//         }
-//       } else {
-//         toast.success("Bill saved!");
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("Printing failed");
-//     }
-
-//     setLoading(false);
-//   };
-
-const handlePrintBill = async () => {
-  if (loading) return;
-  if (!isReprint && !validate()) return;
-  setLoading(true);
-
-  try {
-    let finalBillId = savedBillId;
-    let finalBillNo = savedBillNo;
-
-    // ── Bill Save ────────────────────────────
-    if (!isReprint) {
-      const billRes = await saveBill();
-      if (!billRes?.data?.success) {
-        toast.error(billRes?.data?.message || "Bill save failed");
-        setLoading(false);
-        return;
-      }
-      finalBillId = billRes?.data?.billId || billRes?.data?.bill?.billId;
-      finalBillNo = billRes?.data?.billNo || billRes?.data?.bill?.billNo;
-      if (finalBillId) setSavedBillId(finalBillId);
-      if (finalBillNo) setSavedBillNo(finalBillNo);
-
-      // ── OFFLINE — printData seedha response mein hai ──
-      if (billRes?.data?.offline) {
-        const offlinePrintData = {
-          ...billRes.data.printData,
-          billNo: billRes.data.billNo,
-          table_no: tableId ? tableNameMap[tableId] || tableId : null,
-          date_time: new Date().toLocaleString("en-IN"),
-          tax_breakdown: taxBreakdown,
-        };
-
-        const token = localStorage.getItem("token");
-        if (window.electronAPI?.printBill) {
-          const printResult = await window.electronAPI.printBill({
-            billData: offlinePrintData,
-            token,
-          });
-          if (printResult.success) {
-            toast.success("Bill printed successfully!");
+          const token = localStorage.getItem("token");
+          if (window.electronAPI?.printBill) {
+            const printResult = await window.electronAPI.printBill({
+              billData: offlinePrintData,
+              token,
+            });
+            if (printResult.success) {
+              toast.success("Bill printed successfully!");
+            } else {
+              toast.error(`Print failed: ${printResult.message}`);
+            }
           } else {
-            toast.error(`Print failed: ${printResult.message}`);
+            toast.success("Bill saved offline!");
           }
-        } else {
-          toast.success("Bill saved offline!");
+          setLoading(false);
+          return;  // ← offline mein yahan se nikal jao
         }
-        setLoading(false);
-        return;  // ← offline mein yahan se nikal jao
-      }
 
-      await deductWalletIfNeeded(finalBillId);
+        await deductWalletIfNeeded(finalBillId);
 
-    } else {
-      // ── Reprint ───────────────────────────
-      await apiConnectorPost(
-        `${endpoint.update_bill_details_api}/${savedBillId}`,
-        {
-          paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
-          payment_splits: paymentSplits,
-          customer_name: customer.name,
-          customer_phone: customer.phone,
-          customer_address: customer.address,
-          discount: discountAmount,
-          paid_amount: isLending ? givenAmt : isAdvance ? maxWalletUse : grandTotal,
-          remaining_amount: isLending ? lendingRemaining : isAdvance ? advanceRemaining : 0,
-          wallet_used: useWallet && !isAdvance ? maxWalletUse : 0,
-          advance_used: isAdvance ? maxWalletUse : 0,
-        }
-      );
-    }
-
-    // ── ONLINE — normal bill data ─────────────
-    const billData = {
-      billNo: finalBillNo || finalBillId,
-      orderId,
-      table_no: tableId ? tableNameMap[tableId] || tableId : null,
-      date_time: new Date().toLocaleString("en-IN"),
-      tax_breakdown: taxBreakdown,
-      customer_name: customer.name,
-      customer_phone: customer.phone,
-      subtotal: subTotal.toFixed(2),
-      discount: discountAmount.toFixed(2),
-      wallet_used: useWallet || isAdvance ? maxWalletUse.toFixed(2) : 0,
-      advance_used: isAdvance ? maxWalletUse.toFixed(2) : 0,
-      total_amount: grandTotal.toFixed(2),
-      paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
-      payment_splits: paymentSplits,
-      paid_amount: isLending ? givenAmt.toFixed(2) : isAdvance ? maxWalletUse.toFixed(2) : grandTotal.toFixed(2),
-      remaining_amount: isLending ? lendingRemaining.toFixed(2) : isAdvance ? advanceRemaining.toFixed(2) : 0,
-      is_lending: isLending,
-      is_advance: isAdvance,
-      round_off: roundOff,
-      items: orderItems.map((i) => ({
-        name: i.dg09_name,
-        qty: i.qty,
-        rate: Number(i.price).toFixed(2),
-        total: (i.price * i.qty).toFixed(2),
-        remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),
-      })),
-    };
-
-    const token = localStorage.getItem("token");
-    if (window.electronAPI?.printBill) {
-      const printResult = await window.electronAPI.printBill({ billData, token });
-      if (printResult.success) {
-        toast.success(isReprint ? "Bill reprinted!" : "Bill printed successfully!");
       } else {
-        toast.error(`Print failed: ${printResult.message}`);
+        // ── Reprint ───────────────────────────
+        await apiConnectorPost(
+          `${endpoint.update_bill_details_api}/${savedBillId}`,
+          {
+            paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
+            payment_splits: paymentSplits,
+            customer_name: customer.name,
+            customer_phone: customer.phone,
+            customer_address: customer.address,
+            discount: discountAmount,
+            paid_amount: isLending ? givenAmt : isAdvance ? maxWalletUse : grandTotal,
+            remaining_amount: isLending ? lendingRemaining : isAdvance ? advanceRemaining : 0,
+            wallet_used: useWallet && !isAdvance ? maxWalletUse : 0,
+            advance_used: isAdvance ? maxWalletUse : 0,
+          }
+        );
       }
-    } else {
-      toast.success("Bill saved!");
+
+      // ── ONLINE — normal bill data ─────────────
+      const billData = {
+        billNo: finalBillNo || finalBillId,
+        orderId,
+        table_no: tableId ? tableNameMap[tableId] || tableId : null,
+        date_time: new Date().toLocaleString("en-IN"),
+        tax_breakdown: taxBreakdown,
+        customer_name: customer.name,
+        customer_phone: customer.phone,
+        subtotal: subTotal.toFixed(2),
+        discount: discountAmount.toFixed(2),
+        wallet_used: useWallet || isAdvance ? maxWalletUse.toFixed(2) : 0,
+        advance_used: isAdvance ? maxWalletUse.toFixed(2) : 0,
+        total_amount: grandTotal.toFixed(2),
+        paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
+        payment_splits: paymentSplits,
+        paid_amount: isLending ? givenAmt.toFixed(2) : isAdvance ? maxWalletUse.toFixed(2) : grandTotal.toFixed(2),
+        remaining_amount: isLending ? lendingRemaining.toFixed(2) : isAdvance ? advanceRemaining.toFixed(2) : 0,
+        is_lending: isLending,
+        is_advance: isAdvance,
+        round_off: roundOff,
+        items: orderItems.map((i) => ({
+          name: i.dg09_name,
+          qty: i.qty,
+          rate: Number(i.price).toFixed(2),
+          total: (i.price * i.qty).toFixed(2),
+          remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),
+        })),
+      };
+
+      const token = localStorage.getItem("token");
+      if (window.electronAPI?.printBill) {
+        const printResult = await window.electronAPI.printBill({ billData, token });
+        if (printResult.success) {
+          toast.success(isReprint ? "Bill reprinted!" : "Bill printed successfully!");
+        } else {
+          toast.error(`Print failed: ${printResult.message}`);
+        }
+      } else {
+        toast.success("Bill saved!");
+      }
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Printing failed");
     }
 
-  } catch (err) {
-    console.error(err);
-    toast.error("Printing failed");
-  }
+    setLoading(false);
+  };
 
-  setLoading(false);
-};
-  
-const handleCloseTable = async () => {
-  if (loading) return;
-  if (!validate()) return;
-  setLoading(true);
+  const handleCloseTable = async () => {
+    if (loading) return;
+  if (!validateForClose()) return; // ← strict validation
+    setLoading(true);
 
-  try {
-    if (!savedBillId) {
-      const billRes = await saveBill();
-      if (!billRes?.data?.success) {
-        toast.error(billRes?.data?.message || "Bill save failed");
-        setLoading(false);
-        return;
+    try {
+      if (!savedBillId) {
+        const billRes = await saveBill();
+        if (!billRes?.data?.success) {
+          toast.error(billRes?.data?.message || "Bill save failed");
+          setLoading(false);
+          return;
+        }
+        const newBillId = billRes?.data?.billId || billRes?.data?.bill?.billId;
+        const newBillNo = billRes?.data?.billNo || billRes?.data?.bill?.billNo;
+        if (newBillId) setSavedBillId(newBillId);
+        if (newBillNo) setSavedBillNo(newBillNo);
+
+        // ← offline mein wallet deduct nahi hoga
+        if (!billRes?.data?.offline) {
+          await deductWalletIfNeeded(newBillId);
+        }
       }
-      const newBillId = billRes?.data?.billId || billRes?.data?.bill?.billId;
-      const newBillNo = billRes?.data?.billNo || billRes?.data?.bill?.billNo;
-      if (newBillId) setSavedBillId(newBillId);
-      if (newBillNo) setSavedBillNo(newBillNo);
 
-      // ← offline mein wallet deduct nahi hoga
-      if (!billRes?.data?.offline) {
-        await deductWalletIfNeeded(newBillId);
+      if (orderType === "dine_in" && tableId) {
+        await apiConnectorPost(endpoint.update_table_status_api, {
+          tableId,
+          status: "Available",
+        });
       }
+
+      toast.success(
+        isLending
+          ? `Udhaar saved! Remaining: ₹${lendingRemaining}`
+          : isAdvance && advanceRemaining > 0
+            ? `Advance partially used! Due: ₹${advanceRemaining}`
+            : "Table closed successfully!"
+      );
+
+      onBillDone?.();
+      onClose();
+      navigate("/userdashboard");
+      window.location.reload();
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Server error");
     }
 
-    if (orderType === "dine_in" && tableId) {
-      await apiConnectorPost(endpoint.update_table_status_api, {
-        tableId,
-        status: "Available",
-      });
-    }
+    setLoading(false);
+  };
 
-    toast.success(
-      isLending
-        ? `Udhaar saved! Remaining: ₹${lendingRemaining}`
-        : isAdvance && advanceRemaining > 0
-        ? `Advance partially used! Due: ₹${advanceRemaining}`
-        : "Table closed successfully!"
-    );
-
-    onBillDone?.();
-    onClose();
-    navigate("/userdashboard");
-    window.location.reload();
-
-  } catch (err) {
-    console.error(err);
-    toast.error("Server error");
-  }
-
-  setLoading(false);
-};
-  
   // const handleCloseTable = async () => {
   //   if (loading) return;
   //   if (!validate()) return;
@@ -1523,8 +1458,8 @@ const handleCloseTable = async () => {
                   }
                   placeholder="Enter name"
                   className={`${inp} ${(isLending || isAdvance) && !customer.name
-                      ? "border-red-400/50"
-                      : ""
+                    ? "border-red-400/50"
+                    : ""
                     }`}
                   disabled={isReprint}
                 />
@@ -1544,8 +1479,8 @@ const handleCloseTable = async () => {
                   placeholder="Phone number"
                   type="tel"
                   className={`${inp} ${(isLending || isAdvance) && !customer.phone
-                      ? "border-red-400/50"
-                      : ""
+                    ? "border-red-400/50"
+                    : ""
                     }`}
                   disabled={isReprint}
                 />
@@ -1732,12 +1667,14 @@ const handleCloseTable = async () => {
         isOpen={showPreview}
         loading={loading}
         billData={{
-          restaurant_name: "Chai Bolo Chai",
-          restaurant_address: "Indiranagar",
-          gstin: "482483246",
-          captain_name: "Captain 2",
+          restaurant_name: branch.branch_name || "Restaurant",
+          restaurant_address: branch.address || "",
+          gstin: branch.gst_no || "",
+          uniqueOrderId: uniqueOrderId || orderId,  // ← unique_order_id pehle, fallback orderId
+          captain_name: branch.captain_name || "",
+          customer_name: customer.name,
+          customer_phone: customer.phone,
           billNo: savedBillNo,
-          orderId,
           table_no: tableId ? tableNameMap[tableId] || tableId : null,
           date_time: new Date().toLocaleString("en-IN"),
           items: orderItems.map((i) => ({
@@ -1778,20 +1715,20 @@ function Row({ label, value, bold, highlight, muted }) {
     <div className="flex justify-between items-center px-3 py-2 border-b border-white/5 last:border-0">
       <span
         className={`text-sm ${muted
-            ? "text-white/50"
-            : bold
-              ? "text-white font-semibold"
-              : "text-white/80"
+          ? "text-white/50"
+          : bold
+            ? "text-white font-semibold"
+            : "text-white/80"
           }`}
       >
         {label} :
       </span>
       <span
         className={`text-sm font-medium ${highlight
-            ? "text-purple-300"
-            : bold
-              ? "text-white font-bold"
-              : "text-white/80"
+          ? "text-purple-300"
+          : bold
+            ? "text-white font-bold"
+            : "text-white/80"
           }`}
       >
         {value}

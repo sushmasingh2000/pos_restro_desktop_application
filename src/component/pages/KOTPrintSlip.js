@@ -1,170 +1,3 @@
-// import React, { useRef } from "react";
-
-// const KOTPrintSlip = ({ kotData, onClose }) => {
-//   const printRef = useRef();
-
-//   const handlePrint = () => {
-//     const printContents = printRef.current.innerHTML;
-//     const win = window.open("", "_blank", "width=400,height=600");
-//     win.document.write(`
-//       <html>
-//         <head>
-//           <title>KOT Print</title>
-//           <style>
-//             @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
-//             * { margin: 0; padding: 0; box-sizing: border-box; }
-//             body {
-//               font-family: 'Courier Prime', 'Courier New', monospace;
-//               font-size: 13px;
-//               background: #fff;
-//               color: #000;
-//               width: 80mm;
-//               padding: 8px;
-//             }
-//             .center { text-align: center; }
-//             .bold { font-weight: 700; }
-//             .uppercase { text-transform: uppercase; }
-//             .dashed { border-top: 1px dashed #000; margin: 6px 0; }
-//             .header-row { display: flex; justify-content: space-between; }
-//             .item-row { display: flex; justify-content: space-between; margin: 6px 0; }
-//             .item-name { flex: 1; font-size: 14px; font-weight: 700; }
-//             .item-qty { font-size: 14px; font-weight: 700; min-width: 30px; text-align: right; }
-//             .remark { font-size: 11px; color: #333; padding-left: 8px; font-style: italic; }
-//             .meta-row { display: flex; gap: 4px; font-size: 12px; margin: 2px 0; }
-//             .meta-label { font-weight: 700; min-width: 110px; }
-//           </style>
-//         </head>
-//         <body>${printContents}</body>
-//       </html>
-//     `);
-//     win.document.close();
-//     win.focus();
-//     setTimeout(() => {
-//       win.print();
-//       win.close();
-//     }, 300);
-//   };
-
-//   if (!kotData) return null;
-
-//   const {
-//     orderNo,
-//     tableNo,
-//     kotNo,
-//     captainName,
-//     type,
-//     dateTime,
-//     items = [],
-//   } = kotData;
-
-//   return (
-//     // ── Overlay ──────────────────────────────────────────────
-//     <div
-//       className="fixed inset-0 z-50 flex items-center justify-center"
-//       style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
-//     >
-//       <div className="Order_Details_modal">
-//          {/* HEADER */}
-//         <div className="Order_Details_modal_header">
-//           <div className="flex items-center gap-3">
-//               <div className="modal_header_icon">🍳</div>
-//               <div>
-//               <h2>KOT Preview</h2>
-//               <p>Kitchen Order Ticket</p>
-//             </div>
-//           </div>
-//           <button onClick={onClose}>×</button>
-//         </div>
-//         <div className="ordre_table_lBoxs" ref={printRef}>
-//             <div className="ordre_table_list">
-//               <ul>
-//                 <li>ORDER NO.- <span>{orderNo || "—"}</span></li>
-//                 <li>TABLE NO.- <span>{tableNo || "—"}</span></li>
-//                 <li>KOT NO.- <span>{kotNo || "1"}</span></li>
-//                 <li>CAPTAIN NAME.- <span>{captainName || "—"}</span></li>
-//                 <li>TYPE.- <span>{type || "—"}</span></li>
-//                 <li>DATE & TIME.- <span>{dateTime || "—"}</span></li>
-//               </ul>
-//             </div>
-//             <div className="ordre_table_list_2">
-//               <ul>
-//                 <li>
-//                   <h6>ITEM</h6>
-//                   <span>
-//                     <h6>QTY</h6>
-//                   </span>
-//                 </li>
-
-//                 {items.map((item, idx) => {
-//                   // Collect all remarks
-//                   const remarks = [];
-
-//                   if (item.predefinedRemarks?.length > 0) {
-//                     remarks.push(...item.predefinedRemarks);
-//                   }
-
-//                   if (item.qtyRemark?.trim()) {
-//                     remarks.push(item.qtyRemark.trim());
-//                   }
-
-//                   if (item.globalRemark?.trim()) {
-//                     remarks.push(`Note: ${item.globalRemark.trim()}`);
-//                   }
-
-//                   return (
-//                     <React.Fragment key={idx}>
-//                       <li>
-//                         <b>{item.name}</b>
-//                         <span>{item.qty}</span>
-//                       </li>
-
-//                       {/* Remarks */}
-//                       {remarks.map((r, ri) => (
-//                         <p
-//                           key={ri}
-//                           style={{
-//                             fontSize: 11,
-//                             color: "#444",
-//                             paddingLeft: 10,
-//                             fontStyle: "italic",
-//                             margin: 0,
-//                           }}
-//                         >
-//                           ↳ {r}
-//                         </p>
-//                       ))}
-//                     </React.Fragment>
-//                   );
-//                 })}
-//               </ul>
-//             </div>
-//         </div>
-       
-        
-
-       
-
-//         {/* ── Buttons ─── */}
-//         <div className="flex justify-between gap-3 modal_footer px-3 py-3">
-//           <button
-//             onClick={onClose}
-//             className="cancel_btn">
-//             ✕ Close
-//           </button>
-//           <button
-//             onClick={handlePrint}
-//             className="update_btn">
-//             🖨 Print KOT
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-
-// export default KOTPrintSlip;
-
 import React, { useRef } from "react";
 import toast from "react-hot-toast";
 
@@ -199,7 +32,6 @@ const KOTPrintSlip = ({ kotData, onClose }) => {
         toast.error(`Print failed: ${result.message}`);
       }
     } else {
-      // Fallback — browser print (dev mode)
       const printContents = printRef.current.innerHTML;
       const win = window.open("", "_blank", "width=400,height=600");
       win.document.write(`
@@ -207,43 +39,15 @@ const KOTPrintSlip = ({ kotData, onClose }) => {
           <head>
             <title>KOT Print</title>
             <style>
-              @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
               * { margin: 0; padding: 0; box-sizing: border-box; }
               body {
-                font-family: 'Courier Prime', 'Courier New', monospace;
-                font-size: 13px;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
                 background: #fff;
                 color: #000;
                 width: 80mm;
                 padding: 8px;
               }
-              .addon {
-                font-size: 11px;
-                padding-left: 12px;
-                font-style: italic;
-                color: #444;
-                margin: 2px 0;
-              }
-              .ordre_table_lBoxs { padding: 8px; }
-              .ordre_table_list ul { list-style: none; padding: 0; margin: 0 0 6px 0; }
-              .ordre_table_list ul li {
-                display: flex;
-                justify-content: space-between;
-                font-size: 12px;
-                margin: 2px 0;
-              }
-              .ordre_table_list ul li span { font-weight: 700; }
-              .ordre_table_list_2 ul { list-style: none; padding: 0; margin: 0; }
-              .ordre_table_list_2 ul li {
-                display: flex;
-                justify-content: space-between;
-                font-size: 14px;
-                font-weight: 700;
-                margin: 6px 0;
-                border-top: 1px dashed #ccc;
-                padding-top: 4px;
-              }
-              .ordre_table_list_2 ul li:first-child { border-top: none; }
             </style>
           </head>
           <body>${printContents}</body>
@@ -251,118 +55,167 @@ const KOTPrintSlip = ({ kotData, onClose }) => {
       `);
       win.document.close();
       win.focus();
-      setTimeout(() => {
-        win.print();
-        win.close();
-      }, 300);
+      setTimeout(() => { win.print(); win.close(); }, 300);
     }
   };
 
   if (!kotData) return null;
 
-  const {
-    orderNo,
-    tableNo,
-    kotNo,
-    captainName,
-    type,
-    dateTime,
-    items = [],
-  } = kotData;
+  const { orderNo, tableNo, kotNo, captainName, type, dateTime, items = [] } = kotData;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.85)",
+        backdropFilter: "blur(6px)",
+      }}
     >
-      <div className="Order_Details_modal">
-        {/* HEADER */}
-        <div className="Order_Details_modal_header">
-          <div className="flex items-center gap-3">
-            <div className="modal_header_icon">🍳</div>
-            <div>
-              <h2>KOT Preview</h2>
-              <p>Kitchen Order Ticket</p>
-            </div>
-          </div>
-          <button onClick={onClose}>×</button>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, maxHeight: "95vh", overflowY: "auto" }}>
+
+        {/* Label */}
+        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, letterSpacing: 2, textTransform: "uppercase" }}>
+          KOT Preview
         </div>
 
-        {/* PRINTABLE AREA */}
-        <div className="ordre_table_lBoxs" ref={printRef}>
-          {/* Meta info */}
-          <div className="ordre_table_list">
-            <ul>
-              <li>ORDER NO.-      <span>{orderNo || "—"}</span></li>
-              <li>TABLE NO.-      <span>{tableNo || "—"}</span></li>
-              <li>KOT NO.-        <span>{kotNo || "1"}</span></li>
-              <li>CAPTAIN NAME.-  <span>{captainName || "—"}</span></li>
-              <li>TYPE.-          <span>{type || "—"}</span></li>
-              <li>DATE &amp; TIME.- <span>{dateTime || "—"}</span></li>
-            </ul>
+        {/* Thermal Receipt */}
+        <div
+          ref={printRef}
+          style={{
+            background: "#fff",
+            width: 300,
+            fontFamily: "'Courier New', Courier, monospace",
+            fontSize: 12,
+            color: "#111",
+            padding: "20px 14px 16px",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+            borderRadius: 2,
+            clipPath: "polygon(0 4px,4px 0,8px 4px,12px 0,16px 4px,20px 0,24px 4px,28px 0,32px 4px,36px 0,40px 4px,44px 0,48px 4px,52px 0,56px 4px,60px 0,64px 4px,68px 0,72px 4px,76px 0,80px 4px,84px 0,88px 4px,92px 0,96px 4px,100% 4px,100% 100%,0 100%)",
+          }}
+        >
+          {/* KOT Heading */}
+          <div style={{ textAlign: "center", fontWeight: "bold", fontSize: 16, letterSpacing: 2, marginBottom: 4 }}>
+            KOT
           </div>
+
+          <KotDivider />
+
+          {/* Meta Info */}
+          {/* Meta Info — Center aligned */}
+          <div style={{ textAlign: "center", fontSize: 11, marginBottom: 2 }}>
+            <div>ORDER NO. &nbsp;&nbsp; {orderNo || "—"}</div>
+            <div>TABLE NO. &nbsp;&nbsp; {tableNo || "—"}</div>
+            <div>KOT NO. &nbsp;&nbsp; {kotNo || "1"}</div>
+          </div>
+
+          <KotDivider />
+
+          {/* Captain, Type, DateTime — left right */}
+          <KotRow label="CAPTAIN" value={captainName || "—"} />
+          <KotRow label="TYPE" value={type || "—"} />
+          <KotRow label="DATE & TIME" value={dateTime || "—"} />
+
+          <KotDivider />
+
+          {/* Items Header */}
+          <div style={{ display: "flex", fontWeight: "bold", fontSize: 11, marginBottom: 4 }}>
+            <span style={{ flex: 1 }}>ITEM</span>
+            <span style={{ width: 40, textAlign: "right" }}>QTY</span>
+          </div>
+
+          <KotDivider />
 
           {/* Items */}
-          <div className="ordre_table_list_2">
-            <ul>
-              {/* Header row */}
-              <li>
-                <h6>ITEM</h6>
-                <span><h6>QTY</h6></span>
-              </li>
+          {items.map((item, idx) => {
+            const remarks = [
+              ...(item.predefinedRemarks || []),
+              item.qtyRemark?.trim() || "",
+              item.globalRemark?.trim() ? `Note: ${item.globalRemark.trim()}` : "",
+            ].filter(Boolean);
 
-              {items.map((item, idx) => {
-                const remarks = [];
-                if (item.predefinedRemarks?.length > 0) {
-                  remarks.push(...item.predefinedRemarks);
-                }
-                if (item.qtyRemark?.trim()) {
-                  remarks.push(item.qtyRemark.trim());
-                }
-                if (item.globalRemark?.trim()) {
-                  remarks.push(`Note: ${item.globalRemark.trim()}`);
-                }
+            return (
+              <React.Fragment key={idx}>
+                <div style={{ display: "flex", fontSize: 12, fontWeight: "bold", marginBottom: 2 }}>
+                  <span style={{ flex: 1 }}>{item.name}</span>
+                  <span style={{ width: 40, textAlign: "right" }}>{item.qty}</span>
+                </div>
+                {remarks.map((r, ri) => (
+                  <div key={ri} style={{ fontSize: 10, color: "#555", paddingLeft: 10, fontStyle: "italic", marginBottom: 2 }}>
+                    ↳ {r}
+                  </div>
+                ))}
+              </React.Fragment>
+            );
+          })}
 
-                return (
-                  <React.Fragment key={idx}>
-                    <li>
-                      <b>{item.name}</b>
-                      <span>{item.qty}</span>
-                    </li>
-                    {remarks.map((r, ri) => (
-                      <p
-                        key={ri}
-                        className="addon"
-                        style={{
-                          fontSize: 11,
-                          color: "#444",
-                          paddingLeft: 12,
-                          fontStyle: "italic",
-                          margin: "2px 0",
-                        }}
-                      >
-                        ↳ {r}
-                      </p>
-                    ))}
-                  </React.Fragment>
-                );
-              })}
-            </ul>
+          <KotDivider />
+
+          {/* Powered by */}
+          <div style={{ textAlign: "center", fontSize: 9, color: "#aaa", marginTop: 4 }}>
+            powered by FerryRestro v1.0.1
           </div>
+
+          <div style={{ height: 12 }} />
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-between gap-3 modal_footer px-3 py-3">
-          <button onClick={onClose} className="cancel_btn">
+        {/* Action Buttons */}
+        <div style={{ display: "flex", gap: 12 }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: "10px 24px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.2)",
+              background: "rgba(255,255,255,0.08)",
+              color: "#fff",
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
             ✕ Close
           </button>
-          <button onClick={handlePrint} className="update_btn">
-            🖨 Print KOT
+          <button
+            onClick={handlePrint}
+            style={{
+              padding: "10px 28px",
+              borderRadius: 10,
+              border: "none",
+              background: "rgba(124,58,237,0.9)",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            🖨️ Print KOT
           </button>
         </div>
+
       </div>
     </div>
   );
 };
 
 export default KOTPrintSlip;
+
+// ── Helper Components ─────────────────────────
+
+function KotDivider() {
+  return (
+    <div style={{ borderTop: "1px dashed #999", margin: "5px 0" }} />
+  );
+}
+
+function KotRow({ label, value }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 2 }}>
+      <span style={{ color: "#333" }}>{label}</span>
+      <span style={{ fontWeight: "bold" }}>{value}</span>
+    </div>
+  );
+}

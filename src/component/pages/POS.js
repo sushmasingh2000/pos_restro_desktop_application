@@ -48,6 +48,8 @@ const POS = () => {
   const [activeOrderIndex, setActiveOrderIndex] = useState(0);
   const [kotPrintData, setKotPrintData] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [previousItems, setPreviousItems] = useState([]);
+
 
   const navigate = useNavigate();
   const client = useQueryClient();
@@ -76,6 +78,7 @@ const POS = () => {
     () => apiConnectorPost(endpoint.menu_branch_api),
     { refetchOnMount: false, refetchOnWindowFocus: false, retry: false }
   );
+  const currentOrder = allOrders[activeOrderIndex];
 
   const categories = data?.data?.result?.categories || [];
   const itemsData = data?.data?.result?.menus || [];
@@ -94,7 +97,6 @@ const POS = () => {
         );
       }
     }
-    // search filter
     if (searchTerm.trim() !== "") {
       items = items.filter((item) =>
         item.dg09_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -103,7 +105,6 @@ const POS = () => {
     return items;
   }, [selectedCategory, itemsData, categories, searchTerm]);
 
-  // ── Fetch existing order (dine-in) ────────────────────────
   const { data: orderData } = useQuery(
     ["getOrdersByTable", table],
     () => apiConnectorPost(endpoint.get_orders_by_table_api, { tableId: table }),
@@ -111,6 +112,7 @@ const POS = () => {
   );
 
   useEffect(() => {
+    setPreviousItems([]);
     setAllOrders([]);
     setOrderItems([]);
     setSavedOrderId(null);
@@ -161,6 +163,7 @@ const POS = () => {
 
     if (firstOrder) {
       setOrderItems(firstOrder.items || []);
+      setPreviousItems(firstOrder.items || []);
       setSavedOrderId(firstOrder.orderId || null);
       setExistingBillId(firstOrder.billId || null);
       setExistingBillNo(firstOrder.billNo || null);
@@ -191,7 +194,6 @@ const POS = () => {
     }
   };
 
-  // const totalAmount = orderItems.reduce((acc, item) => acc + item.price * item.qty, 0);
   const totalAmount = parseFloat(
     orderItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2)
   );
@@ -210,23 +212,28 @@ const POS = () => {
     return "";
   };
 
-  // const getTableId = () => {
-  //   if (type === "dine-in") return table;
-  //   if (type === "take-away") return 10001;
-  //   if (type === "delivery") return 10002;
-  //   return null;
-  // };
-
   const getTableId = () => {
     if (type === "dine-in") return table;
-
-    // takeaway & delivery ke liye DB me NULL save hoga
     return null;
   };
 
   const handleSaveKOT = async () => {
     if (!orderItems.length) { toast.error("Please add items first"); return; }
-    if (type === "delivery" && !address.trim()) { toast.error("Delivery address is required"); return; }
+
+    const newItems = orderItems.filter((item) => {
+      const prev = previousItems.find((p) => p.id === item.id);
+      if (!prev) return true;
+      return item.qty > prev.qty;
+    }).map((item) => {
+      const prev = previousItems.find((p) => p.id === item.id);
+      return {
+        ...item,
+        qty: prev ? item.qty - prev.qty : item.qty,
+      };
+    });
+
+    // ── Koi naya item nahi — sirf reprint karo ──
+    const isReprint = newItems.length === 0;
 
     try {
       const res = await apiConnectorPost(endpoint.add_update_order_api, {
@@ -246,17 +253,15 @@ const POS = () => {
       });
 
       if (res?.data?.success) {
-        // const orderId = res?.data?.order?.orderId;
         const orderId = res?.data?.order?.orderId || res?.data?.order?.offlineOrderId;
         const kotNo = res?.data?.order?.kotNo || 1;
         const captainName = res?.data?.order?.captainName || "—";
         const orderUniqueNo = res?.data?.order?.uniqueOrderId || `CBC-R${orderId}`;
 
         setSavedOrderId(orderId);
-
         await apiConnectorPost(endpoint.generate_kot_api, { orderId });
 
-                if (type === "dine-in" && table) {
+        if (type === "dine-in" && table) {
           await apiConnectorPost(endpoint.update_table_status_api, {
             tableId: table,
             status: "Busy",
@@ -264,8 +269,9 @@ const POS = () => {
           });
         }
 
-        toast.success("KOT sent to Kitchen 🍳");
         client.refetchQueries("get_table");
+
+        if (!isReprint) setPreviousItems([...orderItems]); // ← sirf naye items pe update
 
         setKotPrintData({
           orderNo: orderUniqueNo,
@@ -274,16 +280,25 @@ const POS = () => {
             : type === "take-away" ? "TakeAway" : "Delivery",
           kotNo,
           captainName,
-          type: savedOrderId ? "Reprint-Added" : "New",
+          type: isReprint ? "Reprint" : savedOrderId ? "Updated" : "Print", // ← type bhi sahi
           dateTime: formatReceiptDateTime(),
-          items: orderItems.map((item) => ({
-            name: item.dg09_name,
-            qty: item.qty,
-            qtyRemark: item.qtyRemark || "",
-            globalRemark: item.globalRemark || "",
-            predefinedRemarks: item.predefinedRemarks || [],
-          })),
+          items: isReprint
+            ? orderItems.map((item) => ({  // ← reprint mein poore items
+              name: item.dg09_name,
+              qty: item.qty,
+              qtyRemark: item.qtyRemark || "",
+              globalRemark: item.globalRemark || "",
+              predefinedRemarks: item.predefinedRemarks || [],
+            }))
+            : newItems.map((item) => ({   // ← update mein sirf naye
+              name: item.dg09_name,
+              qty: item.qty,
+              qtyRemark: item.qtyRemark || "",
+              globalRemark: item.globalRemark || "",
+              predefinedRemarks: item.predefinedRemarks || [],
+            })),
         });
+
       } else {
         toast.error(res?.data?.message || "Failed to save KOT");
       }
@@ -521,6 +536,7 @@ const POS = () => {
           onClose={() => setShowBillModal(false)}
           orderItems={orderItems}
           orderId={savedOrderId}
+          uniqueOrderId={currentOrder?.uniqueId || null}
           tableId={table}
           orderType={getOrderTypeEnum()}
           tableNameMap={tableNameMap}

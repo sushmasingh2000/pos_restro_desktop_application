@@ -901,6 +901,7 @@ const Dashboard = () => {
       setQuickPrint({
         tableId: table.dg05_table_id,
         orderId: order.dg06_order_id,
+        uniqueOrderId: order.unique_order_id,
         orderItems,
       });
     } catch (err) {
@@ -909,7 +910,6 @@ const Dashboard = () => {
     }
   };
 
-  // ── Move Confirm ──────────────────────────────────────────
   const handleMoveConfirm = async (toTable) => {
     try {
       const res = await apiConnectorPost(endpoint.move_table_api, {
@@ -1281,6 +1281,7 @@ const Dashboard = () => {
           isOpen={!!quickPrint}
           onClose={() => setQuickPrint(null)}
           orderId={quickPrint.orderId}
+          uniqueOrderId={quickPrint.uniqueOrderId}
           tableId={quickPrint.tableId}
           tableNameMap={tableNameMap}
           orderItems={quickPrint.orderItems}

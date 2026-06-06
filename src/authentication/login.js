@@ -54,6 +54,7 @@ const Login = ({ role }) => {
       // SAVE DATA
       // =========================
       localStorage.setItem("token", user?.token);
+      localStorage.setItem("loginTime", Date.now().toString());
       // console.log("✅ fron mein save:", user?.token);
 
       localStorage.setItem("role", userRole);
