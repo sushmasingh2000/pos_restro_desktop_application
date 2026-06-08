@@ -4,7 +4,7 @@ import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 
 const MainLayout = ({ children }) => {
-  const [openSidebar, setOpenSidebar] = useState(false);
+  const [openSidebar, setOpenSidebar] = useState(true);
   return (
     <div className="h-screen flex bg-[#000] overflow-hidden">
 

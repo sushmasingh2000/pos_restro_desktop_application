@@ -17,11 +17,13 @@ export default function Sidebar() {
   const role = localStorage.getItem("role");
   return (
     <aside className="main_sidebar w-64 h-screen sticky top-0 overflow-y-auto  text-white relative">
-      <div className="mb-8 flex items-center gap-3 logo_sidebar">
-        <img src="../assets/images/logo/logo.png" alt="Logo" />
+      <div className="sidebar_logo">
+        <div className="logo_icon">
+          <i className="ri-send-plane-line"></i>
+        </div>
         <div>
-          <h3 className="text-lg font-bold">CBC Restro Panel</h3>
-          {/* <p className="text-xs text-white/50">Welcome, {role.replace("_", " ").toUpperCase()}</p> */}
+          <h1>Ferry Restro</h1>
+          <p>Restaurant Technology partner</p>
         </div>
       </div>
 
