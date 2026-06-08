@@ -1775,13 +1775,13 @@ button.add_item {
 .tottle_btn {
     width: 35px;
     height: 35px;
-    background: #2b2b2b;
+    background: #eff5ff;
+    border: 1px solid #c7dcff;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 8px;
-    color: #a9a9a9;
-    border: 1px solid #464646;
+    color: var(--primary-color);
 }
 
 .tottle_btn button {
