@@ -2,7 +2,7 @@
 import { Edit, Person } from "@mui/icons-material";
 import React, { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { apiConnectorPost } from "../../utils/APIConnector";
+import { apiConnectorGet, apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import { useQuery, useQueryClient } from "react-query";
 import { useEffect } from "react";
@@ -14,6 +14,7 @@ import KOTPrintSlip from "./KOTPrintSlip";
 import PosTab from "../Layout/PosTab";
 import { Col } from "react-bootstrap";
 import Row from 'react-bootstrap/Row';
+import ItemOptionsModal from "./ItemOptionsModal";
 
 function formatReceiptDateTime() {
   const now = new Date();
@@ -31,7 +32,8 @@ const POS = () => {
   const { type } = useParams();
   const table = location.state?.table;
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [optionItem, setOptionItem] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [orderItems, setOrderItems] = useState([]);
@@ -186,27 +188,82 @@ const POS = () => {
     setExistingBillNo(order.billNo);
   };
 
-  const addToOrder = (item) => {
+  const addToOrder = async (item) => {
+    try {
+      const res = await apiConnectorGet(endpoint.item_options_pos_api + item.dg09_menu_id);
+      console.log("FULL RESPONSE:", res);        // ← add karo
+      console.log("RESULT:", res?.data?.result);
+      const groups = res?.data?.result || [];
+
+      if (groups.length > 0) {
+        // Options hain → modal dikhao
+        setOptionItem({ ...item, optionGroups: groups });
+        setShowOptionsModal(true);
+      } else {
+        // Options nahi → seedha add karo
+        addItemDirectly(item, 0);
+      }
+    } catch (err) {
+      addItemDirectly(item, 0);
+    }
+  };
+
+  const addItemDirectly = (item, extraPrice, selections) => {
+    const basePrice = item.dg09_tax_group_id
+      ? parseFloat(item.dg09_amount_after_tax)
+      : parseFloat(item.dg09_price);
+    const finalPrice = basePrice + extraPrice;
+
+    // Selected options ka label banao
+    const optionLabel = selections
+      ? Object.values(selections).flat()
+        .map((o) => o.dg029_display_name)
+        .join(", ")
+      : "";
+
+    const displayName = optionLabel
+      ? `${item.dg09_name} (${optionLabel})`
+      : item.dg09_name;
+
     const existing = orderItems.find((i) => i.id === item.dg09_menu_id);
     if (existing) {
       setOrderItems(orderItems.map((i) =>
         i.id === item.dg09_menu_id ? { ...i, qty: i.qty + 1 } : i
       ));
     } else {
-      setOrderItems([
-        ...orderItems,
-        {
-          ...item, qty: 1, id: item.dg09_menu_id,
-          tax_group_id: item.dg09_tax_group_id || null,
-          basePrice: parseFloat(item.dg09_price),
-          price: item.dg09_tax_group_id
-            ? parseFloat(item.dg09_amount_after_tax)
-            : parseFloat(item.dg09_price)
-          // price: parseFloat(item.dg09_price)
-        },
-      ]);
+      setOrderItems((prev) => [...prev, {
+        ...item,
+        qty: 1,
+        id: item.dg09_menu_id,
+        dg09_name: displayName,  // ← "POHA (Large)"
+        tax_group_id: item.dg09_tax_group_id || null,
+        basePrice: parseFloat(item.dg09_price),
+        price: finalPrice,
+      }]);
     }
   };
+
+  // const addToOrder = (item) => {
+  //   const existing = orderItems.find((i) => i.id === item.dg09_menu_id);
+  //   if (existing) {
+  //     setOrderItems(orderItems.map((i) =>
+  //       i.id === item.dg09_menu_id ? { ...i, qty: i.qty + 1 } : i
+  //     ));
+  //   } else {
+  //     setOrderItems([
+  //       ...orderItems,
+  //       {
+  //         ...item, qty: 1, id: item.dg09_menu_id,
+  //         tax_group_id: item.dg09_tax_group_id || null,
+  //         basePrice: parseFloat(item.dg09_price),
+  //         price: item.dg09_tax_group_id
+  //           ? parseFloat(item.dg09_amount_after_tax)
+  //           : parseFloat(item.dg09_price)
+  //         // price: parseFloat(item.dg09_price)
+  //       },
+  //     ]);
+  //   }
+  // };
 
   const totalAmount = parseFloat(
     orderItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2)
@@ -549,7 +606,15 @@ const POS = () => {
           orderItems={orderItems}
           onUpdate={setOrderItems}
         />
-
+        <ItemOptionsModal
+          isOpen={showOptionsModal}
+          onClose={() => setShowOptionsModal(false)}
+          item={optionItem}
+          onConfirm={(item, extraPrice, selections) => {
+            addItemDirectly(item, extraPrice, selections);
+            setShowOptionsModal(false);
+          }}
+        />
         <BillModal
           isOpen={showBillModal}
           onClose={() => setShowBillModal(false)}

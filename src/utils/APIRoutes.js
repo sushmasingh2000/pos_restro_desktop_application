@@ -17,6 +17,7 @@ export const endpoint = {
   printer_bill_api: `${domain}/api/v1/thermal-print-bill`,
 
   // get_sales_summary: `${domain}/api/v1/monthly-dashboard`,
+  item_options_pos_api: `${domain}/api/v1/item-options-pos/`,
 
   update_bill_details_api: `${domain}/api/v1/update-bill`,
   get_bill_by_id_api: `${domain}/api/v1/get-bill`,
