@@ -1794,9 +1794,13 @@ button.add_item {
 
 .main_tabs button {
     padding: 10px 15px;
-    color: gray;
+    color:#64748b;
     font-size: 13px;
     font-weight: 600;
+}
+
+.main_tabs {
+    border-bottom: 1.5px solid #e2edff;
 }
 
 button.acive_tab {
@@ -1805,14 +1809,15 @@ button.acive_tab {
 }
 
 .table_card {
-    background: #1d1d1d;
-    border: 1px solid transparent;
+    background: #fff;
     border-radius: 15px;
     padding: 20px;
     position: relative;
     z-index: 1;
     overflow: hidden;
-    margin-bottom: 15px;
+    border: 2px solid #dbeafe;
+    box-shadow: 0 2px 16px rgba(37, 99, 235, .09);
+    height: 100%;
 }
 
 .table_card.table_busy {
@@ -1821,7 +1826,7 @@ button.acive_tab {
 
 .table_card:before {
     content:'';
-    height: 2px;
+    height: 3px;
     position: absolute;
     width: 100%;
     background: transparent;
@@ -1842,11 +1847,19 @@ button.acive_tab {
     background: #22c55e;
 }
 
+.table_card.table_available .qr_btns{
+    border: 1px solid #22c55e3b;
+    background: #22c55e24;
+}
+.table_card.table_available .qr_btns svg{
+    stroke: #22c55e;
+}
+
 .table_card h2 {
     font-size: 16px;
-    color: #fff;
+    color: #272727;
     text-align: center;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .table_card .table_status_btn {
@@ -1866,16 +1879,14 @@ button.acive_tab {
 }
 
 .table_card .time_diff {
-    background: #5555552e;
-    width: fit-content;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    margin: auto;
-    margin-top: 15px;
-    color: #a0a0a0;
-    border: 1px solid #67676726;
-    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #4b4b4b;
+    margin-top: 10px;
+    margin-bottom: 35px;
 }
 
 .table_status_btn.busy_btn {
@@ -1919,7 +1930,7 @@ button.acive_tab {
 }
 
 .main_table_action button:hover {
-    background: #2d2d2d;
+    background: #f0f6ff;
 }
 .list_category_btnt {
     background: #1a1a1a;
@@ -1992,20 +2003,22 @@ button.acive_tab {
 
 button.prev_btn {
     padding: 5px 10px;
-    background: #2b2b2b;
+    background: #eff5ff;
     border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: #9d9d9d;
+    color: var(--primary-color);
+    border: 1px solid #c7dcff;
 }
 
 button.next_btn {
     padding: 5px 10px;
-    background: #2b2b2b;
+    background: #eff5ff;
     border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: #9d9d9d;
+    color: var(--primary-color);
+    border: 1px solid #c7dcff;
 }
 
 .current_page {
@@ -2014,7 +2027,7 @@ button.next_btn {
     border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: #000000;
+    color: #fff;
 }
 
 .pagination_number {
@@ -2024,7 +2037,7 @@ button.next_btn {
 }
 
 .pagination_number .pagintation_text {
-    color: #fff;
+    color: #090909;
 }
 
 .main_bill_payment{
@@ -2067,12 +2080,11 @@ button.next_btn {
 }
 
 .main_card h3 {
-    color: #fff;
+    color: #1a1a1a;
     margin: 0;
-    font-size: 21px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
 }
-
 .main_card.main_card_2 {
     padding: 15px;
     cursor: pointer;
@@ -3898,4 +3910,223 @@ width: 100% !important;
 .pase_price_main ul li {
     font-size: 14px;
     color: #708c94;
+}
+
+.legendse {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.leg {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0c447c;
+}
+
+.leg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.leg-dot.avail {
+    background: #22c55e;
+}
+
+.leg-dot.busy {
+    background: #ef4444;
+}
+
+.scanner_btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0c447c;
+    background: #ffffff;
+    border: 1px solid #c7dcff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    box-shadow: 0 1px 4px #2563eb0f;
+    transition: background .15s,box-shadow .15s;
+}
+
+.scanner_btn svg{
+    stroke: #0c447c;
+}
+
+.table_dsb {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 15px;
+    background: #ffffff;
+    border-radius: 15px;
+    border: 1px solid #c7dcff;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.table_dsb::before {
+    content: '';
+    width: 100%;
+    height: 75px;
+    max-width: 88px;
+    position: absolute;
+    right: 0;
+    top: 0px;
+    background-size: cover;
+    z-index: -1;
+    background: url(../images/dashbord/servicesShape1_1.png);
+    filter: invert(40%) sepia(13%) saturate(978%) hue-rotate(354deg) brightness(96%) contrast(89%);
+}
+
+.table_dsb .main_icon {
+    width: 50px;
+    height: 50px;
+    background: #eff5ff;
+    min-width: 50px;
+    padding: 7px;
+    border-radius: 8px;
+    border: 1px solid #c7dcff;
+}
+
+.table_dsb h4 {
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.table_dsb p {
+    margin: 0;
+    color: #85B7EB;
+    font-size: 13px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #c7dcff;
+    box-shadow: 0 1px 4px #2563eb0f;
+    border-radius: 8px;
+    padding: 8px 14px;
+}
+
+.search-box svg {
+    width: 15px;
+    height: 15px;
+    stroke: #85b7eb;
+    stroke-width: 2;
+    fill: none;
+    flex-shrink: 0;
+}
+
+.search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 13px;
+    color: #042c53;
+    width: 160px;
+}
+
+.qr_btns{
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s;
+    flex-shrink: 0;
+}
+
+.table_card.table_busy .qr_btns svg {
+    stroke: #ef4444;
+}
+
+.table_card.table_busy .qr_btns {
+    background: #ef444421;
+    border-color: #ef444421;
+}
+
+.menu-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #ef444421;
+    border: 1px solid #ef444421;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color:transparent;
+    transition: background .15s;
+}
+
+
+.menu-btn svg circle{
+    stroke: #ef4444;
+}
+
+.card-actions {
+    display: flex;
+    border-top: 1px solid #dbeafe;
+    position: absolute;
+    width: 100%;
+    bottom: 0px;
+    left: 0;
+}
+
+.card-action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary-color);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: background .15s;
+}
+
+.card-action-btn svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+.card-action-btn.red:hover {
+    background: #fee2e2;
+}
+
+.card-action-btn.red {
+    color: #dc2626;
+}
+
+.card-action-btn:not(:last-child) {
+    border-right: 1px solid #dbeafe;
+}
+
+.card-action-btn:hover {
+    background: #eff6ff;
 }

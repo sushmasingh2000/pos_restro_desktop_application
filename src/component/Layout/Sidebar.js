@@ -45,20 +45,13 @@ export default function Sidebar() {
 
       </ul>
 
-      {/* LOGOUT */}
-      <div className="mt-6 pt-4 border-t border-white/10 relative z-10">
-        <li>
-          <button onClick={handleLogout} className="w-full text-left">
-            <div className="group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all backdrop-blur-md border bg-red-500/10 text-red-400 border-red-400/20 hover:bg-red-500/20">
-
-              <span className="text-red-400 group-hover:text-red-500">
-                <Logout fontSize="small" />
-              </span>
-
-              <span>Logout</span>
-            </div>
-          </button>
-        </li>
+      
+      <div className="email_sidebar">
+        <div className="ba_mails">BA</div>
+        <div>
+          <h6>Branch Admin</h6>
+          <p>admin@ferryrestro.in</p>
+        </div>
       </div>
 
     </aside>
