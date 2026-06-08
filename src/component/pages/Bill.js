@@ -639,6 +639,10 @@ export default function BillModal({
           }
         );
       }
+      await apiConnectorPost(endpoint.update_order_status_api, {
+        orderId,
+        status: "completed"
+      });
 
       if (orderType === "dine_in" && tableId) {
         await apiConnectorPost(endpoint.update_table_status_api, {
@@ -649,7 +653,7 @@ export default function BillModal({
 
       toast.success(
         isLending
-          ? `Udhaar saved! Remaining: ₹${lendingRemaining}`
+          ? `Due saved! Remaining: ₹${lendingRemaining}`
           : isAdvance && advanceRemaining > 0
             ? `Advance partially used! Due: ₹${advanceRemaining}`
             : "Table closed successfully!"
@@ -697,7 +701,7 @@ export default function BillModal({
   //     // ─────────────────────────────────────────────
   //     toast.success(
   //       isLending
-  //         ? `Udhaar saved! Remaining: ₹${lendingRemaining}`
+  //         ? `Due saved! Remaining: ₹${lendingRemaining}`
   //         : isAdvance && advanceRemaining > 0
   //           ? `Advance partially used! Due: ₹${advanceRemaining}`
   //           : "Table closed successfully!"
@@ -802,8 +806,8 @@ export default function BillModal({
                           <tr key={i} className="border-t border-white/5">
                             <td>{item.dg09_name}</td>
                             <td>{item.qty}</td>
-                            <td>₹{Number(item.price).toFixed(2)}</td>
-                            <td>₹{(item.price * item.qty).toFixed(2)}</td>
+                            <td>₹{Number(item.basePrice || item.price).toFixed(2)}</td>
+                            <td>₹{((item.basePrice || item.price) * item.qty).toFixed(2)}</td>
                           </tr>
                           {remarks && (
                             <tr
@@ -1650,7 +1654,7 @@ export default function BillModal({
                 {loading
                   ? "Processing..."
                   : isLending
-                    ? "📋 Save Udhaar & Close"
+                    ? "📋 Save Due & Close"
                     : isAdvance && advanceRemaining > 0
                       ? `Save Advance & Close (Due: ₹${isReprint
                         ? reprintRemainingDue.toFixed(2)
@@ -1681,7 +1685,7 @@ export default function BillModal({
                 : isReprint
                   ? "⟳ Reprint Bill"
                   : isLending
-                    ? "📋 Print & Save Udhaar"
+                    ? "📋 Print & Save Due"
                     : isAdvance
                       ? "Print & Apply Advance"
                       : "🖨 Print Bill"}
@@ -1706,8 +1710,8 @@ export default function BillModal({
           items: orderItems.map((i) => ({
             name: i.dg09_name,
             qty: i.qty,
-            rate: Number(i.price).toFixed(2),
-            total: (i.price * i.qty).toFixed(2),
+            rate: Number(i.basePrice || i.price).toFixed(2),  // ← basePrice
+            total: ((i.basePrice || i.price) * i.qty).toFixed(2),
             remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),
           })),
           subtotal: subTotal.toFixed(2),

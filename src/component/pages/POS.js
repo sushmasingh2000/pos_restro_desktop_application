@@ -15,6 +15,7 @@ import PosTab from "../Layout/PosTab";
 import { Col } from "react-bootstrap";
 import Row from 'react-bootstrap/Row';
 import ItemOptionsModal from "./ItemOptionsModal";
+import { domain } from "../../domain";
 
 function formatReceiptDateTime() {
   const now = new Date();
@@ -141,6 +142,7 @@ const POS = () => {
       isSplit: order.unique_order_id?.startsWith("SPLIT"),
       items: (order.items || []).map((item) => {
         const menuItem = itemsData.find(m => m.dg09_menu_id === item.dg07_menu_id);
+        console.log("item:", item.dg07_menu_id, "menuItem:", menuItem, "tax_group_id:", menuItem?.dg09_tax_group_id);
         return {
           id: item.dg07_menu_id,
           dg09_name: item.dg07_menu_name_snapshot,
@@ -265,9 +267,10 @@ const POS = () => {
   //   }
   // };
 
-  const totalAmount = parseFloat(
-    orderItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2)
-  );
+ const totalAmount = parseFloat(
+  orderItems.reduce((acc, item) => acc + (item.basePrice || item.price) * item.qty, 0).toFixed(2)
+);
+
 
   const updateQty = (id, qty) => {
     if (qty < 1) return;
@@ -371,7 +374,10 @@ const POS = () => {
               predefinedRemarks: item.predefinedRemarks || [],
             })),
         });
-
+        await apiConnectorPost(endpoint.update_order_status_api, {
+          orderId: savedOrderId || orderId,
+          status: "preparing"
+        });
       } else {
         toast.error(res?.data?.message || "Failed to save KOT");
       }
@@ -450,6 +456,11 @@ const POS = () => {
 
               <h6>{item.dg09_name}</h6>
               <h3>₹{item.dg09_price}</h3>
+              <img
+                src={domain + item.dg09_image_url}
+                alt={item.dg09_image_url}
+                className="w-full h-16 object-cover rounded"
+              />
             </div>
           ))}
         </div>
@@ -531,8 +542,8 @@ const POS = () => {
                           />
                         ) : item.qty}
                       </td>
-                      <td>₹{item.price}</td>
-                      <td>₹{(item.price * item.qty).toFixed(2)}</td>
+                      <td>₹{(item.basePrice || item.price).toFixed(2)}</td>
+                      <td>₹{((item.basePrice || item.price) * item.qty).toFixed(2)}</td>
                       <td className="cursor-pointer">
                         <Edit onClick={() => { setSelectedItem(item); setShowQtyModal(true); }} />
                       </td>
