@@ -6,7 +6,7 @@ import Sidebar from "./Sidebar";
 const MainLayout = ({ children }) => {
   const [openSidebar, setOpenSidebar] = useState(true);
   return (
-    <div className="h-screen flex bg-[#000] overflow-hidden">
+    <div className="h-screen flex  overflow-hidden">
 
       {/* SIDEBAR GLASS */}
       <div >
@@ -22,7 +22,7 @@ const MainLayout = ({ children }) => {
         </div>
 
         {/* CONTENT AREA */}
-        <div className="flex-1 overflow-auto p-4
+        <div className="flex-1 overflow-auto p-md-4 p-2 
            backdrop-blur-md">
 
           {/* content glass wrapper */}

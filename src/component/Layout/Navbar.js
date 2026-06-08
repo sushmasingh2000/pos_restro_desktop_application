@@ -81,11 +81,7 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="tottle_btn mobile_btn">
-          <button onClick={toggleSidebar}>
-            <MenuIcon fontSize="small" />
-          </button>
-        </div>
+       
 
         {/* Notification Bell */}
         <div className="relative">
@@ -185,6 +181,12 @@ const Navbar = ({ toggleSidebar }) => {
           <Logout className="!h-4" />
           Logout
         </button>
+
+         <div className="tottle_btn mobile_btn">
+          <button onClick={toggleSidebar}>
+            <MenuIcon fontSize="small" />
+          </button>
+        </div>
       </div>
     </nav>
   );
