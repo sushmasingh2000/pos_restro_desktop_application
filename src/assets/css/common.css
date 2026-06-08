@@ -1,9 +1,13 @@
 *{
-    font-family: "Inter", sans-serif;
+    font-family: "DM Sans", sans-serif;
 }
 
 :root {
-    --primary-color: #c5a377;
+    --primary-color: #1d4ed8;
+}
+
+body{
+    background: #f0f6ff !important;
 }
 
 body,
@@ -11,4 +15,8 @@ html {
   width: 100vw;
   overflow-x: hidden;
 
+}
+
+.row {
+    --bs-gutter-x: 1rem !important;
 }
