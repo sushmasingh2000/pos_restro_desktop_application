@@ -412,7 +412,7 @@ const POS = () => {
   return (
     <div>
       <PosTab />
-      <div className="flex">
+      <div className="flex main_take_away">
         {/* LEFT — CATEGORIES */}
         <div className="w-[15%] h-full list_category_btnt">
           <div
@@ -436,16 +436,19 @@ const POS = () => {
         </div>
 
         {/* CENTER — MENU ITEMS */}
-        <div className="w-3/5 h-full overflow-y-auto p-3 grid grid-cols-3 gap-3 content-start">
+        <div className="w-3/5 h-full overflow-y-auto p-3 pt-0 grid grid-cols-3 gap-3 content-start">
           {/* SEARCH BAR */}
-          <div className="main_input mt-0 w-full col-span-3">
-            <input
-              type="text"
-              placeholder="Search menu items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className=""
-            />
+          <div className="search-bar-wrap w-full col-span-3">
+            <div className="search-bar">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input
+                type="text"
+                placeholder="Search menu items..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className=""
+              />
+            </div>
           </div>
           {filteredItems.map((item) => (
             <div
@@ -454,19 +457,19 @@ const POS = () => {
               className="main_card main_card_2"
             >
 
-              <h6>{item.dg09_name}</h6>
-              <h3>₹{item.dg09_price}</h3>
               <img
                 src={domain + item.dg09_image_url}
                 alt={item.dg09_image_url}
                 className="w-full h-16 object-cover rounded"
               />
+              <h6>{item.dg09_name}</h6>
+              <h3>₹{item.dg09_price}</h3>
             </div>
           ))}
         </div>
 
         {/* RIGHT — BILL PANEL */}
-        <div className="w-2/6 bg-white/10 backdrop-blur-xl border-l border-white/10 p-4 flex flex-col">
+        <div className="w-2/6 cart_post flex flex-col">
 
           {/* Split order tabs */}
           {allOrders.length > 1 && (
@@ -487,7 +490,7 @@ const POS = () => {
           )}
 
           {/* Info bar */}
-          <div className="flex flex-wrap justify-start gap-2 items-center mb-3">
+          <div className="flex flex-wrap justify-start gap-2 items-center  cart-badges">
             <button className="main_food_type_btn">
               {getOrderTypeEnum() === "dine_in" ? "Dine In"
                 : getOrderTypeEnum() === "takeaway" ? "TakeAway"
@@ -503,61 +506,43 @@ const POS = () => {
                 onClick={() => setShowModal(true)}
                 className="flex items-center gap-2 cursor-pointer bg-white/10 px-3 py-1 rounded-full"
               >
-                <Person className="!text-white" />
+                <Person className="text-dark" />
               </div>
             )}
-            <span className="text-xs text-white/60 ml-auto">{currentDateTime}</span>
+            {/* <span className="text-xs text-white/60 ml-auto">{currentDateTime}</span> */}
           </div>
 
           {/* ORDER TABLE */}
-          <div className="main_table_container">
-            <div className="flex-1 overflow-auto" style={{ borderRadius: "15px" }}>
-              <table className="w-full text-sm">
-                <thead className="bg-white/10 text-white">
-                  <tr>
-                    <th >Item</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                    <th>Required</th>
-                    {modifyMode && <th>X</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {orderItems.length === 0 && (
-                    <tr>
-                      <td colSpan="5" className="text-center text-white/40 p-4">No items</td>
-                    </tr>
-                  )}
-                  {orderItems.map((item) => (
-                    <tr key={item.id} className="border-t border-white/10">
-                      <td>{item.dg09_name}</td>
-                      <td>
-                        {modifyMode ? (
+          <div className="cart-cols">
+              <div class="cart-col-h">Item</div>
+              <div class="cart-col-h" style={{textAlign: "center"}}>Qty</div>
+              <div class="cart-col-h" style={{textAlign: "right"}}>Price</div>
+              <div class="cart-col-h" style={{textAlign: "right"}}>Total</div>
+              <div class="cart-col-h"  style={{textAlign: "right"}}>Edit</div>
+              <div class="cart-col-h"></div>
+          </div>
+          <div className="cart-items">
+            {orderItems.map((item) => (
+              <div className="cart-row">
+                <div className="cart-item-name">{item.dg09_name}</div>
+                <div className="cart-qty-wrap">
+                  {modifyMode ? (
                           <input
                             type="number"
                             value={item.qty}
                             onChange={(e) => updateQty(item.id, +e.target.value)}
-                            className="w-14 text-center bg-white/10 border border-white/10 rounded"
+                            className=""
                           />
                         ) : item.qty}
-                      </td>
-                      <td>₹{(item.basePrice || item.price).toFixed(2)}</td>
-                      <td>₹{((item.basePrice || item.price) * item.qty).toFixed(2)}</td>
-                      <td className="cursor-pointer">
-                        <Edit onClick={() => { setSelectedItem(item); setShowQtyModal(true); }} />
-                      </td>
-                      {modifyMode && (
-                        <td>
-                          <button onClick={() => removeItem(item.id)} className="text-red-400">✕</button>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+                <div className="cart-price">₹{(item.basePrice || item.price).toFixed(2)}</div>
+                <div className="cart-total">₹{((item.basePrice || item.price) * item.qty).toFixed(2)}</div>
+                <div className="edite_inf"><Edit onClick={() => { setSelectedItem(item); setShowQtyModal(true); }} /></div>
+                <div className="cart-del"><button onClick={() => removeItem(item.id)} >✕</button></div>
+              </div>
+               ))}
           </div>
+         
 
           {/* TOTAL */}
           <div className="flex justify-between items-center">
@@ -566,19 +551,19 @@ const POS = () => {
                 Cancel Order
               </button>
             )}
-            <div className="mt-2 text-right font-semibold text-gold ml-auto">
+            <div className="mt-2 text-right font-semibold text-gold ml-auto px-3">
               Total: ₹{totalAmount.toFixed(2)}
             </div>
           </div>
 
           {savedOrderId && (
-            <div className="ordr_lsitst">
+            <div className="ordr_lsitst ">
               KOT Saved — Order #{savedOrderId}
             </div>
           )}
 
           {/* ACTION BUTTONS */}
-          <div className="mt-3 flex flex-col gap-2 ">
+          <div className="mt-3 mb-3 flex flex-col gap-2 px-3">
             <button
               onClick={handleSaveKOT}
               className="main_btn flex justify-center items-center "

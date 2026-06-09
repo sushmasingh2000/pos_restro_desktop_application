@@ -104,7 +104,8 @@ export default function PendingOrder() {
   return (
     <div className="">
   <PosTab/>
-   <div className="chart_header px-0">
+  <div className="main_cards mt-3">
+      <div className="chart_header ">
         <div className="chart_heading">
           <h4><span class="live-dot"></span> Pending Orders</h4>
           <p>Daily performance overview</p>
@@ -137,8 +138,8 @@ export default function PendingOrder() {
     
      
       {/* TABLE */}
-      <div className="main_table_container mt-3">
-        <div className="overflow-y-auto" style={{borderRadius: '14px'}}>
+      <div className="main_table_container" style={{borderRadius: "0", border: "0"}}>
+        <div className="overflow-y-auto">
 
           <table className="w-full ">
             <thead >
@@ -267,6 +268,7 @@ export default function PendingOrder() {
           Next
         </button>
       </div>
+    </div>
 
       {/* BILL MODAL */}
       {showBillModal && selectedBillOrder && (
