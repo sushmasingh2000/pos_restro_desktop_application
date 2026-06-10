@@ -14,7 +14,7 @@ import TableQuickPrintModal from "./component/pages/TableQuickPrint";
 import total_table from "./assets/images/dashbord/total-tables.png";
 import available from "./assets/images/dashbord/available.png";
 import busy from "./assets/images/dashbord/busy.png";
-import utilisation from "./assets/images/dashbord/utilisation.png";
+import utilisationi from "./assets/images/dashbord/utilisation.png";
 
 
 function timeDifference(targetDateStr) {
@@ -59,7 +59,7 @@ const ActionDropdown = ({ table, onMove, onMerge, onSplit }) => {
         onClick={() => setOpen((prev) => !prev)}
         title="Table Actions"
         className="menu-btn flex items-center justify-center rounded-full transition-all duration-200"
-       >
+      >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
           <circle cx="6" cy="2" r="1.2" />
           <circle cx="6" cy="6" r="1.2" />
@@ -79,7 +79,7 @@ const ActionDropdown = ({ table, onMove, onMerge, onSplit }) => {
             minWidth: 160,
           }}
         >
-          <div className="px-3 py-1.5 border-b  text-dark text-xs uppercase tracking-widest" style={{borderColor: "#b5d4f47d"}}>
+          <div className="px-3 py-1.5 border-b  text-dark text-xs uppercase tracking-widest" style={{ borderColor: "#b5d4f47d" }}>
             {table.dg05_table_name}
           </div>
           <button onClick={() => { onMove(table); setOpen(false); }}>
@@ -326,6 +326,20 @@ const Dashboard = () => {
   );
 
   const tables = data?.data?.result || [];
+  const totalTables = tables.length;
+
+  const availableTables = tables.filter(
+    (t) => t.dg05_status === "Available"
+  ).length;
+
+  const busyTables = tables.filter(
+    (t) => t.dg05_status === "Busy"
+  ).length;
+
+  const utilisation =
+    totalTables > 0
+      ? ((busyTables / totalTables) * 100).toFixed(0)
+      : 0;
 
   // tableNameMap: { tableId -> tableName }
   const tableNameMap = tables.reduce((acc, t) => {
@@ -446,60 +460,60 @@ const Dashboard = () => {
       <Row>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb">
-              <div className="main_icon">
-                <img src={total_table} />
-              </div>
-              <div>
-                <h4>8</h4>
-                <p>Total Tables</p>
-              </div>
+            <div className="main_icon">
+              <img src={total_table} />
+            </div>
+            <div>
+            <h4>{totalTables}</h4>
+              <p>Total Tables</p>
+            </div>
           </div>
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb">
-              <div className="main_icon" style={{background: "#dcfce7", borderColor: "#caffdc",}}>
-                <img src={available} />
-              </div>
-             <div>
-               <h4>8</h4>
-                <p>Available</p>
-             </div>
+            <div className="main_icon" style={{ background: "#dcfce7", borderColor: "#caffdc", }}>
+              <img src={available} />
+            </div>
+            <div>
+              <h4>{availableTables}</h4>
+              <p>Available</p>
+            </div>
           </div>
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb">
-              <div className="main_icon" style={{background: "#fee2e2", borderColor: "#fcd7d7",}}>
-                <img src={busy} />
-              </div>
-              <div>
-                <h4>8</h4>
-                <p>Busy</p>
-              </div>
+            <div className="main_icon" style={{ background: "#fee2e2", borderColor: "#fcd7d7", }}>
+              <img src={busy} />
+            </div>
+            <div>
+              <h4>{busyTables}</h4>
+              <p>Busy</p>
+            </div>
           </div>
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb">
-              <div className="main_icon" style={{background: "#fef9c3", borderColor: "#f7f1ae"}}>
-                <img src={utilisation} />
-              </div>
-              <div>
-                <h4>8</h4>
-                <p>Utilisation</p>
-              </div>
+            <div className="main_icon" style={{ background: "#fef9c3", borderColor: "#f7f1ae" }}>
+              <img src={utilisationi} />
+            </div>
+            <div>
+              <h4>{utilisation}%</h4>
+              <p>Utilisation</p>
+            </div>
           </div>
         </Col>
       </Row>
       {/* LEGEND */}
       <PosTab />
-     
+
       <div className="flex items-center justify-between gap-6 mb-6 mt-3">
         <div class="legendse">
           <div class="leg"><div class="leg-dot avail"></div>Available</div>
           <div class="leg"><div class="leg-dot busy"></div>Busy</div>
         </div>
-        
 
-       <div className="flex items-center justify-between gap-6">
+
+        <div className="flex items-center justify-between gap-6">
           <div className="search-box">
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <input type="text" placeholder="Search Table" />
@@ -515,9 +529,9 @@ const Dashboard = () => {
               <rect x="5" y="16" width="3" height="3" fill="white" stroke="none" />
               <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17v3" />
             </svg>
-            All QR 
+            All QR
           </button>
-       </div>
+        </div>
       </div>
 
       {/* GRID */}
@@ -537,30 +551,30 @@ const Dashboard = () => {
                 }`}
             >
               <div className="flex items-center justify-between">
-                  <button className="qr_btns"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setQrModal({ tableName: table.dg05_table_name, qrImage: table.dg05_qr_image });
-                    }}
-                    title="View QR Code" >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                      <rect x="3" y="14" width="7" height="7" rx="1" />
-                      <rect x="5" y="5" width="3" height="3" fill="white" stroke="none" />
-                      <rect x="16" y="5" width="3" height="3" fill="white" stroke="none" />
-                      <rect x="5" y="16" width="3" height="3" fill="white" stroke="none" />
-                      <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17v3" />
-                    </svg>
-                  </button>
-                  {/* 3-dot action dropdown */}
-                  <ActionDropdown
-                    table={table}
-                    onMove={(t) => setMoveModal(t)}
-                    onMerge={(t) => setMergeModal(t)}
-                    onSplit={(t) => setSplitModal(t)}
-                  />
+                <button className="qr_btns"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setQrModal({ tableName: table.dg05_table_name, qrImage: table.dg05_qr_image });
+                  }}
+                  title="View QR Code" >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="5" y="5" width="3" height="3" fill="white" stroke="none" />
+                    <rect x="16" y="5" width="3" height="3" fill="white" stroke="none" />
+                    <rect x="5" y="16" width="3" height="3" fill="white" stroke="none" />
+                    <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17v3" />
+                  </svg>
+                </button>
+                {/* 3-dot action dropdown */}
+                <ActionDropdown
+                  table={table}
+                  onMove={(t) => setMoveModal(t)}
+                  onMerge={(t) => setMergeModal(t)}
+                  onSplit={(t) => setSplitModal(t)}
+                />
               </div>
-              
+
 
               {table.dg05_status === "Available" ? (
                 <img onClick={() => handleTableClick(table)} src={table_avialable} alt="table" className="w-20 cursor-pointer mx-auto mb-3 mt-3 " />
@@ -569,7 +583,7 @@ const Dashboard = () => {
               )}
 
               <h2 >{table.dg05_table_name}</h2>
-              
+
 
               <button
                 onClick={() => handleTableClick(table)}
@@ -588,20 +602,20 @@ const Dashboard = () => {
                 <BusyTimer busySince={table.dg05_busy_since} />
               )}
               {/* 🖨 Print icon — sirf Busy tables pe, bottom-left */}
-                {table.dg05_status === "Busy" && (
-              <div className="card-actions">
-                <button className="card-action-btn"
-                  onClick={(e) => handlePrintIconClick(e, table)}
-                  title="Quick Print" >
-                  <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                  Print
-                </button>
-              
-              <button className="card-action-btn red" onclick="event.stopPropagation();setAvailable(3)">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Refresh
-              </button>
-              </div>
+              {table.dg05_status === "Busy" && (
+                <div className="card-actions">
+                  <button className="card-action-btn"
+                    onClick={(e) => handlePrintIconClick(e, table)}
+                    title="Quick Print" >
+                    <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Print
+                  </button>
+
+                  <button className="card-action-btn red" onclick="event.stopPropagation();setAvailable(3)">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Refresh
+                  </button>
+                </div>
               )}
             </div>
           </Col>

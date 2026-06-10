@@ -273,6 +273,8 @@ const DineIn = () => {
             dg09_name: i.dg07_menu_name_snapshot,
             qty: i.dg07_quantity,
             price: parseFloat(i.dg07_price),
+             tax_group_id: i.dg09_tax_group_id,
+            basePrice: parseFloat(i.dg07_base_price),
             qtyRemark: i.dg07_item_remark || "",
             globalRemark: i.dg07_global_remark || "",
             predefinedRemarks: i.dg07_predefined_remark

@@ -71,10 +71,10 @@ const Orders = () => {
   return (
     <div className="main_cards">
       <div className="cards_header flex items-center justify-between">
-          <div>
-            <h3>All Orders</h3>
-            <p>Manage & track all orders</p>
-          </div>
+        <div>
+          <h3>All Orders</h3>
+          <p>Manage & track all orders</p>
+        </div>
         {/* Search */}
         <div className="flex justify-end">
           <div className="date-row main_input">
@@ -84,7 +84,7 @@ const Orders = () => {
           </div>
         </div>
       </div>
-      
+
       {/* CARD */}
       <div className="table_box_main mx-3 mt-3">
         <Row>
@@ -97,50 +97,50 @@ const Orders = () => {
                   setFilters({ ...filters, startDate: e.target.value })
                 }
               />
-              </div>
-            </Col>
-            <Col md={3}>
-              <div className="main_input">
-                <input
-                  type="date"
-                  onChange={(e) =>
-                    setFilters({ ...filters, endDate: e.target.value })
-                  }
-                />
-              </div>
-            </Col>
-            <Col md={3}>
-              <div className="main_input">
-                <select className=""
-                  onChange={(e) =>
-                    setFilters({ ...filters, paymentMethod: e.target.value })
-                  } >
-                  <option >Mode of Payment</option>
-                  <option value="Cash" >Cash</option>
-                  <option value="Card" >Card</option>
-                  <option value="UPI">UPI</option>
-                  <option value="lending">Lending</option>
-                </select>
-              </div>
-            </Col>
-            <Col md={3}>
-              <div className="main_input">
-                <select
-                  onChange={(e) =>
-                    setFilters({ ...filters, orderType: e.target.value })
-                  } >
+            </div>
+          </Col>
+          <Col md={3}>
+            <div className="main_input">
+              <input
+                type="date"
+                onChange={(e) =>
+                  setFilters({ ...filters, endDate: e.target.value })
+                }
+              />
+            </div>
+          </Col>
+          <Col md={3}>
+            <div className="main_input">
+              <select className=""
+                onChange={(e) =>
+                  setFilters({ ...filters, paymentMethod: e.target.value })
+                } >
+                <option >Mode of Payment</option>
+                <option value="Cash" >Cash</option>
+                <option value="Card" >Card</option>
+                <option value="UPI">UPI</option>
+                <option value="lending">Lending</option>
+              </select>
+            </div>
+          </Col>
+          <Col md={3}>
+            <div className="main_input">
+              <select
+                onChange={(e) =>
+                  setFilters({ ...filters, orderType: e.target.value })
+                } >
                 <option value="" >Order Type</option>
                 <option value="dine_in" >DINE IN</option>
                 <option value="takeaway" >TAKE AWAY</option>
                 <option value="delivery">DOOR DELIVERY</option>
               </select>
-              </div>
-            </Col>
+            </div>
+          </Col>
         </Row>
       </div>
 
       {/* TABLE */}
-      <div className="main_table_container mt-3 border-0" style={{borderRadius: '0px'}}>
+      <div className="main_table_container mt-3 border-0" style={{ borderRadius: '0px' }}>
         {/* SCROLL WRAPPER */}
         <div className="overflow-x-auto" >
 
@@ -274,6 +274,8 @@ const Orders = () => {
             dg09_name: i.dg07_menu_name_snapshot,
             qty: i.dg07_quantity,
             price: parseFloat(i.dg07_price),
+            tax_group_id: i.dg09_tax_group_id,
+            basePrice: parseFloat(i.dg07_base_price),
             qtyRemark: i.dg07_item_remark || "",
             globalRemark: i.dg07_global_remark || "",
             predefinedRemarks: i.dg07_predefined_remark

@@ -40,7 +40,7 @@ export default function QROrder() {
         try {
             const res = await apiConnectorPost(endpoint.confirm_customer_order, { orderId });
             if (res?.data?.success) {
-                toast.success("Order confirmed! KOT sent to kitchen 🍳");
+                toast.success("Order confirmed! KOT sent to kitchen 🍳", {id:1});
                 fetchOrders();
                 client.refetchQueries("get_table");
             }

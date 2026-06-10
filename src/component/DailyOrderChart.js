@@ -97,14 +97,7 @@ export default function DailyOrdersChart() {
 
   return (
     <div>
-
-     
-
-
-      {/* Chart Card */}
       <div >
-
-        {/* Card Header */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "16px 22px 14px", borderBottom: `1px solid ${BLUE[100]}`,

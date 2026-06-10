@@ -25,7 +25,7 @@ const Navbar = ({ toggleSidebar }) => {
     ["pending_notifications"],
     () =>
       apiConnectorPost(endpoint.order_branch_status_api, {
-        status: ["pending"],
+        status: ["pending", "customer_placed"],
       }),
     {
       refetchInterval: 10000,
@@ -43,7 +43,7 @@ const Navbar = ({ toggleSidebar }) => {
     }
 
     if (notifCount > prevCount) {
-      audioRef.current?.play().catch(() => {});
+      audioRef.current?.play().catch(() => { });
 
       if (Notification.permission === "granted") {
         new Notification("🔔 New Order!", {
@@ -81,7 +81,7 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
 
       <div className="flex items-center gap-3">
-       
+
 
         {/* Notification Bell */}
         <div className="relative">
@@ -130,7 +130,11 @@ const Navbar = ({ toggleSidebar }) => {
                       className="order_notifaction"
                       onClick={() => {
                         setShowDropdown(false);
-                        navigate("/live-orders");
+                        navigate(
+                          order.dg06_order_type === "delivery"
+                            ? "/online-delivery-order"
+                            : "/qr-order"
+                        );
                       }}
                     >
                       <div className="flex justify-between items-center order_stattus_box">
@@ -174,7 +178,7 @@ const Navbar = ({ toggleSidebar }) => {
           Logout
         </button>
 
-         <div className="tottle_btn mobile_btn">
+        <div className="tottle_btn mobile_btn">
           <button onClick={toggleSidebar}>
             <MenuIcon fontSize="small" />
           </button>

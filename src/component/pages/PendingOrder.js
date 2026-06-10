@@ -75,6 +75,8 @@ export default function PendingOrder() {
         items: (order.items || []).map((item) => ({
           dg09_name: item.dg07_menu_name_snapshot,
           price: Number(item.dg07_price || 0),
+           tax_group_id: item.dg09_tax_group_id,
+            basePrice: parseFloat(item.dg07_base_price),
           qty: Number(item.dg07_quantity || 0),
           total: Number(item.dg07_total || 0),
           globalRemark: item.dg07_global_remark,

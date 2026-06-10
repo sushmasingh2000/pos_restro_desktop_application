@@ -40,7 +40,7 @@ export default function OnlineDeliveryOrder() {
         try {
             const res = await apiConnectorPost(endpoint.confirm_customer_order, { orderId });
             if (res?.data?.success) {
-                toast.success("Order confirmed! KOT sent to kitchen 🍳");
+                toast.success("Order confirmed! KOT sent to kitchen 🍳", {id:1});
                 fetchOrders();
                 client.refetchQueries("get_table");
             }
@@ -64,7 +64,7 @@ export default function OnlineDeliveryOrder() {
 
     const filteredOrders = orders.filter(order => {
         if (activeTab === "PLACED") return order.dg06_status === "customer_placed";
-        if (activeTab === "IN PROGRESS") return order.dg06_status === "preparing";
+        if (activeTab === "IN PROGRESS") return order.dg06_status === "pending";
         if (activeTab === "COMPLETED") return order.dg06_status === "completed";
         if (activeTab === "CANCELLED") return order.dg06_status === "cancelled";
         return false;
