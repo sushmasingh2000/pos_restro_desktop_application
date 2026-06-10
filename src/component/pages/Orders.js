@@ -288,6 +288,8 @@ const Orders = () => {
           orderType={selectedBillOrder.type}
           tableNameMap={{}}
           existingBillId={selectedBillOrder.billId}
+            orderStatus={selectedBillOrder?.status || ""} 
+
           onBillDone={() => {
             setShowBillModal(false);
             setSelectedBillOrder(null);

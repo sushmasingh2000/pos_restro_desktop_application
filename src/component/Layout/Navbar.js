@@ -25,7 +25,7 @@ const Navbar = ({ toggleSidebar }) => {
     ["pending_notifications"],
     () =>
       apiConnectorPost(endpoint.order_branch_status_api, {
-        status: ["pending", "customer_placed"],
+        status: ["customer_placed"],
       }),
     {
       refetchInterval: 10000,

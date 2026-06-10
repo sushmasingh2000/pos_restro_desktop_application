@@ -26,9 +26,11 @@ export default function QROrder() {
             const res = await apiConnectorPost(endpoint.get_customer_placed_orders);
             setOrders(
                 (res?.data?.result || []).filter(
-                    (order) => order.dg06_order_type !== "delivery"
+                    (order) => order.dg06_customer_session !== null
+                        && order.dg06_customer_session !== ""
                 )
             );
+
         } catch (err) {
             console.error(err);
         } finally {
@@ -40,7 +42,7 @@ export default function QROrder() {
         try {
             const res = await apiConnectorPost(endpoint.confirm_customer_order, { orderId });
             if (res?.data?.success) {
-                toast.success("Order confirmed! KOT sent to kitchen 🍳", {id:1});
+                toast.success("Order confirmed! KOT sent to kitchen 🍳", { id: 1 });
                 fetchOrders();
                 client.refetchQueries("get_table");
             }
@@ -88,15 +90,28 @@ export default function QROrder() {
                                     className={activeTab === tab ? "active_tab" : ""}
                                 >
                                     {tab}
-                                    {tab === "PLACED" && orders.filter(o => o.dg06_status === "customer_placed").length > 0 && (
-                                        <span style={{
-                                            background: "#ef4444", color: "#fff",
-                                            borderRadius: "50%", fontSize: 10,
-                                            padding: "1px 5px", marginLeft: 6
-                                        }}>
-                                            {orders.filter(o => o.dg06_status === "customer_placed").length}
-                                        </span>
-                                    )}
+                                    {(() => {
+                                        const statusMap = {
+                                            "PLACED": "customer_placed",
+                                            "IN PROGRESS": "preparing",
+                                            "COMPLETED": "completed",
+                                            "CANCELLED": "cancelled",
+                                        };
+                                        const count = orders.filter(o => o.dg06_status === statusMap[tab]).length;
+                                        return count > 0 ? (
+                                            <span style={{
+                                                background: tab === "PLACED" ? "#ef4444"
+                                                    : tab === "IN PROGRESS" ? "#f59e0b"
+                                                        : tab === "COMPLETED" ? "#10b981"
+                                                            : "#6b7280",
+                                                color: "#fff",
+                                                borderRadius: "50%", fontSize: 10,
+                                                padding: "1px 5px", marginLeft: 6
+                                            }}>
+                                                {count}
+                                            </span>
+                                        ) : null;
+                                    })()}
                                 </button>
                             ))}
                         </div>
@@ -124,7 +139,7 @@ export default function QROrder() {
                                     filteredOrders.map((order, index) => (
                                         <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition">
                                             <td>{order.unique_order_id}</td>
-                                            <td> {order.dg06_order_type==="dine_in" && "Dine IN"}</td>
+                                            <td> {order.dg06_order_type === "dine_in" && "Dine IN"}</td>
                                             <td>{order.item_count} items</td>
                                             <td>₹{order.dg06_total_amount}</td>
                                             <td>{new Date(order.dg06_created_at).toLocaleTimeString()}</td>

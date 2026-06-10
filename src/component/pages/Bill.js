@@ -17,6 +17,8 @@ export default function BillModal({
   tableNameMap = {},
   onBillDone,
   existingBillId = null,
+    orderStatus = "",   // ← YEH ADD KARO
+
 }) {
   // ── Customer ──────────────────────────────────────
   const [customerSearch, setCustomerSearch] = useState("");
@@ -1053,7 +1055,7 @@ export default function BillModal({
               </div>
             )}
 
-            
+
             {/* Payment modes — MULTIPLE SPLIT */}
             <div>
               <label className="text-xs text-dark uppercase tracking-widest mb-2 block">
@@ -1107,10 +1109,10 @@ export default function BillModal({
                                     : {
                                       background: "rgba(124,58,237,0.4)",
                                       border: "1px solid rgba(167,139,250,0.5)",
-                                      color: "#e9d5ff",
+                                      color: "#A83CF6",
                                     }
                                 : {
-                                  
+
                                 }
                             }
                           >
@@ -1377,7 +1379,7 @@ export default function BillModal({
                     }}
                   >
                     ₹{maxWalletUse.toFixed(2)}{" "}
-                    {isAdvance ? "advance" : "wallet"} se apply hoga
+                    {isAdvance ? "advance" : "wallet"} apply 
                     {afterWalletTotal === 0 && " — Fully covered!"}
                   </div>
                 )}
@@ -1585,8 +1587,8 @@ export default function BillModal({
           <button onClick={onClose} className="cancel_btn">
             Cancel
           </button>
-          <div className="flex gap-3" style={{ width: "50%" }}>
-            {orderType === "dine_in" && (
+          <div className="flex justify-end gap-3" style={{ width: "50%" }}>
+            {savedBillId && orderStatus !== "completed" && (
               <button
                 onClick={handleCloseTable}
                 disabled={loading}
@@ -1594,7 +1596,7 @@ export default function BillModal({
                 style={{
                   background: "rgba(239,68,68,0.2)",
                   border: "1px solid rgba(248,113,113,0.35)",
-                  color: "#fca5a5",
+                  color: "#F94E34",
                 }}
               >
                 {loading
@@ -1606,11 +1608,14 @@ export default function BillModal({
                         ? reprintRemainingDue.toFixed(2)
                         : advanceRemaining.toFixed(2)
                       })`
-                      : "🔒 Close Table"}
+                      : orderType === "dine_in"   // ✅ FIX 2: dine_in check
+                        ? "🔒 Close Table"
+                        : "🚚 Delivery Done"}
               </button>
             )}
+
             <button
-              onClick={() => setShowPreview(true)} // ← YAHI CHANGE HAI
+              onClick={() => setShowPreview(true)}
               disabled={loading}
               className="update_btn disabled:opacity-50"
             >
@@ -1620,22 +1625,6 @@ export default function BillModal({
                   ? "⟳ Reprint Bill"
                   : "🖨 Print Bill"}
             </button>
-            {/* <button
-              onClick={handlePrintBill}
-
-              disabled={loading}
-              className="update_btn disabled:opacity-50"
-            >
-              {loading
-                ? "Saving..."
-                : isReprint
-                  ? "⟳ Reprint Bill"
-                  : isLending
-                    ? "📋 Print & Save Due"
-                    : isAdvance
-                      ? "Print & Apply Advance"
-                      : "🖨 Print Bill"}
-            </button> */}
           </div>
         </div>
       </div>

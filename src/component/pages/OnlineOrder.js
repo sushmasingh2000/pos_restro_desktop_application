@@ -24,7 +24,14 @@ export default function OnlineOrder() {
     setLoading(true);
     try {
       const res = await apiConnectorPost(endpoint.get_customer_placed_orders);
-      setOrders(res?.data?.result || []);
+
+      const onlineOrders = (res?.data?.result || []).filter(
+        (order) =>
+          order.platform?.toLowerCase() === "swiggy" ||
+          order.platform?.toLowerCase() === "zomato"
+      );
+
+      setOrders(onlineOrders);
     } catch (err) {
       console.error(err);
     } finally {
@@ -36,7 +43,7 @@ export default function OnlineOrder() {
     try {
       const res = await apiConnectorPost(endpoint.confirm_customer_order, { orderId });
       if (res?.data?.success) {
-        toast.success("Order confirmed! KOT sent to kitchen 🍳", {id:1});
+        toast.success("Order confirmed! KOT sent to kitchen 🍳", { id: 1 });
         fetchOrders();
         client.refetchQueries("get_table");
       }
@@ -99,7 +106,7 @@ export default function OnlineOrder() {
           </div>
         </div>
 
-        <div className="main_table_container" style={{borderRadius: "0", border: "0"}}>
+        <div className="main_table_container" style={{ borderRadius: "0", border: "0" }}>
           <div className="overflow-y-auto" >
             <table className="w-full text-sm">
               <thead>
@@ -128,8 +135,8 @@ export default function OnlineOrder() {
                         <span className={`px-3 py-1 rounded-full text-xs font-medium
                           ${order.dg06_status === "completed" ? "green_bg"
                             : order.dg06_status === "cancelled" ? "red_bg"
-                            : order.dg06_status === "preparing" ? "yellow_bg"
-                            : "purple_bg"}`}>
+                              : order.dg06_status === "preparing" ? "yellow_bg"
+                                : "purple_bg"}`}>
                           {order.dg06_status}
                         </span>
                       </td>

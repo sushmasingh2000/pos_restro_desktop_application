@@ -14,6 +14,7 @@ const DineIn = () => {
   const [showBillModal, setShowBillModal] = useState(false);
   const [selectedBillOrder, setSelectedBillOrder] = useState(null);
   const limit = 5;
+  const type = "dine_in"
 
   const [filters, setFilters] = useState({
     startDate: "",
@@ -284,13 +285,13 @@ const DineIn = () => {
 
           orderId={selectedBillOrder.rawId}
           tableId={selectedBillOrder.tableNo}
-          orderType={selectedBillOrder.type}
+          orderType={type}
           tableNameMap={{}}  // Orders page pe table name map nahi hai, blank do
 
           //  KEY LOGIC: completed hai to existingBillId pass karo → Reprint mode
           // pending hai to null → Normal bill mode
           existingBillId={selectedBillOrder.billId}
-
+            orderStatus={selectedBillOrder?.status || ""}
 
           onBillDone={() => {
             setShowBillModal(false);

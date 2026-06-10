@@ -53,6 +53,8 @@ const POS = () => {
   const [kotPrintData, setKotPrintData] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [previousItems, setPreviousItems] = useState([]);
+  const [currentOrderStatus, setCurrentOrderStatus] = useState("");
+
 
 
   const navigate = useNavigate();
@@ -152,6 +154,7 @@ const POS = () => {
           price: parseFloat(item.dg07_price),
           qtyRemark: item.dg07_item_remark || "",
           globalRemark: item.dg07_global_remark || "",
+          status: order.dg06_status || "",
           predefinedRemarks: item.dg07_predefined_remark
             ? item.dg07_predefined_remark.split(", ").filter(Boolean)
             : [],
@@ -161,7 +164,7 @@ const POS = () => {
 
     const mainOrder = formattedOrders.find((o) => !o.isSplit);
     const splitOrders = formattedOrders.filter((o) => o.isSplit);
-
+    // Existing states ke saath ADD karo:
     const finalOrders = [
       ...(mainOrder ? [mainOrder] : []),
       ...splitOrders,
@@ -177,6 +180,7 @@ const POS = () => {
       setSavedOrderId(firstOrder.orderId || null);
       setExistingBillId(firstOrder.billId || null);
       setExistingBillNo(firstOrder.billNo || null);
+      setCurrentOrderStatus(firstOrder.status || "");
       setActiveOrderIndex(0);
     }
   }, [orderData]);
@@ -188,6 +192,8 @@ const POS = () => {
     setSavedOrderId(order.orderId);
     setExistingBillId(order.billId);
     setExistingBillNo(order.billNo);
+    setCurrentOrderStatus(order.status || "");  // ← ADD KARO
+
   };
 
   const addToOrder = async (item) => {
@@ -267,9 +273,9 @@ const POS = () => {
   //   }
   // };
 
- const totalAmount = parseFloat(
-  orderItems.reduce((acc, item) => acc + (item.basePrice || item.price) * item.qty, 0).toFixed(2)
-);
+  const totalAmount = parseFloat(
+    orderItems.reduce((acc, item) => acc + (item.basePrice || item.price) * item.qty, 0).toFixed(2)
+  );
 
 
   const updateQty = (id, qty) => {
@@ -514,12 +520,12 @@ const POS = () => {
 
           {/* ORDER TABLE */}
           <div className="cart-cols">
-              <div class="cart-col-h">Item</div>
-              <div class="cart-col-h" style={{textAlign: "center"}}>Qty</div>
-              <div class="cart-col-h" style={{textAlign: "right"}}>Price</div>
-              <div class="cart-col-h" style={{textAlign: "right"}}>Total</div>
-              <div class="cart-col-h"  style={{textAlign: "right"}}>Edit</div>
-              <div class="cart-col-h"></div>
+            <div class="cart-col-h">Item</div>
+            <div class="cart-col-h" style={{ textAlign: "center" }}>Qty</div>
+            <div class="cart-col-h" style={{ textAlign: "right" }}>Price</div>
+            <div class="cart-col-h" style={{ textAlign: "right" }}>Total</div>
+            <div class="cart-col-h" style={{ textAlign: "right" }}>Edit</div>
+            <div class="cart-col-h"></div>
           </div>
           <div className="cart-items">
             {orderItems.map((item) => (
@@ -527,22 +533,22 @@ const POS = () => {
                 <div className="cart-item-name">{item.dg09_name}</div>
                 <div className="cart-qty-wrap">
                   {modifyMode ? (
-                          <input
-                            type="number"
-                            value={item.qty}
-                            onChange={(e) => updateQty(item.id, +e.target.value)}
-                            className=""
-                          />
-                        ) : item.qty}
+                    <input
+                      type="number"
+                      value={item.qty}
+                      onChange={(e) => updateQty(item.id, +e.target.value)}
+                      className=""
+                    />
+                  ) : item.qty}
                 </div>
                 <div className="cart-price">₹{(item.basePrice || item.price).toFixed(2)}</div>
                 <div className="cart-total">₹{((item.basePrice || item.price) * item.qty).toFixed(2)}</div>
                 <div className="edite_inf"><Edit onClick={() => { setSelectedItem(item); setShowQtyModal(true); }} /></div>
                 <div className="cart-del"><button onClick={() => removeItem(item.id)} >✕</button></div>
               </div>
-               ))}
+            ))}
           </div>
-         
+
 
           {/* TOTAL */}
           <div className="flex justify-between items-center">
@@ -619,6 +625,7 @@ const POS = () => {
           uniqueOrderId={currentOrder?.uniqueId || null}
           tableId={table}
           orderType={getOrderTypeEnum()}
+          orderStatus={currentOrderStatus}
           tableNameMap={tableNameMap}
           onBillDone={handleBillDone}
           existingBillId={existingBillId}

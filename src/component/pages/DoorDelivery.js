@@ -15,6 +15,7 @@ const DoorDelivery = () => {
   const [showBillModal, setShowBillModal] = useState(false);
   const [selectedBillOrder, setSelectedBillOrder] = useState(null);
   const limit = 10;
+  const type = "delivery"
 
   const [filters, setFilters] = useState({
     startDate: "",
@@ -80,69 +81,69 @@ const DoorDelivery = () => {
 
   return (
     <div className="main_cards">
-       <div className="cards_header flex items-center justify-between">
+      <div className="cards_header flex items-center justify-between">
         <div>
           <h3>Door Delivery Orders</h3>
           <p>Manage and track delivery orders efficiently.</p>
         </div>
       </div>
-      
+
       {/* CARD */}
       <div className="table_box_main mx-3 mt-3">
         <Row>
           <Col md={3}>
-              <div className="main_input">
-                <label>Date <span className="text-red-500">*</span></label>
-                 <input
-                    type="date"
-                    className=""
-                    onChange={(e) =>
-                      setFilters({ ...filters, startDate: e.target.value })
-                    }
-                  />
-              </div>
+            <div className="main_input">
+              <label>Date <span className="text-red-500">*</span></label>
+              <input
+                type="date"
+                className=""
+                onChange={(e) =>
+                  setFilters({ ...filters, startDate: e.target.value })
+                }
+              />
+            </div>
           </Col>
           <Col md={3}>
-              <div className="main_input">
-                <label>Date <span className="text-red-500">*</span></label>
-                <input
-                  type="date"
-                  className=""
-                  onChange={(e) =>
-                    setFilters({ ...filters, endDate: e.target.value })
-                  }
-                />
-              </div>
+            <div className="main_input">
+              <label>Date <span className="text-red-500">*</span></label>
+              <input
+                type="date"
+                className=""
+                onChange={(e) =>
+                  setFilters({ ...filters, endDate: e.target.value })
+                }
+              />
+            </div>
           </Col>
           <Col md={3}>
-              <div className="main_input">
-                <label>Mode of Payment <span className="text-red-500">*</span></label>
-                 <select onChange={(e) => setFilters({ ...filters, paymentMethod: e.target.value }) }>
-                  <option >Mode of Payment</option>
-                  <option value="Cash" >Cash</option>
-                  <option value="Card" >Card</option>
-                  <option value="UPI">UPI</option>
-                </select>
-              </div>
+            <div className="main_input">
+              <label>Mode of Payment <span className="text-red-500">*</span></label>
+              <select onChange={(e) => setFilters({ ...filters, paymentMethod: e.target.value })}>
+                <option >Mode of Payment</option>
+                <option value="Cash" >Cash</option>
+                <option value="Card" >Card</option>
+                <option value="UPI">UPI</option>
+              </select>
+            </div>
           </Col>
           <Col md={3}>
-              <div className="main_input">
-                <label>Payment Status <span className="text-red-500">*</span></label>
-                  <select  onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value }) }>
-                  <option>Payment Status</option>
-                  <option value="paid" >Paid</option>
-                  <option value="unpaid" >Pending</option>
-                </select>
-              </div>
+            <div className="main_input">
+              <label>Payment Status <span className="text-red-500">*</span></label>
+              <select onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}>
+                <option>Payment Status</option>
+                <option value="paid" >Paid</option>
+                <option value="unpaid" >Pending</option>
+              </select>
+            </div>
           </Col>
-         
+
         </Row>
       </div>
 
 
       {/* TABLE */}
 
-      <div className="main_table_container mt-3 border-0" style={{borderRadius: '0px'}}>
+      <div className="main_table_container mt-3 border-0" style={{ borderRadius: '0px' }}>
 
         {/* SCROLL WRAPPER */}
         <div className="overflow-x-auto" >
@@ -151,7 +152,7 @@ const DoorDelivery = () => {
             <thead>
               <tr>
                 {["S.No.",
-                  "Order Id", "Date", "Time",  "SubTotal", "Charge",
+                  "Order Id", "Date", "Time", "SubTotal", "Charge",
                   "Tax", "Discount", "Paid", "MOP", "Status", "Action"
                 ].map((h) => (
                   <th key={h} >{h}</th>
@@ -273,7 +274,7 @@ const DoorDelivery = () => {
             dg09_name: i.dg07_menu_name_snapshot,
             qty: i.dg07_quantity,
             price: parseFloat(i.dg07_price),
-             tax_group_id: i.dg09_tax_group_id,
+            tax_group_id: i.dg09_tax_group_id,
             basePrice: parseFloat(i.dg07_base_price),
             qtyRemark: i.dg07_item_remark || "",
             globalRemark: i.dg07_global_remark || "",
@@ -284,10 +285,10 @@ const DoorDelivery = () => {
 
           orderId={selectedBillOrder.rawId}
           tableId={selectedBillOrder.tableNo}
-          orderType={selectedBillOrder.type}
+          orderType={type}
           tableNameMap={{}}
           existingBillId={selectedBillOrder.billId}
-
+          orderStatus={selectedBillOrder?.status || ""}
           onBillDone={() => {
             setShowBillModal(false);
             setSelectedBillOrder(null);
