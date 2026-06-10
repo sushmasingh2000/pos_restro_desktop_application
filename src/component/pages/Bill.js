@@ -734,7 +734,7 @@ export default function BillModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}
+      style={{ background: "#0e2a47b5" }}
     >
       <div
         className="Order_Details_modal"

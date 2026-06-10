@@ -112,7 +112,7 @@ const LendingOrders = () => {
   const modalOverlay = {
     position: "fixed", inset: 0, zIndex: 60,
     display: "flex", alignItems: "center", justifyContent: "center",
-    background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)",
+    background: "#0e2a47b5",
   };
   const modalCard = {
     width: "100%", maxWidth: 480, borderRadius: 20,

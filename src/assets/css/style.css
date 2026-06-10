@@ -2547,12 +2547,23 @@ button.next_btn {
 .mobile_btn{
     display: none;
 }
+
+ .logo_mobile_responsvie{
+    display: none;
+ }
  
 
 @media(max-width:991px){
    .breadcrumbs{
         flex-wrap: wrap;
         gap: 10px;
+    }
+
+    .logo_mobile_responsvie{
+        margin: 0;
+        border: 0;
+        padding: 0;
+        display: flex;
     }
 
     .desktop_btn{
@@ -2571,6 +2582,10 @@ button.next_btn {
 
 .flex.gap-1.main_tabs {
     overflow-x: scroll;
+}
+
+.breadcrumb_text{
+    display: none;
 }
 
 .flex.gap-1.main_tabs::-webkit-scrollbar, 
@@ -2722,6 +2737,23 @@ button.next_btn {
     .main_chat_sidebar{
         max-width: 100%;
     }
+
+    nav {
+    padding: 10px 15px;
+}
+
+    .logout_btn span{
+        display: none;
+    }
+
+    .logout_btn {
+    padding: 10px 10px;
+}
+
+.tottle_btn {
+    width: 40px;
+    height: 40px;
+}
 
     .login_card{
         border-radius: 25px;
@@ -4416,4 +4448,12 @@ width: 100% !important;
     gap: 4px;
     font-size: 11px;
     color: #85b7eb;
+}
+
+.base_price{
+    font-size: 14px;
+}
+
+.base_price .text-green{
+    color: #1ca22e;
 }

@@ -262,7 +262,7 @@ const SplitModal = ({ table, onClose, onConfirm }) => {
 const Modal = ({ title, onClose, children }) => (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center p-4"
-    style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}
+    style={{ background: "#0e2a47b5" }}
   >
     <div className="Order_Details_modal">
       <div className="Order_Details_modal_header">
@@ -505,8 +505,8 @@ const Dashboard = () => {
       </Row>
       {/* LEGEND */}
       <PosTab />
-
-      <div className="flex items-center justify-between gap-6 mb-6 mt-3">
+     
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 mb-6 mt-3">
         <div class="legendse">
           <div class="leg"><div class="leg-dot avail"></div>Available</div>
           <div class="leg"><div class="leg-dot busy"></div>Busy</div>
@@ -626,17 +626,11 @@ const Dashboard = () => {
       {allQrModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.9)", backdropFilter: "blur(8px)" }}
+          style={{ background: "#0e2a47b5", }}
           onClick={() => setAllQrModal(false)}
         >
           <div
             style={{
-              background: "#1a1a1a",
-              borderRadius: "16px",
-              padding: "20px",
-              maxWidth: "90vw",
-              maxHeight: "85vh",
-              overflowY: "auto",
               position: "relative",
             }}
             onClick={(e) => e.stopPropagation()}
@@ -648,13 +642,13 @@ const Dashboard = () => {
                 position: "absolute",
                 top: "-12px",
                 right: "-12px",
-                width: "28px",
-                height: "28px",
+                width: "32px",
+                height: "32px",
                 borderRadius: "50%",
-                background: "#333",
-                border: "2px solid #555",
-                color: "white",
-                fontSize: "14px",
+                background: "#EFF6FF",
+                border: "1px solid #C7DCFF",
+                color: "#378ADD",
+                fontSize: "22px",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -690,7 +684,7 @@ const Dashboard = () => {
       {qrModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+          style={{ background: "#0e2a47b5", }}
           onClick={() => setQrModal(null)}
         >
           <div
@@ -710,13 +704,13 @@ const Dashboard = () => {
                 position: "absolute",
                 top: "-12px",
                 right: "-12px",
-                width: "28px",
-                height: "28px",
+                width: "32px",
+                height: "32px",
                 borderRadius: "50%",
-                background: "#333",
-                border: "2px solid #555",
-                color: "white",
-                fontSize: "14px",
+                background: "#EFF6FF",
+                border: "1px solid #C7DCFF",
+                color: "#378ADD",
+                fontSize: "22px",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",

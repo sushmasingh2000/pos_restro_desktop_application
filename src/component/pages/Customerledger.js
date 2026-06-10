@@ -31,7 +31,7 @@ const inp = "w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/
 const modalOverlay = {
   position: "fixed", inset: 0, zIndex: 60,
   display: "flex", alignItems: "center", justifyContent: "center",
-  background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)",
+  background: "#0e2a47b5",
 };
 
 const modalCard = {

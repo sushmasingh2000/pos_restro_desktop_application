@@ -71,6 +71,15 @@ const Navbar = ({ toggleSidebar }) => {
       />
 
       <div className="flex items-center gap-4">
+        <div className="sidebar_logo logo_mobile_responsvie">
+          <div className="logo_icon">
+            <i className="ri-send-plane-line"></i>
+          </div>
+          <div>
+            <h1>Ferry Restro</h1>
+            <p>Restaurant Technology partner</p>
+          </div>
+        </div>
         <div className="breadcrumb_text">
           <h4>
             {type === "business_owner" && "Owner Dashboard"}
@@ -80,8 +89,8 @@ const Navbar = ({ toggleSidebar }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-
+      <div className="flex items-center gap-md-3 gap-2">
+       
 
         {/* Notification Bell */}
         <div className="relative">
@@ -175,7 +184,7 @@ const Navbar = ({ toggleSidebar }) => {
           className="flex items-center gap-2 logout_btn"
         >
           <Logout className="!h-4" />
-          Logout
+          <span>Logout</span>
         </button>
 
         <div className="tottle_btn mobile_btn">

@@ -93,7 +93,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 
-      bg-black/70 backdrop-blur-md">
+       " style={{background: "#0e2a47b5"}}>
 
       <div className="Order_Details_modal">
 
