@@ -16,6 +16,8 @@ import CustomerReport from "../component/pages/Report";
 import SalesSummary from "../component/pages/SalesOrderSummary";
 import TakeAway from "../component/pages/TakeAway";
 import ExpenseManagementReport from "../component/pages/expense/Expense";
+import OnlineDeliveryOrder from "../component/pages/OnlineDeliveryOrder";
+import QROrder from "../component/pages/QROrder";
 
 
 export const routes = [
@@ -80,6 +82,24 @@ export const routes = [
     element: (
       <MainLayout>
         <PendingOrder />
+      </MainLayout>
+    ),
+  },
+  
+   {
+    path: "/online-delivery-order",
+    element: (
+      <MainLayout>
+        <OnlineDeliveryOrder />
+      </MainLayout>
+    ),
+  },
+
+  {
+    path: "/qr-order",
+    element: (
+      <MainLayout>
+        <QROrder />
       </MainLayout>
     ),
   },

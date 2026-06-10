@@ -22,64 +22,43 @@ const Login = ({ role }) => {
     setShowPassword(false);
   };
 
-  // ── Submit ────────────────────────────────────────
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
-      toast.error("Email aur password daalo!");
+      toast.error("Email and Password required");
       return;
     }
     setLoading(true);
-
     try {
-      const res = await apiConnectorPost(endpoint?.login_api, {
-        email: username,
-        password: password,
+      const res = await apiConnectorPost(endpoint.login_api, {
+        email: username.trim(),
+        password,
       });
+
       if (!res?.data?.success) {
         toast.error(res?.data?.message || "Login failed");
-        setLoading(false);
         return;
       }
-
       const user = res?.data?.result?.[0];
-      if (user?.role !== role) {
-        toast.error("Invalid credentials");
-        setLoading(false);
+      if (!user) {
+        toast.error("User not found");
         return;
       }
-
-
-      const userRole = user?.role;
-      // =========================
-      // SAVE DATA
-      // =========================
-      localStorage.setItem("token", user?.token);
-      localStorage.setItem("loginTime", Date.now().toString());
-      // console.log("✅ fron mein save:", user?.token);
-
-      localStorage.setItem("role", userRole);
-      if (userRole === "business_owner") {
-        localStorage.setItem("business", user?.business_id);
+      if (user.role !== "staff") {
+        toast.error("Only staff login is allowed");
+        return;
       }
-
+      localStorage.setItem("token", user.token);
+      localStorage.setItem("role", "staff");
+      localStorage.setItem("loginTime", Date.now().toString());
       toast.success("Login successful");
+      navigate("/userdashboard");
 
-      // =========================
-      // NAVIGATION
-      // =========================
-      if (userRole === "master_admin") navigate("/masterdashboard");
-      else if (userRole === "business_owner") navigate("/ownerdashboard");
-      else if (userRole === "branch_admin") navigate("/admindashboard");
-      else if (userRole === "staff") navigate("/userdashboard");
-
-      // window.location.reload();
-
-    } catch (e) {
-      console.error("Login error:", e);
+    } catch (error) {
+      console.error("Login Error:", error);
       toast.error("Server error, try again");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
 
