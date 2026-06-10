@@ -72,8 +72,7 @@ const KOTPrintSlip = ({ kotData, onClose }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "rgba(0,0,0,0.85)",
-        backdropFilter: "blur(6px)",
+        background: "#0e2a47b5",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, maxHeight: "95vh", overflowY: "auto" }}>

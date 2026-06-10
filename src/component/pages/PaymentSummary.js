@@ -74,7 +74,7 @@ const LendingModal = ({ customer, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background: "#0e2a47b5"}}
       onClick={onClose}
     >
       <div
@@ -176,7 +176,7 @@ const WalletModal = ({ customer, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background: "#0e2a47b5"}}
       onClick={onClose}
     >
       <div

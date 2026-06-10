@@ -39,8 +39,7 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "rgba(0,0,0,0.85)",
-        backdropFilter: "blur(6px)",
+        background: "#0e2a47b5",
       }}
     >
       {/* Outer card */}
