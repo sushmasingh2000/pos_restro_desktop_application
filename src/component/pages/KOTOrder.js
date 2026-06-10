@@ -54,18 +54,14 @@ const KitchenScreen = () => {
     };
 
    return (
-  <div className="">
-    <div className="breadcrumbs">
+  <div className="main_cards">
+    <div className="cards_header flex items-center justify-between">
         <div>
-          <h3 className="main_heading">🍳 Kitchen Dashboard</h3>
-          <ul>
-            <li>Home</li>
-            <li>/</li>
-            <li className="active">🍳 Kitchen Dashboard</li>
-          </ul>
+          <h3>Kitchen Dashboard</h3>
+          <p>Monitor kitchen orders in real time.</p>
         </div>
     </div>
-    <Row>
+    <Row className="px-3">
       {Object.values(groupedOrders).map((order) => (
       <Col lg={6} md={6}  key={order.kotId} className="mt-3">
         <div className="kitchen_box">

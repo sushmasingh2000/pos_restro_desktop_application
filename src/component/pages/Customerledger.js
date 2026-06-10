@@ -22,7 +22,7 @@ const StatCard = ({ label, value, color, sub }) => (
     <span className="text-2xl font-bold" style={{ color }}>
       {value}
     </span>
-    {sub && <span className="text-xs text-white/30">{sub}</span>}
+    {sub && <span className="text-xs text-dark">{sub}</span>}
   </div>
 );
 
@@ -165,16 +165,12 @@ const CustomerLedger = () => {
   };
 
   return (
-    <div className="">
+    <div className="main_cards">
       {/* ── Header ── */}
-      <div className="breadcrumbs">
+      <div className="cards_header flex items-center justify-between ">
         <div>
           <h3 className="main_heading">Customer Ledger</h3>
-          <ul>
-            <li>Home</li>
-            <li>/</li>
-            <li className="active">Customer Ledger</li>
-          </ul>
+          <p>Track all customer transactions and balances easily.</p>
         </div>
         <div className="flex gap-3">
           <button
@@ -187,33 +183,35 @@ const CustomerLedger = () => {
 
 
       {/* ── Search Bar ── */}
-      <div className="brand_boxs flex items-end gap-4 w-full">
-        <div className="main_input">
-          <label>Customer Phone Number <span className="text-red-500">*</span></label>
-          <select
-            value={phone}
-            onChange={(e) => { setPhone(e.target.value); setSearchPhone(e.target.value); }}
-          >
-            <option value="" >Select Customer</option>
-            {allCustomers.map((c) => (
-              <option key={c.id} value={c.phone}>
-                {c.name} ({c.phone})
-              </option>
-            ))}
-          </select>
+      <div className="m-3">
+        <div className="brand_boxs flex items-end gap-4 ">
+          <div className="main_input mt-0">
+            <label>Customer Phone Number <span className="text-red-500">*</span></label>
+            <select
+              value={phone}
+              onChange={(e) => { setPhone(e.target.value); setSearchPhone(e.target.value); }}
+            >
+              <option value="" >Select Customer</option>
+              {allCustomers.map((c) => (
+                <option key={c.id} value={c.phone}>
+                  {c.name} ({c.phone})
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={handleSearch}
+            disabled={isLoading || isFetching}
+            className="main_btn">
+            {isLoading || isFetching ? "Searching..." : "🔍 Search"}
+          </button>
         </div>
-        <button
-          onClick={handleSearch}
-          disabled={isLoading || isFetching}
-          className="main_btn">
-          {isLoading || isFetching ? "Searching..." : "🔍 Search"}
-        </button>
       </div>
 
       {/* ── Results ── */}
       {ledger && customer && (
         < >
-          <div className="landing_boxes mt-3">
+          <div className="landing_boxes mt-3 mx-3">
             <Row className="landing_header border-0">
               <Col lg={4} md={4}>
                 <div className="landin_name">
@@ -256,7 +254,7 @@ const CustomerLedger = () => {
               </Col>
             </Row>
           </div>
-          <div className="history_box mt-3">
+          <div className="history_box mt-3 mx-3">
             <div className="history_header flex justify-between items-center">
               <h6>Pending Dues</h6>
               {ledger.totalDue > 0 && ( 
@@ -264,7 +262,7 @@ const CustomerLedger = () => {
               )}
             </div>
               {ledger.pendingDues?.length === 0 ? (
-                <div className="px-5 py-10 text-center text-white/30 text-sm">No pending due</div>
+                <div className="px-5 py-10 text-center text-dark text-sm">No pending due</div>
               ) : (
               <div className="divide-y divide-white/5">
                 {ledger.pendingDues.map((due) => (
@@ -322,12 +320,12 @@ const CustomerLedger = () => {
               </div>
               )}
           </div>
-          <div className="wallet_histotry_box mt-3">
+          <div className="wallet_histotry_box mt-3 mx-3 mb-3">
             <div className="history_header flex justify-between items-center">
               <h6>Wallet / Transaction History</h6>
             </div>
              {!ledger.walletHistory?.length ? (
-                <div className="px-5 py-10 text-center text-white/30 text-sm">No transactions found</div>
+                <div className="px-5 py-10 text-center text-dark text-sm">No transactions found</div>
               ) : (
               <div>
               {ledger.walletHistory.map((tx, i) => (
@@ -353,7 +351,7 @@ const CustomerLedger = () => {
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
 
                               {/* DATE */}
-                              <span className="text-xs text-white/30">
+                              <span className="text-xs text-dark">
                                 {new Date(tx.dg043_created_at).toLocaleDateString("en-IN", {
                                   day: "2-digit",
                                   month: "short",
@@ -364,7 +362,7 @@ const CustomerLedger = () => {
                               {/* TIME */}
                               <span className="text-xs text-white/20">•</span>
 
-                              <span className="text-xs text-white/30">
+                              <span className="text-xs text-dark">
                                 {new Date(tx.dg043_created_at).toLocaleTimeString("en-IN", {
                                   hour: "2-digit",
                                   minute: "2-digit",
@@ -464,7 +462,7 @@ const CustomerLedger = () => {
               <div className="flex items-center justify-between cursor-pointer" onClick={() => setRegWalletToggle((p) => !p)}>
                 <div>
                   <div className="text-sm font-medium"> add advance Wallet ?</div>
-                  <div className="text-xs text-white/30 mt-0.5">Optional</div>
+                  <div className="text-xs text-dark mt-0.5">Optional</div>
                 </div>
                 <div className="relative flex-shrink-0 w-10 h-6 rounded-full transition-colors" style={{ background: regWalletToggle ? "rgba(124,58,237,0.8)" : "rgba(255,255,255,0.1)" }}>
                   <div className="absolute top-1 w-4 h-4 rounded-full bg-white transition-all" style={{ left: regWalletToggle ? "20px" : "4px" }} />
@@ -477,8 +475,8 @@ const CustomerLedger = () => {
                     <input type="number" value={regWalletAmount} onChange={(e) => setRegWalletAmount(e.target.value)} placeholder="e.g. 500"  />
                   </div>
                   {/* Payment Method */}
-                  <div>
-                    <label className="text-xs text-white/40 uppercase tracking-widest mb-1.5 block">
+                  <div className="main_input">
+                    <label>
                       Payment Method <span className="text-red-400">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -557,8 +555,8 @@ const CustomerLedger = () => {
               </div>
 
               {/* ── Payment Method ── */}
-              <div className="mt-3">
-                <label className="text-xs text-white/40 uppercase tracking-widest mb-1.5 block">
+              <div className="mt-3 main_input">
+                <label >
                   Payment Method <span className="text-red-400">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -575,14 +573,14 @@ const CustomerLedger = () => {
                       className="py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition"
                       style={{
                         border: topupPaymentMode === m.id
-                          ? "1.5px solid #7c3aed"
-                          : "1px solid rgba(255,255,255,0.1)",
+                          ? "1px solid #1d4ed8"
+                          : "1px solid #1e3a9942",
                         background: topupPaymentMode === m.id
-                          ? "rgba(124,58,237,0.18)"
+                          ? "#1d4ed8"
                           : "rgba(255,255,255,0.04)",
                         color: topupPaymentMode === m.id
-                          ? "#c4b5fd"
-                          : "rgba(255,255,255,0.5)",
+                          ? "#fff"
+                          : "#1e3a99",
                       }}
                     >
                       {m.icon} {m.label}

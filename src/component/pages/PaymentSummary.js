@@ -28,26 +28,26 @@ const Card = ({ title, value, color = "purple" }) => {
 
 const Badge = ({ label, color }) => {
   const map = {
-    cash: "bg-green-500/20 text-green-300",
-    upi: "bg-blue-500/20 text-blue-300",
-    card: "bg-purple-500/20 text-purple-300",
-    unpaid: "bg-red-500/20 text-red-300",
-    advance: "bg-yellow-500/20 text-yellow-300",
-    credit: "bg-green-500/20 text-green-300",
-    debit: "bg-red-500/20 text-red-300",
-    settled: "bg-green-500/20 text-green-300",
-    partial: "bg-yellow-500/20 text-yellow-300",
-    pending: "bg-red-500/20 text-red-300",
+    cash: "",
+    upi: "",
+    card: "",
+    unpaid: "",
+    advance: "",
+    credit: "",
+    debit: "",
+    settled: "",
+    partial: "",
+    pending: "",
   };
-  const cls = map[color] || map[label?.toLowerCase()] || "bg-white/10 text-white/60";
+  const cls = map[color] || map[label?.toLowerCase()] || "";
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${cls}`}>{label}</span>
+    <span className={` ${cls}`}>{label}</span>
   );
 };
 
 const Section = ({ title, children }) => (
-  <div className="main_chart_box">
-    <div className="chart_header_card">
+  <div className="main_cards" style={{height: "100%"}}>
+    <div className="cards_header flex items-center justify-between">
       <h3>{title}</h3>
     </div>
     <div >{children}</div>
@@ -397,7 +397,7 @@ const PaymentLendingWallet = () => {
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex flex-wrap gap-3 mt-3 text-xs text-white/60 px-4 pb-4">
+                    <div className="flex flex-wrap gap-3 mt-3 text-xs text-dark px-4 pb-4">
                       {payPieData.map((d, i) => (
                         <span key={i} className="flex items-center gap-1.5">
                           <span className="w-3 h-3 rounded" style={{ background: PAY_COLORS[i] }} />
@@ -409,25 +409,24 @@ const PaymentLendingWallet = () => {
                 </Col>
                 <Col md={6} className="mb-3 md:mb-0">
                   <Section title="Payment Records">
-                    <div className="main_details_order_table">
-                      <div className="t_header">
-                        <h6>Method</h6>
-                        <h6>Amount</h6>
+                    <div className="rec-card-body">
+                      <div class="rec-thead">
+                          <span className="rec-th">Method</span>
+                          <span className="rec-th">Amount</span>
                       </div>
-                      <ul>
                         {[
-                          { label: "Cash", val: payment.cash, color: "green" },
-                          { label: "UPI", val: payment.upi, color: "blue" },
-                          { label: "Card", val: payment.card, color: "purple" },
-                          { label: "Lending", val: payment.lending, color: "red" },
+                          { label: "Cash", val: payment.cash,  },
+                          { label: "UPI", val: payment.upi,  },
+                          { label: "Card", val: payment.card,  },
+                          { label: "Lending", val: payment.lending,  },
                         ].map((row, i) => (
-                          <li key={i} className="flex justify-between">
-                            <span><Badge label={row.label} color={row.label.toLowerCase()} /></span>
-                            <span>₹{row.val || 0}</span>
+                          <li key={i} className="rec-row">
+                            <span  className="rec-key"><Badge label={row.label}  /></span>
+                            <span className="rec-val">₹{row.val || 0}</span>
                           </li>
                         ))}
-                        <li className="flex justify-between"><span><b>Total</b></span><span>₹{((payment.cash || 0) + (payment.upi || 0) + (payment.card || 0) + (payment.lending || 0)).toFixed(2)}</span></li>
-                      </ul>
+                        <li className="rec-row"><span><b>Total</b></span><span className="rec-val">₹{((payment.cash || 0) + (payment.upi || 0) + (payment.card || 0) + (payment.lending || 0)).toFixed(2)}</span></li>
+                      
                     </div>
 
                   </Section>
@@ -467,7 +466,7 @@ const PaymentLendingWallet = () => {
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex flex-wrap gap-3 mt-3 text-xs text-white/60  px-4 pb-4">
+                    <div className="flex flex-wrap gap-3 mt-3 text-xs text-dark  px-4 pb-4">
                       {lendPieData.map((d, i) => (
                         <span key={i} className="flex items-center gap-1.5">
                           <span className="w-3 h-3 rounded" style={{ background: LEND_COLORS[i] }} />
@@ -480,25 +479,22 @@ const PaymentLendingWallet = () => {
 
                 <Col md={6} className="mb-3 md:mb-0">
                   <Section title="Payment Mode Records">
-                    <div className="main_details_order_table">
-                      <div className="t_header">
-                        <h6>Mode</h6>
-                        <h6>Paid Amount</h6>
+                    <div className="rec-card-body">
+                      <div className="rec-thead">
+                        <span className="rec-th">Mode</span>
+                        <span className="rec-th">Paid Amount</span>
                       </div>
-                      <ul>
                         {[
                           { label: "Cash", val: lendMode.cash },
                           { label: "UPI", val: lendMode.upi },
                           { label: "Card", val: lendMode.card },
                           { label: "Unpaid", val: lendMode.unpaid },
                         ].map((row, i) => (
-                          <li key={i} className="flex justify-between">
-                            <span><Badge label={row.label} color={row.label.toLowerCase()} /></span>
-                            <span>₹{row.val || 0}</span>
+                          <li key={i} className="rec-row">
+                            <span className="rec-key"><Badge label={row.label} color={row.label.toLowerCase()} /></span>
+                            <span className="rec-val">₹{row.val || 0}</span>
                           </li>
                         ))}
-
-                      </ul>
                     </div>
 
                   </Section>
@@ -506,10 +502,10 @@ const PaymentLendingWallet = () => {
               </Row>
 
               {/*  FIXED: Customer table — Mode column hataya, click se modal */}
-
-              <Section title="Customer-wise Lending (click to view payments)" >
+              <div className="mx-4 mb-3">
+              <Section  title="Customer-wise Lending (click to view payments)" >
                 {lendList.length > 0 ? (
-                  <div className="main_table_container" className="">
+                  <div className="main_table_container" className="mx-3">
                     <div className="overflow-x-auto" style={{ borderRadius: "14px;" }}>
                       <table className="w-full">
                         <thead>
@@ -550,9 +546,10 @@ const PaymentLendingWallet = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-white/40 text-center py-8">No lending records found</p>
+                  <p className="text-dark text-center py-8">No lending records found</p>
                 )}
               </Section>
+              </div>
             </>
           )}
 
@@ -586,7 +583,7 @@ const PaymentLendingWallet = () => {
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex gap-4 mt-3 text-xs text-white/60  px-4 pb-4">
+                    <div className="flex gap-4 mt-3 text-xs text-dark  px-4 pb-4">
                       <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-green-500" />Credit</span>
                       <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-500" />Debit</span>
                     </div>
@@ -610,7 +607,7 @@ const PaymentLendingWallet = () => {
                             </tr>
                           ))
                         ) : (
-                          <tr><td colSpan={3} className="p-4 text-center text-white/40">No data</td></tr>
+                          <tr><td colSpan={3} className="p-4 text-center text-dark">No data</td></tr>
                         )}
                       </tbody>
                     </table>
@@ -674,7 +671,7 @@ const PaymentLendingWallet = () => {
                           </table>
                         </div>
                       ) : (
-                        <p className="text-white/40 text-center py-8">No wallet transactions found</p>
+                        <p className="text-dark text-center py-8">No wallet transactions found</p>
                       )}
                     </Section>
                   </div>

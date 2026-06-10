@@ -8,7 +8,7 @@ const fmtD = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit"
 const fmtDT= (d) => d ? new Date(d).toLocaleString("en-IN",  { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 const ini  = (n) => (n || "?").split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 
-const card = { background: "#212020", borderRadius: 12, border: "1px solid #3d3d3d", padding: "14px 16px", marginBottom: 14 };
+const card = { background: "#fff", borderRadius: 12, border: "1px solid #c7dcff", padding: "14px 16px", marginBottom: 14 };
 const th   = {   };
 const td   = {  };
 
@@ -38,9 +38,9 @@ const statusBadge = (s) => {
   return <Badge text={s || "—"} type={m[s] || "gray"} />;
 };
 
-const Stat = ({ label, value, color = "#FFF" }) => (
-  <div style={{ background: "#2b2b2b", borderRadius: 8, padding: "10px 12px" }}>
-    <div style={{ fontSize: 11, color: "#d7d7d7", marginBottom: 4 }}>{label}</div>
+const Stat = ({ label, value, color = "#1e3a8a" }) => (
+  <div style={{ background: "#1d4ed81f", border: "1px solid #1d4ed81f", borderRadius: 8, padding: "10px 12px" }}>
+    <div style={{ fontSize: 11, color: "#373737", marginBottom: 4 }}>{label}</div>
     <div style={{ fontSize: 17, fontWeight: 700, color }}>{value}</div>
   </div>
 );
@@ -171,7 +171,7 @@ const OrderItems = ({ items, topItems }) => {
           { k: "top",   label: `Top ordered (${topItems.length})` },
         ].map((t) => (
           <button key={t.k} onClick={() => setView(t.k)}
-            style={{ padding: "5px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid #3d3d3d", background: view === t.k ? "var(--primary-color)" : "#2b2b2b", color: view === t.k ? "#000" : "#9f9f9f" }}>
+            style={{ padding: "5px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", background: view === t.k ? "var(--primary-color)" : "#c7dcff", color: view === t.k ? "#fff" : "var(--primary-color)" }}>
             {t.label}
           </button>
         ))}
@@ -236,16 +236,16 @@ const OrderItems = ({ items, topItems }) => {
 
 // ── CUSTOMER LIST ITEM ───────────────────────────────────────
 const CustItem = ({ c, active, onClick }) => (
-  <div onClick={onClick} style={{ padding: "11px 14px", borderBottom: "1px solid #3d3d3d", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, background: active ? "#c5a3772b" : "#212020", borderLeft: active ? "3px solid var(--primary-color)" : "3px solid transparent", transition: "background .12s" }}>
-    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#c5a37736", color: "var(--primary-color)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+  <div onClick={onClick} style={{ padding: "11px 14px", borderBottom: "1px solid #c7dcff", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, background: active ? "#1d4ed826" : "#fff", borderLeft: active ? "3px solid var(--primary-color)" : "3px solid transparent", transition: "background .12s" }}>
+    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#1d4ed81f", color: "var(--primary-color)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
       {ini(c.name)}
     </div>
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e3a8a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
       <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>{c.phone || ""}</div>
     </div>
     <div style={{ textAlign: "right", flexShrink: 0 }}>
-      <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>{fmt(c.totalBilled)}</div>
+      <div style={{ fontSize: 12, color: "var(--primary-color)", fontWeight: 600 }}>{fmt(c.totalBilled)}</div>
       {parseFloat(c.totalUdharPending) > 0 && (
         <div style={{ fontSize: 11, color: "#dc2626", marginTop: 1 }}>Due {fmt(c.totalUdharPending)}</div>
       )}
@@ -349,18 +349,18 @@ export default function CustomerReport() {
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } @keyframes spin { to { transform: rotate(360deg); } } table tr:hover td { background: #f0f9ff; }`}</style>
 
       {/* ── TOP BAR ── */}
-      <div style={{ background: "#212020", borderBottom: "1px solid #3d3d3d", padding: "10px 18px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 15, fontWeight: 700, marginRight: 4, color: "#fff" }}> Customer Report</span>
+      <div style={{ background: "#fff", border: "1px solid #c7dcff", borderRadius: "10px 10px 0px 0px", padding: "10px 18px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 15, fontWeight: 700, marginRight: 4, color: "#1e3a8a" }}> Customer Report</span>
         <input
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search by name / phone..."
-          style={{ padding: "7px 12px", color: "#fff", border: "1px solid #3d3d3d", background: "#212020", borderRadius: 8, fontSize: 13, width: 230, outline: "none" }}
+          style={{ padding: "7px 12px", color: "#1e3a8a", border: "1px solid #B5D4F4", background: "#e6f1fb5c", borderRadius: 8, fontSize: 13, width: 230, outline: "none" }}
         />
         <span style={{ fontSize: 12, color: "#fff" }}>{filtered.length} customers</span>
         <button
           onClick={() => loadList(search)}
-          style={{ marginLeft: "auto", padding: "6px 14px", borderRadius: 8, fontSize: 13, cursor: "pointer", border: "1px solid var(--primary-color)", background: "var(--primary-color)", color: "#000" }}
+          style={{ marginLeft: "auto", padding: "6px 14px", borderRadius: 8, fontSize: 13, cursor: "pointer", border: "1px solid var(--primary-color)", background: "var(--primary-color)", color: "#fff" }}
         >
           ↻ Refresh
         </button>
@@ -371,12 +371,12 @@ export default function CustomerReport() {
 
         {/* ── LEFT: Customer List ── */}
         <div className="main_chat_sidebar">
-          <div style={{ padding: "10px 12px", borderBottom: "1px solid #3d3d3d" }}>
+          <div style={{ padding: "10px 12px", borderBottom: "1px solid #c7dcff" }}>
             <input
               value={localQ}
               onChange={(e) => handleLocal(e.target.value)}
               placeholder="🔍 Filter list..."
-              style={{ width: "100%", padding: "7px 10px", color: "#fff", background: "#212020", border: "1px solid #3d3d3d", borderRadius: 8, fontSize: 13, outline: "none" }}
+              style={{ width: "100%", padding: "7px 10px", color: "#1e3a8a", background: "#e6f1fb5c", border: "1px solid #c7dcff", borderRadius: 8, fontSize: 13, outline: "none" }}
             />
           </div>
           <div style={{ flex: 1, overflowY: "auto" }}>
@@ -428,12 +428,12 @@ export default function CustomerReport() {
             <>
               {/* Profile Card */}
               <div style={{ ...card, display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 50, height: 50, borderRadius: "50%", background: "#2d2d2d", border: "1px solid #3d3d3d", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
+                <div style={{ width: 50, height: 50, borderRadius: "50%", background: "#1d4ed81f", border: "1px solid #c7dcff", color: "var(--primary-color)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
                   {ini(cu.name)}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", }}>{cu.name}</div>
-                  <div style={{ fontSize: 12, color: "#838383", marginTop: 4 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#1e3a8a", }}>{cu.name}</div>
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
                     📞 {cu.phone || "—"} &nbsp;·&nbsp; 📍 {cu.address || "—"} &nbsp;·&nbsp; Since {fmtD(cu.customerSince)}
                   </div>
                   <div style={{ marginTop: 7, display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -449,7 +449,7 @@ export default function CustomerReport() {
                   </div>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontSize: 12, color: "#838383" }}>Wallet balance</div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>Wallet balance</div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: "#059669", marginTop: 3 }}>{fmt(cu.walletBalance)}</div>
                 </div>
               </div>
@@ -493,10 +493,10 @@ export default function CustomerReport() {
               </Section>
 
               {/* TABS */}
-              <div style={{ display: "flex", gap: 4, marginBottom: 14, background: "#212020", borderRadius: 10, border: "1px solid #3d3d3d", padding: 4 }}>
+              <div style={{ display: "flex", gap: 4, marginBottom: 14, background: "#fff", borderRadius: 10, border: "1px solid #c7dcff", padding: 4 }}>
                 {TABS.map((t) => (
                   <button key={t.key} onClick={() => setActiveTab(t.key)}
-                    style={{ flex: 1, padding: "7px 6px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: activeTab === t.key ? "var(--primary-color)" : "transparent", color: activeTab === t.key ? "#000" : "rgb(105, 105, 105)" }}>
+                    style={{ flex: 1, padding: "7px 6px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: activeTab === t.key ? "var(--primary-color)" : "transparent", color: activeTab === t.key ? "#fff" : "rgb(105, 105, 105)" }}>
                     {t.label}
                   </button>
                 ))}

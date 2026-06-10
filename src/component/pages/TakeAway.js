@@ -72,21 +72,17 @@ const TakeAway = () => {
   };
 
   return (
-    <div className="">
-      <div className="breadcrumbs">
+    <div className="main_cards">
+      <div className="cards_header flex items-center justify-between">
         <div>
-          <h3 className="main_heading">TakeAway Orders</h3>
-          <ul>
-            <li>Home</li>
-            <li>/</li>
-            <li className="active">TakeAway Orders</li>
-          </ul>
+          <h3>TakeAway Orders</h3>  
+          <p>Track takeaway orders and pickups easily.</p>
         </div>
       </div>
 
 
       {/* CARD */}
-      <div className="table_box_main">
+      <div className="table_box_main mx-3 mt-3">
         <Row>
            <Col md={3}>
               <div className="main_input">
@@ -140,10 +136,10 @@ const TakeAway = () => {
 
       {/* TABLE */}
 
-      <div className="main_table_container mt-3">
+      <div className="main_table_container mt-3 border-0" style={{borderRadius: '0'}}>
 
         {/* SCROLL WRAPPER */}
-        <div className="overflow-x-auto" style={{borderRadius: '14px'}}>
+        <div className="overflow-x-auto" >
 
           <table className="w-full">
             <thead>
