@@ -11,8 +11,11 @@ const PosTab = () => {
 
   const navItems = [
     { name: "DINE IN", path: "/userdashboard" },
-    { name: "TAKE AWAY", path: "/pos/take-away" },
-    { name: "DOOR DELIVERY", path: "/pos/delivery" },
+    // { name: "TAKE AWAY", path: "/pos/take-away" },
+    // { name: "DOOR DELIVERY", path: "/pos/delivery" },
+    { name: "DOOR DELIVERY ORDERS", path: "/online-delivery-order" },
+    { name: "OR SCAN ORDERS", path: "/qr-order" },
+    
     { name: "ONLINE ORDERS", path: "/online-order" },
     { name: "PENDING ORDERS", path: "/pending-order" },
   ];

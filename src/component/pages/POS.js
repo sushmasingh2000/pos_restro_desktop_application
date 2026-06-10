@@ -457,11 +457,11 @@ const POS = () => {
               className="main_card main_card_2"
             >
 
-              <img
+              {/* <img
                 src={domain + item.dg09_image_url}
                 alt={item.dg09_image_url}
                 className="w-full h-16 object-cover rounded"
-              />
+              /> */}
               <h6>{item.dg09_name}</h6>
               <h3>₹{item.dg09_price}</h3>
             </div>

@@ -11,15 +11,6 @@ import { useEffect } from "react";
 import { isTokenValid } from "./authentication/authexpiry";
 import { Navigate } from "react-router-dom";
 
-const getDashboardRoute = () => {
-  const role = localStorage.getItem("role");
-  if (role === "master_admin") return "/masterdashboard";
-  if (role === "business_owner") return "/ownerdashboard";
-  if (role === "branch_admin") return "/admindashboard";
-  if (role === "staff") return "/userdashboard";
-  return "/";
-};
-
 const ProtectedRoute = ({ element }) => {
   return isTokenValid() ? element : <Navigate to="/" replace />;
 };
@@ -43,8 +34,8 @@ const App = () => {
           path="/"
           element={
             isTokenValid()
-              ? <Navigate to={getDashboardRoute()} replace />
-              : <Login role="staff" />
+              ? <Navigate to="/userdashboard" replace />
+              : <Login />
           }
         />
 
