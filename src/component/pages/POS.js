@@ -547,7 +547,7 @@ const POS = () => {
           {/* TOTAL */}
           <div className="flex justify-between items-center">
             {modifyMode && savedOrderId && (
-              <button className="bg-red-600 text-white p-2 rounded-lg text-sm" onClick={() => setShowCancelModal(true)}>
+              <button className="bg-red-600 text-white p-2 mx-3 rounded-lg text-sm" onClick={() => setShowCancelModal(true)}>
                 Cancel Order
               </button>
             )}

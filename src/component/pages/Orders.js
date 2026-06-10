@@ -69,23 +69,16 @@ const Orders = () => {
 
 
   return (
-    <div className="">
-      <div className="breadcrumbs">
-        <div className="flex gap-4 items-center">
+    <div className="main_cards">
+      <div className="cards_header flex items-center justify-between">
           <div>
-            <h3 className="main_heading">All Orders</h3>
-            <ul>
-              <li>Dashboard</li>
-              <li>/</li>
-              <li className="active">Manage & track all orders</li>
-            </ul>
+            <h3>All Orders</h3>
+            <p>Manage & track all orders</p>
           </div>
-         
-        </div>
         {/* Search */}
         <div className="flex justify-end">
-          <div className="flex items-center gap-2 main_input mt-0">
-            <span className="text-sm text-white/50">Search:</span>
+          <div className="date-row main_input">
+            <span className="date-label">Search:</span>
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Enter Order Id" />
           </div>
@@ -93,7 +86,7 @@ const Orders = () => {
       </div>
       
       {/* CARD */}
-      <div className="table_box_main">
+      <div className="table_box_main mx-3 mt-3">
         <Row>
           <Col md={3}>
             <div className="main_input">
@@ -147,9 +140,9 @@ const Orders = () => {
       </div>
 
       {/* TABLE */}
-      <div className="main_table_container mt-3">
+      <div className="main_table_container mt-3 border-0" style={{borderRadius: '0px'}}>
         {/* SCROLL WRAPPER */}
-        <div className="overflow-x-auto" style={{borderRadius: '14px'}}>
+        <div className="overflow-x-auto" >
 
           <table className="w-full ">
             <thead >
@@ -229,7 +222,7 @@ const Orders = () => {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between mt-6 px-4 py-3 ">
+        <div className="flex items-center justify-between  px-4 py-3 pt-0 ">
 
           {/* LEFT INFO */}
           <div className="legend_text">

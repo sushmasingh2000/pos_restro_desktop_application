@@ -122,22 +122,17 @@ const LendingOrders = () => {
     boxShadow: "0 32px 80px rgba(0,0,0,0.7)", color: "white",
   };
 
+  const [selectedAmount, setSelectedAmount] = useState("");
+
   return (
     <div
-      className="">
+      className="main_cards">
       {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between">
-        <div className="breadcrumbs">
+      <div className="cards_header flex items-center justify-between ">
           <div>
-            <h3 className="main_heading">Lending Orders</h3>
-            <ul>
-              <li>Home</li>
-              <li>/</li>
-              <li className="active">Lending Orders</li>
-            </ul>
+            <h3>Lending Orders</h3>
+            <p>Manage lending orders and repayments easily.</p>
           </div>
-
-        </div>
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="main_input mt-0">
@@ -150,7 +145,7 @@ const LendingOrders = () => {
 
           {/* Tabs */}
           <div
-            className="flex items-center gap-2 p-1 rounded-xl main_lading_order"
+            className="flex items-center gap-2 rounded-xl main_lading_order"
             style={{
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.08)",
@@ -163,11 +158,11 @@ const LendingOrders = () => {
                 activeTab === "due"
                   ? {
                     background: "rgba(239,68,68,0.2)",
-                    color: "#fca5a5",
+                    color: "#f70000",
                     border: "1px solid rgba(248,113,113,0.3)",
                   }
                   : {
-                    color: "rgba(255,255,255,0.5)",
+                    color: "#2563eb",
                   }
               }
             >
@@ -185,7 +180,7 @@ const LendingOrders = () => {
                     border: "1px solid rgba(52,211,153,0.3)",
                   }
                   : {
-                    color: "rgba(255,255,255,0.5)",
+                    color: "#2563eb",
                   }
               }
             >
@@ -205,14 +200,14 @@ const LendingOrders = () => {
 
 
           {isLoading ? (
-            <div className="text-center py-16 text-white/40">Loading...</div>
+            <div className="text-center py-16 text-dark">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-white/30">
+            <div className="text-center py-16 text-dark">
               <div className="text-4xl mb-3">📋</div>
               <div>Not Found</div>
             </div>
           ) : (
-            <Row >
+            <Row className="px-3 pb-3">
               {filtered.map((c, i) => (
                 <Col lg={4} md={6} className="mt-3">
                   <div key={i} className="landing_boxes">
@@ -265,7 +260,7 @@ const LendingOrders = () => {
       {/* ════════════════════════════════════════════════════════ */}
       {selectedCustomer && (
         <>
-          <div className="landing_boxes">
+          <div className="landing_boxes mx-3 mt-3">
             <Row className="landing_header border-0">
               <Col lg={4} md={4}>
                 <div className="landin_name">
@@ -297,15 +292,15 @@ const LendingOrders = () => {
               </Col>
             </Row>
           </div>
-          <div className="history_box mt-3">
+          <div className="history_box mt-3 mx-3 mb-3">
             <div className="history_header flex justify-between items-center">
               <h6>Order History</h6>
               <p>📅 All time</p>
             </div>
              {detailLoading ? (
-              <div className="py-12 text-center text-white/40">Loading orders...</div>
+              <div className="py-12 text-center text-dark">Loading orders...</div>
             ) : lendingDetails.length === 0 ? (
-              <div className="py-12 text-center text-white/30">Koi order nahi mila</div>
+              <div className="py-12 text-center text-dark">Koi order nahi mila</div>
             ) : (
               <div className="divide-y divide-white/5">
                 {lendingDetails.map((due) => {
@@ -354,7 +349,7 @@ const LendingOrders = () => {
                            <Col lg={3} md={3}>
                             <div className="bill_card">
                               <p>Remaining</p>
-                              <h5 className={`${due.dg042_status === "settled" ? "text-white/40" : "unpaid"}`}>₹{parseFloat(due.dg042_remaining_amount).toFixed(2)}</h5>
+                              <h5 className={`${due.dg042_status === "settled" ? "text-dark" : "unpaid"}`}>₹{parseFloat(due.dg042_remaining_amount).toFixed(2)}</h5>
                             </div>
                           </Col>
                            <Col lg={3} md={3}>
@@ -388,7 +383,7 @@ const LendingOrders = () => {
                               style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
                             >
                               <div
-                                className="px-3 py-2 text-xs font-semibold text-white/40 uppercase tracking-widest"
+                                className="px-3 py-2 text-xs font-semibold text-dark uppercase tracking-widest"
                                 style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
                               >
                                 Payment History
@@ -417,7 +412,7 @@ const LendingOrders = () => {
                                         {mode.icon} {p.dg044_payment_mode}
                                       </span>
                                       {/* Date & Time */}
-                                      <span className="text-xs text-white/30">
+                                      <span className="text-xs text-dark">
                                         {new Date(p.dg044_created_at).toLocaleDateString("en-IN", {
                                           day: "2-digit", month: "short", year: "numeric",
                                         })}{" "}
@@ -465,27 +460,22 @@ const LendingOrders = () => {
             </div>
            
             {/*Payment Mode */}
-            <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block mx-3 mt-3">
+            <label className="text-xs text-dark uppercase tracking-widest mb-2 block mx-3 mt-3">
               Payment Mode
             </label>
-            <div className="grid grid-cols-4 gap-2 mb-4 mx-3">
+            <div className="grid grid-cols-4 gap-2 mb-4 mx-3 payment_mode">
               {[
-                { key: "cash", label: " Cash" },
+                { key: "cash", label: "Cash" },
                 { key: "card", label: "Card" },
-                { key: "upi", label: " UPI" },
-                { key: "advance", label: " Advance" },
+                { key: "upi", label: "UPI" },
+                { key: "advance", label: "Advance" },
               ].map((m) => (
                 <button
                   key={m.key}
                   onClick={() => setCollectPaymentMode(m.key)}
-                  className="py-2 rounded-xl text-xs font-semibold transition"
-                  style={
-                    collectPaymentMode === m.key
-                      ? m.key === "advance"
-                        ? { background: "rgba(16,185,129,0.25)", border: "1px solid rgba(52,211,153,0.5)", color: "#6ee7b7" }
-                        : { background: "rgba(124,58,237,0.3)", border: "1px solid rgba(167,139,250,0.5)", color: "#e9d5ff" }
-                      : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }
-                  }
+                  className={`payment-btn ${
+                    collectPaymentMode === m.key ? "active" : ""
+                  }`}
                 >
                   {m.label}
                 </button>
@@ -515,19 +505,24 @@ const LendingOrders = () => {
             {/* Quick buttons */}
             <div className="flex flex-wrap gap-2 mt-2 mb-3 mx-3">
               <button
-                onClick={() => setCollectAmount(String(collectModal.remaining))}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(52,211,153,0.25)", color: "#6ee7b7" }}
+                onClick={() => {
+                  setCollectAmount(String(collectModal.remaining));
+                  setSelectedAmount("full");
+                }}
+                className={`payment-btn ${selectedAmount === "full" ? "active" : ""}`}
               >
                 Full ₹{collectModal.remaining}
               </button>
+
               {[50, 100, 200, 500].map((q) =>
                 q < collectModal.remaining ? (
                   <button
                     key={q}
-                    onClick={() => setCollectAmount(String(q))}
-                    className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white transition"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    onClick={() => {
+                      setCollectAmount(String(q));
+                      setSelectedAmount(q);
+                    }}
+                    className={`payment-btn ${selectedAmount === q ? "active" : ""}`}
                   >
                     ₹{q}
                   </button>

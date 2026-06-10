@@ -6,6 +6,7 @@ import getLast12Months from "../../Shared/Month";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import DailyOrderChart from"../DailyOrderChart";
 
 const Card = ({ title, value }) => (
   <div className="relative p-4 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-lg hover:scale-[1.02] transition overflow-hidden">
@@ -143,42 +144,38 @@ const SalesSummary = () => {
                 ))}
           </Row>
           {/* ── TOP CARDS ── */}
-          
-        <div className="mt-8 main_analysis_card">
-          <div className="chart_header">
-            <div className="chart_heading">
-              <h4>Sales Analysis</h4>
-              <p>Daily performance overview</p>
-            </div>
-            <div className="flex gap-2">
-               <button
+
+        <div className="flex justify-between items-center mt-md-3">
+            <h4 className="main_heading">Sales Analysis</h4>
+        </div>
+        <div className="ana-tabs">
+            <button 
               onClick={() => setMainTab("sales")}
-              className={` ${mainTab === "sales" ? "active_tab" : ""}`}
+              className={`atab ${mainTab === "sales" ? "on" : ""}`}
             >
               Sales Analysis
             </button>
             <button
               onClick={() => setMainTab("payment")}
-              className={` ${mainTab === "payment" ? "active_tab" : ""}`}
+              className={`atab ${mainTab === "payment" ? "on" : ""}`}
             >
               Payment Analysis
             </button>
-            </div>
-          </div>
-          {/* ── MAIN TABS ── */}
+        </div>
+        
           
-        <div className="px-3 pt-3 ">
+        <div className=" ">
           {/* ── SUB TABS (Sales only) ── */}
           {mainTab === "sales" && (
-            <div className="flex gap-6 sales_tabs mb-8">
+            <div className="flex gap-3 mb-6 text-xs">
               <button
-                className={`pb-2 ${subTab === "orders" ? "sales_active_tab" : ""}`}
+                className={`stab ${subTab === "orders" ? "on" : ""}`}
                 onClick={() => setSubTab("orders")}
               >
                 Daily Orders
               </button>
               <button
-                className={`pb-2 ${subTab === "sales" ? "sales_active_tab" : ""}`}
+                className={`stab ${subTab === "sales" ? "on" : ""}`}
                 onClick={() => setSubTab("sales")}
               >
                 Daily Sales
@@ -193,63 +190,47 @@ const SalesSummary = () => {
             <>
               {subTab === "orders" ? (
                 <Row>
-                  <Col md={6} className="mb-4 md:mb-0">
+                  <Col md={6} className="mb-4 md:mb-0" >
                     {/* Chart */}
-                    <div className="main_chart_box">
-                      <div className="chart_header_card">
+                    <div className="main_cards" style={{height: "100%"}}>
+                      <div className="cards_header flex items-center justify-between">
                         <div>
                           <h3>Daily Orders</h3>
                           <p>Daily performance overview</p>
                         </div>
                         <button className="chart_btn">View Report</button>
                       </div>
-                      <div className="p-5">
-                        <div className="h-48">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label>
-                                {pieData.map((_, index) => (
-                                  <Cell key={index} fill={COLORS[index]} />
-                                ))}
-                              </Pie>
-                              <Tooltip />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </div>
-                        <div className="flex gap-4 mt-4 text-xs text-white/60">
-                          <span className="flex items-center gap-2">
-                            <span className="w-3 h-3 bg-purple-400 rounded" />Restaurant Orders
-                          </span>
-                          <span className="flex items-center gap-2">
-                            <span className="w-3 h-3 bg-gray-400 rounded" />Online Orders
-                          </span>
-                        </div>
-                      </div>
+                      <DailyOrderChart />
                     </div>
                   </Col>
-                  <Col md={6} className="mb-4 md:mb-0">
+                  <Col md={6} className="mb-4 md:mb-0" >
                     {/* Records Table */}
-                    <div className="main_chart_box">
-                      <div className="chart_header_card">
+                    <div className="main_cards" style={{height: "100%"}}>
+                      <div className="cards_header flex items-center justify-between ">
                         <div>
                           <h3>Daily Sales Records</h3>
                           <p>Daily performance overview</p>
                         </div>
                         <button className="chart_btn">View Report</button>
                       </div>
-                      <div className="main_details_order_table">
-                        <div class="t_header">
-                          <h6>Orders</h6>
-                          <h6>Quantity</h6>
+                      <div className="rec-card-body">
+                        <div class="rec-thead">
+                          <span className="rec-th">Orders</span>
+                          <span className="rec-th">Quantity</span>
                         </div>
-                        <ul>
-                          <li className="flex justify-between"><span>Order Processed</span><span>{orderRec.orderProcessed || 0}</span></li>
-                          <li className="flex justify-between"><span>Restaurant Order Processed</span><span>{orderRec.restaurantOrderProcessed || 0}</span></li>
-                          <li className="flex justify-between"><span>Online Order Processed</span><span>{orderRec.onlineOrderProcessed || 0}</span></li>
-                          
-                        </ul>
+                        <div className="rec-row">
+                          <span className="rec-key">Order Processed</span>
+                          <span className="rec-val">{orderRec.orderProcessed || 0}</span>
+                        </div>
+                        <div className="rec-row">
+                          <span className="rec-key">Restaurant Order Processed</span>
+                          <span className="rec-val">{orderRec.restaurantOrderProcessed || 0}</span>
+                        </div>
+                        <div className="rec-row">
+                          <span className="rec-key">Online Order Processed</span>
+                          <span className="rec-val">{orderRec.onlineOrderProcessed || 0}</span>
+                        </div>
                       </div>
-                      
                     </div>
                   </Col>
                 </Row>
@@ -257,8 +238,8 @@ const SalesSummary = () => {
                 <Row>
                       {/* Sales Chart */}
                     <Col md={6} className="mb-4 md:mb-0">
-                      <div className="main_chart_box">
-                        <div className="chart_header_card">
+                      <div className="main_cards" style={{height: "100%"}}>
+                        <div className="cards_header flex items-center justify-between">
                           <div>
                             <h3>Daily Sales</h3>
                             <p>Daily performance overview</p>
@@ -291,26 +272,25 @@ const SalesSummary = () => {
                     </Col>        
                       {/* Sales Records Table */}
                     <Col md={6} className="mb-4 md:mb-0">
-                      <div className="main_chart_box">
-                        <div className="chart_header_card">
+                      <div className="main_cards" style={{height: "100%"}}>
+                        <div className="cards_header flex items-center justify-between">
                           <div>
                             <h3>Daily Sales Records</h3>
                             <p>Daily performance overview</p>
                           </div>
                           <button className="chart_btn">View Report</button>
                         </div>
-                        <div className="main_details_order_table">
-                          <div class="t_header">
-                            <h6>Sales</h6>
-                            <h6>Quantity</h6>
+                        <div className="rec-card-body">
+                          <div class="rec-thead">
+                            <span className="rec-th">Sales</span>
+                            <span className="rec-th">Quantity</span>
                           </div>
-                          <ul>
-                            <li className="flex justify-between"><span>Total Sale</span><span>{salesRec.totalSale || 0}</span></li>
-                            <li className="flex justify-between"><span>Restaurant Sales</span><span>{salesRec.restaurantSales || 0}</span></li>
-                            <li className="flex justify-between"><span>Online Sales</span><span>{salesRec.onlineSales || 0}</span></li>
-                            <li className="flex justify-between"><span>Total Expense</span><span>{salesRec.totalExpense || 0}</span></li>
-                            <li className="flex justify-between"><span>Total Lend Sales</span><span>{salesRec.totalLendSales || 0}</span></li>
-                          </ul>
+                            <div className="rec-row"><span className="rec-key">Total Sale</span><span className="rec-val">{salesRec.totalSale || 0}</span></div>
+                            <div className="rec-row"><span className="rec-key">Restaurant Sales</span><span className="rec-val">{salesRec.restaurantSales || 0}</span></div>
+                            <div className="rec-row"><span className="rec-key">Online Sales</span><span className="rec-val">{salesRec.onlineSales || 0}</span></div>
+                            <div className="rec-row"><span className="rec-key">Total Expense</span><span className="rec-val">{salesRec.totalExpense || 0}</span></div>
+                            <div className="rec-row"><span className="rec-key">Total Lend Sales</span><span className="rec-val">{salesRec.totalLendSales || 0}</span></div>
+                          
                         </div>
                         
                       </div>
@@ -323,8 +303,8 @@ const SalesSummary = () => {
           {mainTab === "payment" && (
             <Row >
               <Col md={6} className="mb-4 md:mb-0">
-                <div className="main_chart_box">
-                  <div className="chart_header_card">
+                <div className="main_cards" style={{height: "100%"}}>
+                  <div className="cards_header flex items-center justify-between">
                     <div>
                       <h3>Payment Breakdown</h3>
                       <p>Daily performance overview</p>
@@ -346,28 +326,26 @@ const SalesSummary = () => {
                 </div>
               </Col>
                <Col md={6} className="mb-4 md:mb-0">          
-                <div className="main_chart_box">
-                  <div className="chart_header_card">
+                <div className="main_cards" style={{height: "100%"}}>
+                  <div className="cards_header flex items-center justify-between">
                     <div>
                       <h3>Payment Records</h3>
                       <p>Daily performance overview</p>
                     </div>
                     <button className="chart_btn">View Report</button>
                   </div>
-                  <div className="main_details_order_table">
-                    <ul>
-                      <li className="flex justify-between"><span>Cash</span><span>₹{payment.cash || 0}</span></li>
-                      <li className="flex justify-between"><span>UPI</span><span>₹{payment.upi || 0}</span></li>
-                      <li className="flex justify-between"><span>Card</span><span>₹{payment.card || 0}</span></li>
-                      <li className="flex justify-between"><span>Lending</span><span>₹{payment.lending || 0}</span></li>
-                    </ul>
+                  <div className="rec-card-body">
+                      <div className="rec-row"><span className="rec-key">Cash</span><span className="rec-val">₹{payment.cash || 0}</span></div>
+                      <div className="rec-row"><span className="rec-key">UPI</span><span className="rec-val">₹{payment.upi || 0}</span></div>
+                      <div className="rec-row"><span className="rec-key">Card</span><span className="rec-val">₹{payment.card || 0}</span></div>
+                      <div className="rec-row"><span className="rec-key">Lending</span><span className="rec-val">₹{payment.lending || 0}</span></div>
+                    
                   </div>
                 
                 </div>
               </Col>
             </Row>
           )}
-        </div>
         </div>
         </>
       )}

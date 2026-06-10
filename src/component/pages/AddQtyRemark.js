@@ -120,7 +120,7 @@ const AddQtyRemarkModal = ({ isOpen, onClose, item, orderItems, onUpdate }) => {
 
           {/* PREDEFINED */}
           <div className="order_cancel_tabs m-3">
-            <p className="text-sm text-white/70 mb-2">Quick Options</p>
+            <p className="order_paira mb-2">Quick Options</p>
             <div className="flex flex-wrap gap-2">
               {PREDEFINED_REMARKS.map((r) => (
                 <button
@@ -129,7 +129,7 @@ const AddQtyRemarkModal = ({ isOpen, onClose, item, orderItems, onUpdate }) => {
                   className={`ordesr_cancel_btn
                     ${
                       selectedPredefined.includes(r)
-                        ? "bg-purple-500 text-white borde r-purple-400"
+                        ? "active_color"
                         : ""
                     }`}
                 >
@@ -141,7 +141,7 @@ const AddQtyRemarkModal = ({ isOpen, onClose, item, orderItems, onUpdate }) => {
 
           {/* SUMMARY */}
           {(selectedPredefined.length > 0 || qtyRemark) && (
-            <div className="bg-white/10 border border-white/20 rounded-xl p-3 mx-3 my-2 text-xs text-white/70">
+            <div className="bg-white/10 border border-white/20 rounded-xl p-3 mx-3 my-2 text-xs text-dark">
               Remark: {[...selectedPredefined, qtyRemark].filter(Boolean).join(", ")}
             </div>
           )}

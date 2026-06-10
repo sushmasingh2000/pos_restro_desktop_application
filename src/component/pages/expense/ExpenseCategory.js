@@ -32,15 +32,11 @@ const ExpenseCategory = () => {
   );
 
   return (
-    <div className="">
-      <div className="breadcrumbs">
+    <div className="main_cards">
+      <div className="cards_header flex items-center justify-between">
         <div>
-          <h3 className="main_heading">Expense Category</h3>
-          <ul>
-            <li>Home</li>
-            <li>/</li>
-            <li className="active">Expense Category</li>
-          </ul>
+          <h3>Expense Category</h3>
+          <p>Expense Category</p>
         </div>
         <button onClick={() => { setCategoryToEdit(null); setIsModalOpen(true); }}>
           <span>+</span> Add Category
@@ -51,9 +47,9 @@ const ExpenseCategory = () => {
     
 
       {/* TABLE */}
-      <div className="main_table_container">
+      <div className="main_table_container"  style={{borderRadius: '0px'}}>
 
-        <div className="overflow-x-auto" style={{borderRadius: '14px'}}>
+        <div className="overflow-x-auto">
           <table className="w-full">
 
             {/* HEADER */}

@@ -105,20 +105,15 @@ const Navbar = ({ toggleSidebar }) => {
               className="absolute right-0 mt-2 rounded-xl shadow-xl z-50 overflow-hidden"
               style={{
                 width: "320px",
-                background: "rgba(20,20,30,0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                backdropFilter: "blur(12px)",
+                background: "#fff",
+                border: "1px solid #DBEAFE",
+                boxShadow: "0 4px 20px rgba(37, 99, 235, .13);",
               }}
             >
-              <div className="px-4 py-3 border-b border-white/10 flex justify-between items-center">
-                <h3 className="text-sm font-semibold text-white">
-                  Pending Orders ({notifCount})
-                </h3>
-
+              <div className="np-header flex items-center justify-between">
+                <h3><i class="ri-timer-line"></i> Pending Orders <span>{notifCount}</span></h3>
                 <button
-                  onClick={() => setShowDropdown(false)}
-                  className="text-white/40 hover:text-white"
-                >
+                  onClick={() => setShowDropdown(false)}>
                   ✕
                 </button>
               </div>
@@ -132,36 +127,33 @@ const Navbar = ({ toggleSidebar }) => {
                   notifications.map((order, index) => (
                     <div
                       key={index}
-                      className="px-4 py-3 border-b border-white/5 hover:bg-white/5 cursor-pointer"
+                      className="order_notifaction"
                       onClick={() => {
                         setShowDropdown(false);
                         navigate("/live-orders");
                       }}
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold text-white">
+                      <div className="flex justify-between items-center order_stattus_box">
+                        <span>
                           Order #{order.dg06_order_id}
                         </span>
 
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full"
-                          style={{
-                            background: "rgba(245,158,11,0.2)",
-                            color: "#fcd34d",
-                          }}
-                        >
+                        <span className="order_status">
+                          <div className="np-badge-dot "></div>
                           {order.dg06_status}
                         </span>
                       </div>
 
-                      <div className="text-xs text-white/50 mt-1">
+                      <div className="np-order-meta">
+                        <i class="ri-timer-2-line"></i>
                         {order.dg06_order_type === "dine_in"
                           ? `Table ${order.dg06_table_id}`
                           : order.dg06_order_type}
                         {" • "}₹{order.dg06_total_amount}
                       </div>
 
-                      <div className="text-xs text-white/30 mt-0.5">
+                      <div className="np-time">
+                        <i class="ri-timer-2-line"></i>
                         {new Date(
                           order.dg06_created_at
                         ).toLocaleTimeString()}

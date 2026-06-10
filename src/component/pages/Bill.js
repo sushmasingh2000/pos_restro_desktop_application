@@ -838,7 +838,7 @@ export default function BillModal({
             </div>
 
             {/* Calculation breakdown */}
-            <div className="rounded-xl border border-white/10 overflow-hidden text-sm">
+            <div className="main_table_container">
               <Row label="Sub-Total" value={`₹${subTotal.toFixed(2)}`} />
               <Row
                 label="Bill Amount"
@@ -1053,62 +1053,10 @@ export default function BillModal({
               </div>
             )}
 
-            {/* Payment modes */}
-            {/* <div>
-              <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">
-                Payment Method {!isReprint && "*"}
-              </label>
-              <div className="flex flex-wrap gap-2 pb-3">
-                {allModes.map((m) => {
-                  const isSelected =
-                    selectedMode?.toLowerCase() === m.name?.toLowerCase() ||
-                    selectedMode === String(m.id);
-                  const isLendingBtn = m.name?.toLowerCase() === "lending";
-                  const isAdvanceBtn = m.name?.toLowerCase() === "advance";
-                  return (
-                    <button
-                      key={m.id}
-                      onClick={() => setSelectedMode(m.name)}
-                      className="px-4 py-2 rounded-xl text-sm font-semibold transition-all border"
-                      style={
-                        isSelected
-                          ? isLendingBtn
-                            ? {
-                              background: "rgba(239,68,68,0.3)",
-                              border: "1px solid rgba(248,113,113,0.5)",
-                              color: "#fca5a5",
-                            }
-                            : isAdvanceBtn
-                              ? {
-                                background: "rgba(16,185,129,0.25)",
-                                border: "1px solid rgba(52,211,153,0.5)",
-                                color: "#6ee7b7",
-                              }
-                              : {
-                                background: "rgba(124,58,237,0.4)",
-                                border: "1px solid rgba(167,139,250,0.5)",
-                                color: "#e9d5ff",
-                              }
-                          : {
-                            background: "rgba(255,255,255,0.06)",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            color: "rgba(255,255,255,0.6)",
-                          }
-                      }
-                    >
-                      {isLendingBtn
-                        ? "Lending"
-                        : isAdvanceBtn
-                          ? "Advance"
-                          : m.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div> */}
+            
             {/* Payment modes — MULTIPLE SPLIT */}
             <div>
-              <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">
+              <label className="text-xs text-dark uppercase tracking-widest mb-2 block">
                 Payment Method {!isReprint && "*"}
               </label>
 
@@ -1162,9 +1110,7 @@ export default function BillModal({
                                       color: "#e9d5ff",
                                     }
                                 : {
-                                  background: "rgba(255,255,255,0.06)",
-                                  border: "1px solid rgba(255,255,255,0.12)",
-                                  color: "rgba(255,255,255,0.6)",
+                                  
                                 }
                             }
                           >
@@ -1234,7 +1180,7 @@ export default function BillModal({
                           border: "1px solid rgba(255,255,255,0.1)",
                         }}
                       >
-                        <div className="flex justify-between text-white/60">
+                        <div className="flex justify-between text-dark">
                           <span>Total Entered</span>
                           <span>₹{totalSplitPaid.toFixed(2)}</span>
                         </div>
@@ -1279,7 +1225,7 @@ export default function BillModal({
           </div>
 
           {/* ═══ RIGHT — Customer + Discount + Wallet ═══ */}
-          <div className="w-96 p-5 space-y-4 flex-shrink-0">
+          <div className="w-96 p-5 pt-0 space-y-4 flex-shrink-0">
             {/* Customer Search */}
             {!isReprint && (
               <div className="main_input">
@@ -1344,7 +1290,7 @@ export default function BillModal({
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <div className="text-xs text-white/40 uppercase tracking-widest">
+                    <div className="text-xs text-dark uppercase tracking-widest">
                       {/*Label change: advance mode mein "Advance Balance" dikhao */}
                       {isAdvance ? "Advance Balance" : "Wallet Balance"}
                     </div>
@@ -1383,7 +1329,7 @@ export default function BillModal({
                   {/* Toggle — advance mode mein auto ON, sirf normal mode mein manual toggle */}
                   {walletBalance > 0 && !isAdvance && (
                     <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <span className="text-xs text-white/50">Use wallet</span>
+                      <span className="text-xs text-dark">Use wallet</span>
                       <div
                         onClick={() => setUseWallet((w) => !w)}
                         className="relative w-10 h-5 rounded-full transition-all cursor-pointer"
@@ -1437,7 +1383,7 @@ export default function BillModal({
                 )}
 
                 {walletBalance <= 0 && (
-                  <div className="text-xs text-white/30 text-center">
+                  <div className="text-xs text-dark text-center">
                     {isAdvance ? "No advance balance" : "Empty Wallet"}
                   </div>
                 )}
@@ -1591,7 +1537,7 @@ export default function BillModal({
                         <div className="w-2 h-2 rounded-full bg-purple-400" />
                       )}
                     </div>
-                    <span className="text-white/70 capitalize">
+                    <span className="text-dark capitalize">
                       {m === "percent" ? "Discount" : "Coupon"}
                     </span>
                   </label>
@@ -1610,7 +1556,7 @@ export default function BillModal({
                   </div>
                   <div className="main_input">
                     <label>Discount Amount</label>
-                    <div className="px-3 py-2 rounded-xl text-sm text-white/60 bg-white/5 border border-white/10">
+                    <div className="px-3 py-2 rounded-xl text-sm text-dark bg-white/5 border border-white/10">
                       ₹{discountAmount.toFixed(2)}
                     </div>
                   </div>
@@ -1745,10 +1691,10 @@ function Row({ label, value, bold, highlight, muted }) {
     <div className="flex justify-between items-center px-3 py-2 border-b border-white/5 last:border-0">
       <span
         className={`text-sm ${muted
-          ? "text-white/50"
+          ? "text-dark"
           : bold
-            ? "text-white font-semibold"
-            : "text-white/80"
+            ? "text-dark font-semibold"
+            : "text-dark"
           }`}
       >
         {label} :
@@ -1757,8 +1703,8 @@ function Row({ label, value, bold, highlight, muted }) {
         className={`text-sm font-medium ${highlight
           ? "text-purple-300"
           : bold
-            ? "text-white font-bold"
-            : "text-white/80"
+            ? "text-dark font-bold"
+            : "text-dark"
           }`}
       >
         {value}

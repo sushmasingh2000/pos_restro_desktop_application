@@ -36,15 +36,11 @@ const ExpenseManagementReport = () => {
   );
 
   return (
-    <div className="">
-      <div className="breadcrumbs">
+    <div className="main_cards">
+      <div className="cards_header flex items-center justify-between ">
         <div>
-          <h3 className="main_heading">Expense Management</h3>
-          <ul>
-            <li>Home</li>
-            <li>/</li>
-            <li className="active">Expense Management</li>
-          </ul>
+          <h3>Expense Management</h3>
+          <p>Track and manage business expenses with ease.</p>
         </div>
        <div className="flex gap-3">
          <button
@@ -64,9 +60,9 @@ const ExpenseManagementReport = () => {
       
 
       {/* TABLE CONTAINER */}
-      <div className="main_table_container">
+      <div className="main_table_container  border-0" style={{borderRadius: '0px'}}>
 
-        <div className="overflow-x-auto" style={{borderRadius: '14px'}}>
+        <div className="overflow-x-auto" >
           <table className="w-full">
             <thead>
               <tr >

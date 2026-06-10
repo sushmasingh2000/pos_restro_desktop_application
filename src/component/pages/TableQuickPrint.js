@@ -294,54 +294,28 @@ export default function TableQuickPrintModal({
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
         >
-            <div style={{
-                background: "linear-gradient(145deg, #1f1a17, #2a221d)",
-                border: "1px solid rgba(197,163,119,0.25)",
-                borderRadius: "16px",
-                width: "100%",
-                maxWidth: "480px",
-                overflow: "hidden",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
-            }}>
+            <div className="Order_Details_modal">
                 {/* Header */}
-                <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "16px 20px",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
-                }}>
-                    <div>
-                        <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: "#f5deb3" }}>
-                            🧾 Order #{uniqueOrderId}
-                        </h2>
-                        <p style={{ margin: "2px 0 0", fontSize: "13px", color: "rgba(197,163,119,0.65)" }}>
-                            Table: {tableNameMap[tableId] || tableId}
-                        </p>
+                <div className="Order_Details_modal_header">
+                    <div className="flex items-center gap-3">
+                        <div class="modal_header_icon">🗂️</div>
+                        <div>
+                            <h2>Order #{uniqueOrderId}</h2>
+                            <p>Table: {tableNameMap[tableId] || tableId}</p>
+                        </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: "22px", cursor: "pointer" }}
-                    >
+                    <button onClick={onClose} >
                         ×
                     </button>
                 </div>
 
                 {/* Items Table */}
-                <div style={{ padding: "16px 20px", maxHeight: "340px", overflowY: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <div className="main_table_container mt-3 border-0">
+                    <table style={{ width: "100%", }}>
                         <thead>
                             <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                                 {["Item", "Qty", "Rate", "Total"].map((h) => (
-                                    <th key={h} style={{
-                                        padding: "8px 6px",
-                                        textAlign: h === "Item" ? "left" : "right",
-                                        color: "rgba(255,255,255,0.4)",
-                                        fontWeight: 500,
-                                        fontSize: "11px",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                    }}>
+                                    <th key={h} >
                                         {h}
                                     </th>
                                 ))}
@@ -353,14 +327,14 @@ export default function TableQuickPrintModal({
                                 return (
                                     <>
                                         <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                                            <td style={{ padding: "10px 6px", color: "#fff" }}>{item.dg09_name}</td>
-                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "rgba(255,255,255,0.7)" }}>{item.qty}</td>
-                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "rgba(255,255,255,0.7)" }}>₹{Number(item.price).toFixed(2)}</td>
-                                            <td style={{ padding: "10px 6px", textAlign: "right", color: "#fff", fontWeight: 500 }}>₹{(item.price * item.qty).toFixed(2)}</td>
+                                            <td >{item.dg09_name}</td>
+                                            <td>{item.qty}</td>
+                                            <td>₹{Number(item.price).toFixed(2)}</td>
+                                            <td>₹{(item.price * item.qty).toFixed(2)}</td>
                                         </tr>
                                         {remarks && (
                                             <tr key={`r-${i}`}>
-                                                <td colSpan={4} style={{ padding: "0 6px 8px", fontSize: "12px", color: "rgba(252,211,77,0.7)", fontStyle: "italic" }}>
+                                                <td colSpan={4}>
                                                     Remark: {remarks}
                                                 </td>
                                             </tr>
@@ -394,7 +368,7 @@ export default function TableQuickPrintModal({
                         style={{
                             flex: 1, padding: "10px", borderRadius: "10px",
                             border: "1px solid rgba(197,163,119,0.25)",
-                            color: "rgba(255,235,210,0.75)",
+                            color: "#000",
                             background: "rgba(255,255,255,0.03)",
                             fontSize: "14px", cursor: "pointer",
                         }}
@@ -405,8 +379,8 @@ export default function TableQuickPrintModal({
                         onClick={() => setShowPreview(true)}
                         style={{
                             flex: 2, padding: "10px", borderRadius: "10px",
-                            border: "none", background: "#c5a377",
-                            color: "#1b1b1b", fontSize: "14px",
+                            border: "none", background: "var(--primary-color)",
+                            color: "#fff", fontSize: "14px",
                             fontWeight: 600, cursor: "pointer",
                         }}
                     >
@@ -446,12 +420,12 @@ function TotalRow({ label, value, bold, muted }) {
     return (
         <div style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
-            padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+            padding: "8px 12px", borderBottom: "1px solid #e9f3ff",
         }}>
-            <span style={{ color: bold ? "#ffe7bf" : muted ? "rgba(255,240,220,0.6)" : "#f8e7c9", fontWeight: bold ? 600 : 400 }}>
+            <span style={{ color: bold ? "#334155" : muted ? "#334155" : "#334155", fontWeight: bold ? 600 : 400 }}>
                 {label}
             </span>
-            <span style={{ color: bold ? "#e9d5ff" : muted ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)", fontWeight: bold ? 700 : 500 }}>
+            <span style={{ color: bold ? "#334155" : muted ? "#334155" : "#334155", fontWeight: bold ? 700 : 500 }}>
                 {value}
             </span>
         </div>

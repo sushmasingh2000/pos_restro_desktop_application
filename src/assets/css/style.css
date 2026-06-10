@@ -600,13 +600,15 @@ nav {
 }
 
 .main_breadcrumb input, .main_breadcrumb select {
-    background: #27231d;
-    color: var(--primary-color);
-    font-size: 12px;
-    padding: 8px 10px;
-    border: 1px solid #7783c52b;
-    border-radius: 5px;
+       border: 1px solid #c7dcff;
+    border-radius: 8px;
+    padding: 8px 13px;
+    font-size: 13px;
+    color: #1e3a5f;
+    background: #fff;
     outline: none;
+    box-shadow: 0 1px 4px rgba(37, 99, 235, .06);
+    transition: border-color .15s, box-shadow .15s;
 }
 
 .main_breadcrumb input[type="date"]::-webkit-calendar-picker-indicator {
@@ -701,7 +703,7 @@ nav {
 }
 
 .main_analysis_card {
-    background: #1d1d1d;
+    background: #ffff;
     border: 1px solid #8080803b;
     border-radius: 15px;
 }
@@ -745,7 +747,7 @@ nav {
 
 .sales_tabs button {
     font-size: 14px;
-    color: gray;
+    color: #64748b;
 }
 
 .main_chart_box {
@@ -774,7 +776,7 @@ nav {
 .chart_header_card p {
     margin: 0;
     font-size: 12px;
-    color: gray;
+    color: #64748b;
 }
 
 .chart_header_card .chart_btn {
@@ -791,7 +793,7 @@ nav {
     display: flex;
     justify-content: space-between;
     padding: 10px 15px 10px 15px;
-    background: #1d1d1d;
+    background: #ffff;
 }
 
 .main_details_order_table .t_header h6 {
@@ -1015,7 +1017,7 @@ nav {
 .card_table_header p {
     margin: 0;
     font-size: 10px;
-    color: gray;
+    color: #64748b;
 }
 
 .card_table_header button {
@@ -1035,7 +1037,7 @@ nav {
 
 .card_table ul li {
     font-size: 13px;
-    color: gray;
+    color: #64748b;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1395,7 +1397,7 @@ nav {
     outline: none;
 }
 
-.main_input input:focus-within, .main_input select, .main_input textarea:focus-within{
+.main_input input:focus-within, .main_input select:focus-within, .main_input textarea:focus-within{
     border-color: #185FA5;
     background: #fff;
     box-shadow: 0 0 0 3px rgba(24, 95, 165, .12);
@@ -1482,7 +1484,7 @@ nav {
 
 .oder_info_card p {
     font-size: 13px;
-    color: gray;
+    color: #64748b;
     margin: 10px 0px 5px 0px;
 }
 
@@ -1708,7 +1710,7 @@ button.add_item {
 .main_loction_select label {
     font-size: 12px;
     text-transform: uppercase;
-    color: gray;
+    color: #64748b;
     margin-bottom: 5px;
 }
 
@@ -1718,7 +1720,7 @@ button.add_item {
     border-radius: 10px;
     border: 1px solid #8080802e;
     font-size: 13px;
-    color: gray;
+    color: #64748b;
 }
 
 .daty_btnes button.active_days {
@@ -1757,8 +1759,8 @@ button.add_item {
 
 .usermile {
     font-size: 12px;
-    color: gray;
-    background: #1d1d1d;
+    color: #64748b;
+    background: #ffff;
     border: 1px solid #8080803b;
     padding: 5px 15px;
     border-radius: 7px;
@@ -1922,7 +1924,7 @@ button.acive_tab {
 .main_table_action button {
     display: flex;
     font-size: 12px;
-    color: gray;
+    color: #64748b;
     gap: 5px;
     width: 100%;
     padding: 5px 10px;
@@ -1985,12 +1987,16 @@ button.acive_tab {
 
 .right_btn {
     padding: 6px 20px;
-    background: #121212;
+    background: #e6f1fb;
+    border: 1px solid #b5d4f4 !important;
     border-radius: 10px;
     font-size: 13px;
-    color: #646464;
-    font-weight: 700;
-    border: 1px solid #343434a1;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.legend_text span {
+    color: #000 !important;
 }
 
 .bottom_btn {
@@ -2005,7 +2011,7 @@ button.acive_tab {
 
 .legend_text {
     font-size: 14px;
-    color: gray;
+    color: #64748b;
 }
 
 
@@ -2057,19 +2063,19 @@ button.next_btn {
     text-align: center;
 }
 
-.payment_method_btn{
+.payment_method_btn {
     padding: 8px 15px;
-    background: #2b2b2b;
+    background: #f0f6ff;
     border-radius: 6px;
     font-size: 13px;
-    font-weight: 600;
-    color: #9d9d9d;
+    font-weight: 500;
+    color: #1f1f1f;
 }
 
 .main_lading_order .tabslanding {
     font-size: 12px;
-    color: gray;
-    padding: 6px 10px;
+    color: #64748b;
+    padding: 10px 10px;
     border-radius: 10px;
 }
 .ordr_lsitst {
@@ -2111,7 +2117,7 @@ button.next_btn {
 }
 .order_cancel_tabs label {
     font-size: 16px;
-    color: gray;
+    color: #64748b;
     margin-bottom: 13px;
 }
 
@@ -2119,7 +2125,7 @@ button.next_btn {
     border: 1px solid #8080801f;
     padding: 9px 10px;
     font-size: 13px;
-    color: gray;
+    color: #64748b;
     border-radius: 10px;
     font-weight: 400;
 }
@@ -2128,34 +2134,36 @@ button.next_btn {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #0d0d0d;
+    background: #ffffff;
     padding: 10px 14px 15px 15px;
     margin: 15px;
     border-radius: 11px;
-    border: 1px solid #373737;
+    border: 1px solid #c7dcff;
 }
 
 .order_quantity_box label {
     font-size: 13px;
-    color: #7d7d7d;
+    font-weight: 500;
+    color: #0C447C;
+    letter-spacing: .2px;
     margin-bottom: 7px;
     line-height: 15px;
 }
 
 .order_quantity_box .flex.items-center {
-    background: #1d1d1d;
-    border: 1px solid #343434;
+    background: #f0f6ff;
+    border: 1px solid #c7dcff;
     border-radius: 10px;
 }
 
 .order_quantity_box button {
     padding: 5px 14px;
-    color: #ffffff;
+    color: #191919;
 }
 
 .order_quantity_box input {
     background: transparent;
-    color: gray;
+    color:#191919;
     width: 30px;
     text-align: center;
     display: flex;
@@ -2166,7 +2174,7 @@ button.next_btn {
 
 .order_quantity_box button:hover {
     background: var(--primary-color);
-    color: #000;
+    color: #fff;
 }
 
 .order_quantity_box button:first-child {
@@ -2180,15 +2188,17 @@ button.next_btn {
 
 .Item_Remark label {
     font-size: 13px;
-    color: #7d7d7d;
+    font-weight: 500;
+    color: #0C447C;
+    letter-spacing: .2px;
     margin-bottom: 7px;
     line-height: 15px;
 }
 
 .Item_Remark input {
     width: 100%;
-    background: #1d1d1d;
-    border: 1px solid #343434;
+    background: #f0f6ff;
+    border: 1px solid #c7dcff;
     border-radius: 10px;
     padding: 7px 15px;
     font-size: 14px;
@@ -2254,15 +2264,15 @@ button.next_btn {
 }
 
 .ordre_table_list_2 ul li:first-child {
-    background: #1d1d1d;
+    background: #ffff;
     padding: 7px 15px;
 }
 
 
 
 .landing_boxes {
-    background: #1d1d1d;
-    border: 1px solid #8080803b;
+    background: #ffffff;
+    border: 1px solid #c7dcff;
     border-radius: 15px;
     position: relative;
     border-top: 3px solid var(--primary-color);
@@ -2295,13 +2305,13 @@ button.next_btn {
     align-items: center;
     font-size: 20px;
     font-weight: 800;
-    color: #000;
+    color: #fff;
     font-style: italic;
 }
 
 .landin_name h4 {
     font-size: 18px;
-    color: #fff;
+    color: #1e3a8a;
     margin: 0;
     font-weight: 700;
 }
@@ -2383,31 +2393,31 @@ button.next_btn {
 .landin_name h6 {
     font-size: 11px;
     margin: 0;
-    color: gray;
+    color: #64748b;
 }
 
 
 .landin_box {
-    background: #252525;
+    background: #fff;
     border-radius: 10px;
-    border: 1px solid #353535;
+    border: 1px solid #c7dcff;
     padding: 10px;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-flow: column;
-    border-top: 2px solid #c5a3773b;
+    border-top: 2px solid var(--primary-color);
 }
 
 .landin_box p {
-    color: gray;
+    color: #64748b;
     font-size: 12px;
     margin: 0;
 }
 
 .landin_box h3 {
-    color: #fff;
+    color: var(--primary-color);
     margin: 0;
     font-size: 17px;
     font-weight: 800;
@@ -2415,9 +2425,9 @@ button.next_btn {
 }
 
 .landing_footer {
-    background: #252525;
+    background: #ffffff;
     border-radius: 0px 0px 15px 15px;
-    border-top: 1px solid #353535;
+    border-top: 1px solid #c7dcff;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -2426,13 +2436,13 @@ button.next_btn {
 
 .landing_footer p {
     font-size: 11px;
-    color: gray;
+    color: #64748b;
     margin: 0;
 }
 
 .landing_footer button {
-    background: #c5a37733;
-    border: 1px solid #c5a37733;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
     font-size: 12px;
     padding: 4px 12px;
     border-radius: 7px;
@@ -2442,32 +2452,31 @@ button.next_btn {
 
 
 .history_box {
-    background: #1d1d1d;
-    border: 1px solid #8080803b;
+    background: #fff;
+    border: 1px solid #c7dcff;
     border-radius: 15px;
 }
 
 .history_header {
     padding: 15px 20px;
-    background: #292929;
     border-radius: 14px 14px 0px 0px;
-    border-bottom: 1px solid #8080802e;
+    border-bottom: 1px solid #c7dcff;
 }
 
 .history_header h6 {
     margin: 0;
-    color: #ffffff;
+    color: #1e3a8a;
     font-size: 15px;
 }
 
 .history_header p {
     font-size: 13px;
     margin: 0;
-    color: #7b7b7b;
+    color: #64748b;
 }
 
 .bill_statues {
-    color: #fff;
+    color: #101010;
     font-size: 14px;
     display: flex;
     align-items: center;
@@ -2502,7 +2511,7 @@ button.next_btn {
 
 .bill-date {
     font-size: 13px;
-    color: gray;
+    color: #64748b;
 }
 
 
@@ -2512,14 +2521,14 @@ button.next_btn {
 
 .bill_card p {
     font-size: 13px;
-    color: #636363;
+    color: #64748b;
     text-transform: uppercase;
     margin: 0;
     margin-bottom: 4px;
 }
 
 .bill_card h5 {
-    color: #fff;
+    color: #101010;
     font-size: 18px;
     font-weight: 700;
 }
@@ -2614,7 +2623,7 @@ button.next_btn {
 .landin_box h6 {
     font-size: 10px;
     margin: 0;
-    color: gray;
+    color: #64748b;
     margin-top: 2px;
 }
 .history_header p.red_bg {
@@ -2654,8 +2663,9 @@ button.next_btn {
 }
 
 .wallet_histotry_box {
-    background: #1d1d1d;
+    background: #ffff;
     border-radius: 15px;
+    border: 1px solid #c7dcff;
 }
 
 .wallet_amouts {
@@ -2669,7 +2679,7 @@ button.next_btn {
 
 .wallet_amouts p {
     font-size: 13px;
-    color: gray;
+    color: #64748b;
     text-transform: capitalize;
 }
 
@@ -2680,8 +2690,9 @@ button.next_btn {
 .main_chat_sidebar{
     width: 100%;
     max-width: 290px;
-    background: #212020;
-    border-right: 1px solid #3d3d3d;
+    background: #fff;
+    border-right: 1px solid #c7dcff;
+    border-left: 1px solid #c7dcff;
     display: flex;
     flex-direction: column; 
     flex-shrink: 0 ;
@@ -2695,6 +2706,7 @@ button.next_btn {
 
 .main_chait_right{
     padding: 18px;
+    border-right: 1px solid #c7dcff;
     flex: 1 1 0%;
     overflow-y: auto;
 }
@@ -2729,8 +2741,8 @@ button.next_btn {
 }
 
 .kitchen_box {
-    background: #1d1d1d;
-    border: 1px solid #8080803b;
+    background: #ffffff;
+    border: 1px solid #c7dcff;
     border-radius: 15px;
     position: relative;
     border-top: 3px solid var(--primary-color);
@@ -2738,7 +2750,7 @@ button.next_btn {
 
 .kitchen_header {
     padding: 15px 15px;
-    border-bottom: 1px solid #8080803b;
+    border-bottom: 1px solid #c7dcff;
 }
 
 .kitchen_header h1 {
@@ -2783,10 +2795,10 @@ button.next_btn {
 }
 
 .kitchen_list {
-    background: #191919;
+    background: #fff;
     margin-top: 15px;
     border-radius: 15px;
-    border: 1px solid #2f2f2f;
+    border: 1px solid #c7dcff;
     padding: 10px;
     
 }
@@ -2794,7 +2806,7 @@ button.next_btn {
 .item_number {
     width: 40px;
     height: 40px;
-    background: #c5a3771a;
+    background: #1d4ed81a;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -2802,12 +2814,12 @@ button.next_btn {
     color: var(--primary-color);
     font-size: 13px;
     font-weight: 600;
-    border: 1px solid #c5a37738;
+    border: 1px solid #1d4ed829;
 }
 
 .id_menu {
     font-size: 13px;
-    color: #fff;
+    color: #1e3a8a;
     font-weight: 500;
 }
 
@@ -2819,7 +2831,7 @@ button.next_btn {
 .qunttiy p {
     margin: 0;
     font-size: 12px;
-    color: gray;
+    color: #64748b;
     display: flex;
     gap: 5px;
 }
@@ -2829,11 +2841,11 @@ button.next_btn {
     align-items: center;
     height: 20px;
     display: flex;
-    background: #c5a37730;
+    background: #1d4ed81a;
     width: 20px;
     border-radius: 5px;
     color: var(--primary-color);
-    border: 1px solid #c5a37730;
+    border: 1px solid #1d4ed829;
 }
 
 .qunttiy span.yellow_bg {
@@ -2897,14 +2909,14 @@ button.dones_btn {
 }
 
 .kitchen_footer {
-    background: #212121;
-    border-top: 1px solid #8080802e;
+    background: #fff;
+    border-top: 1px solid #c7dcff;
     border-radius: 0px 0px 15px 15px;
     padding: 13px 0px;
 }
 
 .kitchen_footer p {
-    color: gray;
+    color: #64748b;
     font-size: 12px;
 }
 
@@ -4276,4 +4288,132 @@ width: 100% !important;
     padding: 13px 15px 12px;
     border-bottom: 1px solid #dbeafe;
     flex-shrink: 0;
+}
+
+.active_color{
+    background: var(--primary-color);
+    color: #fff !important;
+}
+
+.order_paira{
+    font-size: 13px;
+    font-weight: 500;
+    color: #0C447C;
+    letter-spacing: .2px;
+}
+
+.payment_mode button, .payment-btn{
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    color: #2563eb;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+}
+
+.payment_mode button.active, .payment-btn.active{
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.np-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid #dbeafe;
+    background: #eff6ff;
+}
+
+.np-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e40af;
+    margin: 0;
+}
+
+.np-header h3 span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef9f27;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 3px 8px;
+}
+
+.np-header button{
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: #ffffff;
+    border: 1px solid #c7dcff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: #378add;
+    transition: background .12s;
+}
+
+.order_notifaction {
+    border-bottom: 1px solid #DBEAFE;
+    padding: 10px 15px;
+}
+
+
+.order_stattus_box > span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #042c53;
+    margin-bottom: 0px;
+}
+
+.order_stattus_box .order_status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #faeeda;
+    color: #d97d08;
+    border: 1px solid #fac775;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+    text-transform: capitalize;
+}
+
+.np-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ef9f27;
+}
+
+.np-order-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #378add;
+    margin-bottom: 3px;
+}
+
+.np-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #85b7eb;
 }
