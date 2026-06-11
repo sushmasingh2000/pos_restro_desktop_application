@@ -74,7 +74,7 @@ const LendingModal = ({ customer, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background: "#0e2a47b5"}}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "#0e2a47b5" }}
       onClick={onClose}
     >
       <div
@@ -176,7 +176,7 @@ const WalletModal = ({ customer, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background: "#0e2a47b5"}}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "#0e2a47b5" }}
       onClick={onClose}
     >
       <div
@@ -334,6 +334,32 @@ const PaymentLendingWallet = () => {
       <LendingModal customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />
       <WalletModal customer={selectedWalletCustomer} onClose={() => setSelectedWalletCustomer(null)} />
 
+      <div className="flex justify-end gap-3 px-3" >
+          <div className="main_input">
+            <label>
+              Start Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              max={today}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="main_input">
+            <label>
+              End Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              min={startDate}
+              max={today}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+      </div>
+
       <div className="chart_header">
         <div className="chart_heading">
           <h4>Payment · Lending · Wallet</h4>
@@ -411,22 +437,22 @@ const PaymentLendingWallet = () => {
                   <Section title="Payment Records">
                     <div className="rec-card-body">
                       <div class="rec-thead">
-                          <span className="rec-th">Method</span>
-                          <span className="rec-th">Amount</span>
+                        <span className="rec-th">Method</span>
+                        <span className="rec-th">Amount</span>
                       </div>
-                        {[
-                          { label: "Cash", val: payment.cash,  },
-                          { label: "UPI", val: payment.upi,  },
-                          { label: "Card", val: payment.card,  },
-                          { label: "Lending", val: payment.lending,  },
-                        ].map((row, i) => (
-                          <li key={i} className="rec-row">
-                            <span  className="rec-key"><Badge label={row.label}  /></span>
-                            <span className="rec-val">₹{row.val || 0}</span>
-                          </li>
-                        ))}
-                        <li className="rec-row"><span><b>Total</b></span><span className="rec-val">₹{((payment.cash || 0) + (payment.upi || 0) + (payment.card || 0) + (payment.lending || 0)).toFixed(2)}</span></li>
-                      
+                      {[
+                        { label: "Cash", val: payment.cash, },
+                        { label: "UPI", val: payment.upi, },
+                        { label: "Card", val: payment.card, },
+                        { label: "Lending", val: payment.lending, },
+                      ].map((row, i) => (
+                        <li key={i} className="rec-row">
+                          <span className="rec-key"><Badge label={row.label} /></span>
+                          <span className="rec-val">₹{row.val || 0}</span>
+                        </li>
+                      ))}
+                      <li className="rec-row"><span><b>Total</b></span><span className="rec-val">₹{((payment.cash || 0) + (payment.upi || 0) + (payment.card || 0) + (payment.lending || 0)).toFixed(2)}</span></li>
+
                     </div>
 
                   </Section>
@@ -484,17 +510,17 @@ const PaymentLendingWallet = () => {
                         <span className="rec-th">Mode</span>
                         <span className="rec-th">Paid Amount</span>
                       </div>
-                        {[
-                          { label: "Cash", val: lendMode.cash },
-                          { label: "UPI", val: lendMode.upi },
-                          { label: "Card", val: lendMode.card },
-                          { label: "Unpaid", val: lendMode.unpaid },
-                        ].map((row, i) => (
-                          <li key={i} className="rec-row">
-                            <span className="rec-key"><Badge label={row.label} color={row.label.toLowerCase()} /></span>
-                            <span className="rec-val">₹{row.val || 0}</span>
-                          </li>
-                        ))}
+                      {[
+                        { label: "Cash", val: lendMode.cash },
+                        { label: "UPI", val: lendMode.upi },
+                        { label: "Card", val: lendMode.card },
+                        { label: "Unpaid", val: lendMode.unpaid },
+                      ].map((row, i) => (
+                        <li key={i} className="rec-row">
+                          <span className="rec-key"><Badge label={row.label} color={row.label.toLowerCase()} /></span>
+                          <span className="rec-val">₹{row.val || 0}</span>
+                        </li>
+                      ))}
                     </div>
 
                   </Section>
@@ -503,52 +529,52 @@ const PaymentLendingWallet = () => {
 
               {/*  FIXED: Customer table — Mode column hataya, click se modal */}
               <div className="mx-4 mb-3">
-              <Section  title="Customer-wise Lending (click to view payments)" >
-                {lendList.length > 0 ? (
-                  <div className="main_table_container" className="mx-3">
-                    <div className="overflow-x-auto" style={{ borderRadius: "14px;" }}>
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-white/10 text-white/60">
-                            <th>Customer</th>
-                            <th>Phone</th>
-                            <th>Bill Amt</th>
-                            <th>Paid</th>
-                            <th>Remaining</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                            <th>Date</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {lendList.map((row, i) => (
-                            <tr
-                              key={i}
-                              className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition"
-                            >
-                              <td>{row.customer_name || "—"}</td>
-                              <td>{row.phone || "—"}</td>
-                              <td>₹{parseFloat(row.bill_amount || 0).toFixed(2)}</td>
-                              <td>₹{parseFloat(row.paid_amount || 0).toFixed(2)}</td>
-                              <td>₹{parseFloat(row.remaining || 0).toFixed(2)}</td>
-                              <td>
-                                <Badge label={row.status} color={row.status?.toLowerCase()} />
-                              </td>
-                              <td >
-                                < FaEye className="!text-red-500"
-                                  onClick={() => setSelectedCustomer(row)}
-                                /></td>
-                              <td >{row.order_date?.slice(0, 10)}</td>
+                <Section title="Customer-wise Lending (click to view payments)" >
+                  {lendList.length > 0 ? (
+                    <div className="main_table_container" className="mx-3">
+                      <div className="overflow-x-auto" style={{ borderRadius: "14px;" }}>
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-white/10 text-white/60">
+                              <th>Customer</th>
+                              <th>Phone</th>
+                              <th>Bill Amt</th>
+                              <th>Paid</th>
+                              <th>Remaining</th>
+                              <th>Status</th>
+                              <th>Action</th>
+                              <th>Date</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {lendList.map((row, i) => (
+                              <tr
+                                key={i}
+                                className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition"
+                              >
+                                <td>{row.customer_name || "—"}</td>
+                                <td>{row.phone || "—"}</td>
+                                <td>₹{parseFloat(row.bill_amount || 0).toFixed(2)}</td>
+                                <td>₹{parseFloat(row.paid_amount || 0).toFixed(2)}</td>
+                                <td>₹{parseFloat(row.remaining || 0).toFixed(2)}</td>
+                                <td>
+                                  <Badge label={row.status} color={row.status?.toLowerCase()} />
+                                </td>
+                                <td >
+                                  < FaEye className="!text-red-500"
+                                    onClick={() => setSelectedCustomer(row)}
+                                  /></td>
+                                <td >{row.order_date?.slice(0, 10)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <p className="text-dark text-center py-8">No lending records found</p>
-                )}
-              </Section>
+                  ) : (
+                    <p className="text-dark text-center py-8">No lending records found</p>
+                  )}
+                </Section>
               </div>
             </>
           )}

@@ -27,18 +27,18 @@ const MONTH_DATA = Array.from({ length: 30 }, (_, i) => ({
 }));
 
 const TODAY_DATA = [
-  { hour: "9am",  restaurant: 4,  online: 1 },
-  { hour: "10am", restaurant: 7,  online: 3 },
+  { hour: "9am", restaurant: 4, online: 1 },
+  { hour: "10am", restaurant: 7, online: 3 },
   { hour: "11am", restaurant: 12, online: 5 },
   { hour: "12pm", restaurant: 22, online: 11 },
-  { hour: "1pm",  restaurant: 18, online: 9 },
-  { hour: "2pm",  restaurant: 10, online: 4 },
-  { hour: "3pm",  restaurant: 6,  online: 3 },
-  { hour: "4pm",  restaurant: 8,  online: 5 },
-  { hour: "5pm",  restaurant: 14, online: 7 },
-  { hour: "6pm",  restaurant: 20, online: 10 },
-  { hour: "7pm",  restaurant: 25, online: 13 },
-  { hour: "8pm",  restaurant: 16, online: 8 },
+  { hour: "1pm", restaurant: 18, online: 9 },
+  { hour: "2pm", restaurant: 10, online: 4 },
+  { hour: "3pm", restaurant: 6, online: 3 },
+  { hour: "4pm", restaurant: 8, online: 5 },
+  { hour: "5pm", restaurant: 14, online: 7 },
+  { hour: "6pm", restaurant: 20, online: 10 },
+  { hour: "7pm", restaurant: 25, online: 13 },
+  { hour: "8pm", restaurant: 16, online: 8 },
 ];
 
 const RANGES = ["Today", "This week", "This month"];
@@ -74,24 +74,30 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-export default function DailyOrdersChart() {
+export default function DailyOrdersChart({ data = [] }) {
   const [range, setRange] = useState("This week");
   const [chartType, setChartType] = useState("Bar");
   const [fromDate, setFromDate] = useState("2026-06-04");
   const [toDate, setToDate] = useState("2026-06-04");
 
-  const data = range === "Today" ? TODAY_DATA
-    : range === "This month" ? MONTH_DATA
-    : WEEK_DATA;
+const chartData = useMemo(() => {
+  return (data || []).map(item => ({
+    day: new Date(item.day).toLocaleDateString("en-IN", { 
+      day: "2-digit", 
+      month: "short"   // "10 Jun" format
+    }),
+    restaurant: Number(item.restaurant_orders || item.restaurantOrderProcessed || 0),
+    online: Number(item.online_orders || item.onlineOrderProcessed || 0),
+  }));
+}, [data]);
 
   const xKey = range === "Today" ? "hour" : "day";
 
   const totals = useMemo(() => ({
-    total: data.reduce((s, d) => s + d.restaurant + d.online, 0),
-    restaurant: data.reduce((s, d) => s + d.restaurant, 0),
-    online: data.reduce((s, d) => s + d.online, 0),
-    peak: data.reduce((a, b) => (a.restaurant + a.online > b.restaurant + b.online ? a : b)),
-  }), [data]);
+    total: chartData.reduce((s, d) => s + d.restaurant + d.online, 0),
+    restaurant: chartData.reduce((s, d) => s + d.restaurant, 0),
+    online: chartData.reduce((s, d) => s + d.online, 0),
+  }), [chartData]);
 
   const barRadius = range === "This month" ? [2, 2, 0, 0] : [5, 5, 0, 0];
 
@@ -103,7 +109,7 @@ export default function DailyOrdersChart() {
           padding: "16px 22px 14px", borderBottom: `1px solid ${BLUE[100]}`,
           flexWrap: "wrap", gap: 10,
         }}>
-          
+
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             {/* Range pills */}
             <div style={{ display: "flex", background: BLUE[50], borderRadius: 20, padding: 3, gap: 2 }}>
@@ -132,7 +138,7 @@ export default function DailyOrdersChart() {
               ))}
             </div>
             {/* View Report */}
-           
+
           </div>
         </div>
 
@@ -152,7 +158,7 @@ export default function DailyOrdersChart() {
         <div style={{ padding: "12px 22px 20px" }}>
           <ResponsiveContainer width="100%" height={260}>
             {chartType === "Bar" ? (
-              <BarChart data={data} barGap={3} barCategoryGap="28%">
+              <BarChart data={chartData} barGap={3} barCategoryGap="28%">
                 <CartesianGrid vertical={false} stroke="#E2EDFF" strokeDasharray="3 0" />
                 <XAxis dataKey={xKey} axisLine={false} tickLine={false}
                   tick={{ fontSize: 11, fill: "#64748b", fontFamily: "inherit" }} />
@@ -166,7 +172,7 @@ export default function DailyOrdersChart() {
                   radius={barRadius} maxBarSize={range === "This month" ? 16 : 32} />
               </BarChart>
             ) : (
-              <LineChart data={data}>
+              <LineChart data={chartData}>
                 <CartesianGrid vertical={false} stroke="#E2EDFF" strokeDasharray="3 0" />
                 <XAxis dataKey={xKey} axisLine={false} tickLine={false}
                   tick={{ fontSize: 11, fill: "#64748b", fontFamily: "inherit" }} />
@@ -185,7 +191,7 @@ export default function DailyOrdersChart() {
           </ResponsiveContainer>
         </div>
 
-        
+
       </div>
     </div>
   );

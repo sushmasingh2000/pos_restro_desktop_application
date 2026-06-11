@@ -69,6 +69,6 @@ export const endpoint = {
   cancel_customer_order: `${domain}/api/v1/order-cancel-customer`,
 
   branch_profile_api: `${domain}/api/v1/branch-profile`,
-  update_order_status_api: `${domain}/api/v1/admin/update-order-status`,
+  update_order_status_api: `${domain}/api/v1/update-order-status`,
 
 };

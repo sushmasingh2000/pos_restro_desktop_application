@@ -55,6 +55,9 @@ const Orders = () => {
       items: order.items || [],
       billId: order.dg010_bill_id || null,
       billNo: order.dg06_bill_no || null,
+      customerName: order.dg06_customer_name || "",      // ← ADD
+      customerPhone: order.dg06_customer_phone || "",    // ← ADD  
+      customerAddress: order.dg06_delivery_address || "",
     };
   });
 
@@ -282,13 +285,15 @@ const Orders = () => {
               ? i.dg07_predefined_remark.split(", ").filter(Boolean)
               : [],
           }))}
-
+          deliveryCustomerName={selectedBillOrder?.customerName || ""}
+          deliveryCustomerPhone={selectedBillOrder?.customerPhone || ""}
+          deliveryCustomerAddress={selectedBillOrder?.customerAddress || ""}
           orderId={selectedBillOrder.rawId}
           tableId={selectedBillOrder.tableNo}
           orderType={selectedBillOrder.type}
           tableNameMap={{}}
           existingBillId={selectedBillOrder.billId}
-            orderStatus={selectedBillOrder?.status || ""} 
+          orderStatus={selectedBillOrder?.status || ""}
 
           onBillDone={() => {
             setShowBillModal(false);

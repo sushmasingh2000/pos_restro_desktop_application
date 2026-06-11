@@ -144,7 +144,6 @@ const POS = () => {
       isSplit: order.unique_order_id?.startsWith("SPLIT"),
       items: (order.items || []).map((item) => {
         const menuItem = itemsData.find(m => m.dg09_menu_id === item.dg07_menu_id);
-        console.log("item:", item.dg07_menu_id, "menuItem:", menuItem, "tax_group_id:", menuItem?.dg09_tax_group_id);
         return {
           id: item.dg07_menu_id,
           dg09_name: item.dg07_menu_name_snapshot,
@@ -160,6 +159,9 @@ const POS = () => {
             : [],
         };
       }),
+      customerName: order.dg06_customer_name || "",      // ← ADD
+      customerPhone: order.dg06_customer_phone || "",    // ← ADD  
+      customerAddress: order.dg06_delivery_address || "",
     }));
 
     const mainOrder = formattedOrders.find((o) => !o.isSplit);
@@ -630,6 +632,9 @@ const POS = () => {
           onBillDone={handleBillDone}
           existingBillId={existingBillId}
           existingBillNo={existingBillNo}
+          deliveryCustomerName={currentOrder?.customerName || ""}
+          deliveryCustomerPhone={currentOrder?.customerPhone || ""}
+          deliveryCustomerAddress={currentOrder?.customerAddress || ""}
         />
 
         <CancelOrderModal

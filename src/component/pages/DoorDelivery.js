@@ -61,7 +61,9 @@ const DoorDelivery = () => {
       totalAmount: Number(order.dg06_total_amount || 0),
 
       mop: order.dg010_payment_method || "--",
-
+      customerName: order.dg06_customer_name || "",      // ← ADD
+      customerPhone: order.dg06_customer_phone || "",    // ← ADD  
+      customerAddress: order.dg06_delivery_address || "",
       status: order.dg06_status,
       items: order.items || [],
       billId: order.dg010_bill_id || null,
@@ -73,9 +75,13 @@ const DoorDelivery = () => {
     o.orderId?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleView = (order) => {
-    setSelectedOrder(order);
-    setOpen(true);
+  // const handleView = (order) => {
+  //   setSelectedOrder(order);
+  //   setOpen(true);
+  // };
+const handleView = (order) => {
+    setSelectedBillOrder(order);
+    setShowBillModal(true);
   };
 
 
@@ -282,7 +288,9 @@ const DoorDelivery = () => {
               ? i.dg07_predefined_remark.split(", ").filter(Boolean)
               : [],
           }))}
-
+          deliveryCustomerName={selectedBillOrder?.customerName || ""}
+          deliveryCustomerPhone={selectedBillOrder?.customerPhone || ""}
+          deliveryCustomerAddress={selectedBillOrder?.customerAddress || ""}
           orderId={selectedBillOrder.rawId}
           tableId={selectedBillOrder.tableNo}
           orderType={type}

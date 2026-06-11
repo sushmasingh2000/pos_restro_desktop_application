@@ -17,7 +17,10 @@ export default function BillModal({
   tableNameMap = {},
   onBillDone,
   existingBillId = null,
-    orderStatus = "",   // ← YEH ADD KARO
+  orderStatus = "",
+  deliveryCustomerName = "",
+  deliveryCustomerPhone = "",
+  deliveryCustomerAddress = "",
 
 }) {
   // ── Customer ──────────────────────────────────────
@@ -26,7 +29,7 @@ export default function BillModal({
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [reprintWalletUsed, setReprintWalletUsed] = useState(0); //NAYA
   const [showPreview, setShowPreview] = useState(false);
-
+  const [estimatedTime, setEstimatedTime] = useState("");
   const [customer, setCustomer] = useState({
     name: "",
     phone: "",
@@ -238,9 +241,9 @@ export default function BillModal({
   useEffect(() => {
     if (isOpen) {
       setCustomer({
-        name: "",
-        phone: "",
-        address: "",
+        name: deliveryCustomerName || "",      // ← CHANGE
+        phone: deliveryCustomerPhone || "",    // ← CHANGE
+        address: deliveryCustomerAddress || "",
         tax_id: "",
         dob: "",
         anniversary: "",
@@ -1379,7 +1382,7 @@ export default function BillModal({
                     }}
                   >
                     ₹{maxWalletUse.toFixed(2)}{" "}
-                    {isAdvance ? "advance" : "wallet"} apply 
+                    {isAdvance ? "advance" : "wallet"} apply
                     {afterWalletTotal === 0 && " — Fully covered!"}
                   </div>
                 )}
@@ -1583,6 +1586,82 @@ export default function BillModal({
         </div>
 
         {/* Footer */}
+        {orderType === "delivery" && (
+          <div style={{ margin: 8 }}>
+
+            {/* Estimated Time input — sirf out_for_delivery status mein dikhao */}
+            {orderStatus === "out_for_delivery" && (
+              <div style={{ display: "flex", gap: 8, justifyItems:"end", alignItems: "center", margin: "8px 12px", width:"40%" }}>
+                <input
+                  type="text"
+                  placeholder="⏱️ e.g. 30 mins"
+                  value={estimatedTime}
+                  onChange={(e) => setEstimatedTime(e.target.value)}
+                  style={{
+                    flex: 1, padding: "8px 12px", borderRadius: 8, fontSize: 13,
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.06)", color: "black", outline: "none"
+                  }}
+                />
+                <button
+                  onClick={async () => {
+                    if (!estimatedTime.trim()) {
+                      toast.error("Please enter estimated delivery time!");
+                      return;
+                    }
+                    await apiConnectorPost(endpoint.update_order_status_api, {
+                      orderId,
+                      status: "out_for_delivery",
+                      estimatedTime
+                    });
+                    toast.success("⏱️ Estimated time updated!");
+                  }}
+                  style={{
+                    padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    background: "blue", border: "1px solid rgba(139,92,246,0.4)",
+                    color: "white", cursor: "pointer"
+                  }}
+                >
+                  Set Time
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 8 }} className="p-3">
+              {[
+                { key: "preparing", label: "Preparing", icon: "🍳", color: "#f59e0b", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.4)" },
+                { key: "ready", label: "Ready", icon: "📦", color: "#3b82f6", bg: "rgba(59,130,246,0.15)", border: "rgba(59,130,246,0.4)" },
+                { key: "out_for_delivery", label: "Out for Delivery", icon: "🛵", color: "#8b5cf6", bg: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.4)" },
+              ].map((s) => (
+                <button
+                  key={s.key}
+                  onClick={async () => {
+                    // ✅ out_for_delivery pe seedha complete mat karo
+                    await apiConnectorPost(endpoint.update_order_status_api, {
+                      orderId,
+                      status: s.key
+                    });
+                    toast.success(`${s.icon} ${s.label}`);
+                  }}
+                  style={{
+                    flex: 1, padding: "10px 6px",
+                    background: orderStatus === s.key
+                      ? s.bg.replace("0.15", "0.35")  // active highlight
+                      : s.bg,
+                    border: `1px solid ${orderStatus === s.key ? s.border : s.border}`,
+                    borderRadius: 10, color: s.color, fontSize: 12, fontWeight: 600,
+                    cursor: "pointer", display: "flex", flexDirection: "column",
+                    alignItems: "center", gap: 4,
+                    outline: orderStatus === s.key ? `2px solid ${s.color}` : "none"
+                  }}
+                >
+                  <span style={{ fontSize: 18 }}>{s.icon}</span>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="flex justify-between gap-3 modal_footer px-3 py-3">
           <button onClick={onClose} className="cancel_btn">
             Cancel
@@ -1604,13 +1683,12 @@ export default function BillModal({
                   : isLending
                     ? "📋 Save Due & Close"
                     : isAdvance && advanceRemaining > 0
-                      ? `Save Advance & Close (Due: ₹${isReprint
-                        ? reprintRemainingDue.toFixed(2)
-                        : advanceRemaining.toFixed(2)
-                      })`
-                      : orderType === "dine_in"   // ✅ FIX 2: dine_in check
+                      ? `Save Advance & Close (Due: ₹${isReprint ? reprintRemainingDue.toFixed(2) : advanceRemaining.toFixed(2)})`
+                      : orderType === "dine_in"
                         ? "🔒 Close Table"
-                        : "🚚 Delivery Done"}
+                        : orderStatus === "out_for_delivery"
+                          ? "✅ Delivery Done"           
+                          : "🚚 Mark Out for Delivery"} 
               </button>
             )}
 

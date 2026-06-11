@@ -75,8 +75,8 @@ export default function PendingOrder() {
         items: (order.items || []).map((item) => ({
           dg09_name: item.dg07_menu_name_snapshot,
           price: Number(item.dg07_price || 0),
-           tax_group_id: item.dg09_tax_group_id,
-            basePrice: parseFloat(item.dg07_base_price),
+          tax_group_id: item.dg09_tax_group_id,
+          basePrice: parseFloat(item.dg07_base_price),
           qty: Number(item.dg07_quantity || 0),
           total: Number(item.dg07_total || 0),
           globalRemark: item.dg07_global_remark,
@@ -84,6 +84,9 @@ export default function PendingOrder() {
             ? [item.dg07_predefined_remark]
             : [],
         })),
+        customerName: order.dg06_customer_name || "",      // ← ADD
+        customerPhone: order.dg06_customer_phone || "",    // ← ADD  
+        customerAddress: order.dg06_delivery_address || "",
         // items: order.items || [],
         billId: order.dg010_bill_id || null,
         billNo: order.dg06_bill_no || null,
@@ -105,172 +108,172 @@ export default function PendingOrder() {
 
   return (
     <div className="">
-  <PosTab/>
-  <div className="main_cards mt-3">
-      <div className="chart_header ">
-        <div className="chart_heading">
-          <h4><span class="live-dot"></span> Pending Orders</h4>
-          <p>Daily performance overview</p>
-        </div>
-
-        {/* FILTERS */}
-        <div className="flex">
-          <div className="flex gap-2 live_filters">
-
-           {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setPage(1); // reset page on tab change
-              }}
-              className={`
-                ${activeTab === tab
-                  ? "active_tab"
-                  : ""
-                }`}
-            >
-              {tab}
-              </button>
-          ))}
+      <PosTab />
+      <div className="main_cards mt-3">
+        <div className="chart_header ">
+          <div className="chart_heading">
+            <h4><span class="live-dot"></span> Pending Orders</h4>
+            <p>Daily performance overview</p>
           </div>
 
+          {/* FILTERS */}
+          <div className="flex">
+            <div className="flex gap-2 live_filters">
+
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setPage(1); // reset page on tab change
+                  }}
+                  className={`
+                ${activeTab === tab
+                      ? "active_tab"
+                      : ""
+                    }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+          </div>
         </div>
-      </div>
-    
-     
-      {/* TABLE */}
-      <div className="main_table_container" style={{borderRadius: "0", border: "0"}}>
-        <div className="overflow-y-auto">
 
-          <table className="w-full ">
-            <thead >
-              <tr>
-                {[
-                  "S.No.",
-                  "Order Id",
-                  "Date",
-                  "Time",
-                  "Type",
-                  "Table No",
-                  "SubTotal",
-                  "Discount",
-                  "Charge",
-                  "Tax",
-                  "Paid",
-                  "MOP",
-                  "Status",
-                  "Action",
-                ].map((h) => (
-                  <th key={h} >{h}</th>
-                ))}
-              </tr>
-            </thead>
 
-            <tbody>
-              {isLoading ? (
+        {/* TABLE */}
+        <div className="main_table_container" style={{ borderRadius: "0", border: "0" }}>
+          <div className="overflow-y-auto">
+
+            <table className="w-full ">
+              <thead >
                 <tr>
-                  <td colSpan="14" className="text-center p-6">
-                    Loading...
-                  </td>
+                  {[
+                    "S.No.",
+                    "Order Id",
+                    "Date",
+                    "Time",
+                    "Type",
+                    "Table No",
+                    "SubTotal",
+                    "Discount",
+                    "Charge",
+                    "Tax",
+                    "Paid",
+                    "MOP",
+                    "Status",
+                    "Action",
+                  ].map((h) => (
+                    <th key={h} >{h}</th>
+                  ))}
                 </tr>
-              ) : filteredOrders.length === 0 ? (
-                <tr>
-                  <td colSpan="14" className="text-center p-6">
-                    No pending orders found
-                  </td>
-                </tr>
-              ) : (
-                filteredOrders.map((order, index) => (
-                  <tr
-                    key={order.orderId}
-                    className="text-center border-b border-white/5 hover:bg-white/5"
-                  >
-                    <td>
-                      {(page - 1) * limit + index + 1}
-                    </td>
+              </thead>
 
-                    {/*  FIX: long ID break */}
-                    <td >
-                      {order.orderId}
-                    </td>
-
-                    <td>{order.date}</td>
-                    <td>{order.time}</td>
-
-                    <td>
-                      {order.type === "dine_in"
-                        ? "Dine In"
-                        : order.type === "takeaway"
-                          ? "TakeAway"
-                          : order.type === "delivery"
-                            ? "Door Delivery"
-                            : "--"}
-                    </td>
-
-                    <td>{order.tableNo}</td>
-                    <td>₹{order.subTotal}</td>
-                    <td>₹{order.discount}</td>
-                    <td>₹{order.charge}</td>
-                    <td>₹{order.tax}</td>
-
-                    <td className="p-2 text-green-400 font-semibold">
-                      ₹{order.totalAmount}
-                    </td>
-
-                    <td>{order.paymentMethod}</td>
-
-                    <td>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs ${order.status === "completed"
-                          ? "green_bg"
-                          : "yellow_bg"
-                          }`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      <button
-                        onClick={() => handleView(order)}
-                        className="purple_bg"
-                      >
-                        View
-                      </button>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="14" className="text-center p-6">
+                      Loading...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan="14" className="text-center p-6">
+                      No pending orders found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map((order, index) => (
+                    <tr
+                      key={order.orderId}
+                      className="text-center border-b border-white/5 hover:bg-white/5"
+                    >
+                      <td>
+                        {(page - 1) * limit + index + 1}
+                      </td>
 
+                      {/*  FIX: long ID break */}
+                      <td >
+                        {order.orderId}
+                      </td>
+
+                      <td>{order.date}</td>
+                      <td>{order.time}</td>
+
+                      <td>
+                        {order.type === "dine_in"
+                          ? "Dine In"
+                          : order.type === "takeaway"
+                            ? "TakeAway"
+                            : order.type === "delivery"
+                              ? "Door Delivery"
+                              : "--"}
+                      </td>
+
+                      <td>{order.tableNo}</td>
+                      <td>₹{order.subTotal}</td>
+                      <td>₹{order.discount}</td>
+                      <td>₹{order.charge}</td>
+                      <td>₹{order.tax}</td>
+
+                      <td className="p-2 text-green-400 font-semibold">
+                        ₹{order.totalAmount}
+                      </td>
+
+                      <td>{order.paymentMethod}</td>
+
+                      <td>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs ${order.status === "completed"
+                            ? "green_bg"
+                            : "yellow_bg"
+                            }`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+
+                      <td>
+                        <button
+                          onClick={() => handleView(order)}
+                          className="purple_bg"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+          </div>
+        </div>
+
+        {/* PAGINATION */}
+        <div className="flex justify-between mt-4 text-sm">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-3 py-1 bg-white/10 rounded disabled:opacity-30"
+          >
+            Prev
+          </button>
+
+          <div>
+            Page {page} / {pagination?.totalPages || 1}
+          </div>
+
+          <button
+            disabled={page === pagination?.totalPages}
+            onClick={() => setPage(page + 1)}
+            className="px-3 py-1 bg-white/10 rounded disabled:opacity-30"
+          >
+            Next
+          </button>
         </div>
       </div>
-
-      {/* PAGINATION */}
-      <div className="flex justify-between mt-4 text-sm">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage(page - 1)}
-          className="px-3 py-1 bg-white/10 rounded disabled:opacity-30"
-        >
-          Prev
-        </button>
-
-        <div>
-          Page {page} / {pagination?.totalPages || 1}
-        </div>
-
-        <button
-          disabled={page === pagination?.totalPages}
-          onClick={() => setPage(page + 1)}
-          className="px-3 py-1 bg-white/10 rounded disabled:opacity-30"
-        >
-          Next
-        </button>
-      </div>
-    </div>
 
       {/* BILL MODAL */}
       {showBillModal && selectedBillOrder && (
@@ -285,6 +288,9 @@ export default function PendingOrder() {
           tableId={selectedBillOrder.tableNo}
           orderType={selectedBillOrder.type}
           existingBillId={selectedBillOrder.billId}  //  FIX
+           deliveryCustomerName={selectedBillOrder?.customerName || ""}
+          deliveryCustomerPhone={selectedBillOrder?.customerPhone || ""}
+          deliveryCustomerAddress={selectedBillOrder?.customerAddress || ""}
         />
       )}
     </div>

@@ -88,7 +88,7 @@ const DineIn = () => {
         <Row >
           <Col md={3}>
             <div className="main_input">
-              <label>Date <span className="text-red-500">*</span></label>
+              <label>Start Date <span className="text-red-500">*</span></label>
                 <input
                 type="date"
                 className=""
@@ -98,7 +98,7 @@ const DineIn = () => {
           </Col>
           <Col md={3}>
             <div className="main_input">
-                <label>Date <span className="text-red-500">*</span></label>
+                <label>End Date <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   className=""
