@@ -1,23 +1,25 @@
 import axios from "axios";
-import toast from "react-hot-toast";
 import { frontend } from "../domain";
 
+const isElectronApp = navigator.userAgent.toLowerCase().includes('electron');
+const LIVE_DOMAIN = 'https://cbc.ferryinfotech.in';
+const LOCAL_DOMAIN = 'http://localhost:9047';
 
+const getActiveEndpoint = (endpoint) => {
+  if (isElectronApp && !navigator.onLine) {
+    return endpoint.replace(LIVE_DOMAIN, LOCAL_DOMAIN);
+  }
+  return endpoint;
+};
 
 export const apiConnectorGet = async (endpoint, params = {}) => {
   try {
-    const response = await axios.get(endpoint, {
+    const response = await axios.get(getActiveEndpoint(endpoint), {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       params: params,
     });
-    // if (response?.data?.message === "Invalid token") {
-    //   alert("Login in another device ", { id: 1 });
-    //   localStorage.clear();
-    //   window.location.href = `${frontend}`;
-    //   return;
-    // }
     return response;
   } catch (e) {
     return {
@@ -25,10 +27,11 @@ export const apiConnectorGet = async (endpoint, params = {}) => {
     };
   }
 };
+
 export const apiConnectorPost = async (endpoint, reqBody) => {
   try {
-    const response = await axios?.post(
-      endpoint,
+    const response = await axios.post(
+      getActiveEndpoint(endpoint),
       reqBody,
       {
         headers: {
@@ -36,12 +39,6 @@ export const apiConnectorPost = async (endpoint, reqBody) => {
         },
       }
     );
-    // if (response?.data?.message === "Invalid token") {
-    //   alert("Login in another device ", { id: 1 });
-    //   localStorage.clear();
-    //   window.location.href = `${frontend}`;
-    //   return;
-    // }
     return response;
   } catch (e) {
     return {
