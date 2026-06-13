@@ -49,6 +49,8 @@ const Login = ({ role }) => {
       }
       localStorage.setItem("token", user.token);
       localStorage.setItem("role", "staff");
+      localStorage.setItem("user_name", user?.name || "");
+      localStorage.setItem("user_email", user?.email || "");
       localStorage.setItem("loginTime", Date.now().toString());
       toast.success("Login successful");
       navigate("/userdashboard");

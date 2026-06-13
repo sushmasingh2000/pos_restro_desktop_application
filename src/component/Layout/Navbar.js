@@ -1,10 +1,10 @@
-import { Logout } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
 import { useState, useEffect, useRef } from "react";
-import { apiConnectorPost } from "../../utils/APIConnector";
+import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
+import UserProfileMenu from "../UserProfileMenu";
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -14,12 +14,6 @@ const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [prevCount, setPrevCount] = useState(null);
   const audioRef = useRef(null);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
-    window.location.reload();
-  };
 
   const { data: notifData } = useQuery(
     ["pending_notifications"],
@@ -179,13 +173,12 @@ const Navbar = ({ toggleSidebar }) => {
           )}
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 logout_btn"
-        >
-          <Logout className="!h-4" />
-          <span>Logout</span>
-        </button>
+        <UserProfileMenu
+          apiGet={apiConnectorGet}
+          apiPost={apiConnectorPost}
+          profileEndpoint={endpoint.user_profile_api}
+          changePasswordEndpoint={endpoint.change_password_api}
+        />
 
         <div className="tottle_btn mobile_btn">
           <button onClick={toggleSidebar}>

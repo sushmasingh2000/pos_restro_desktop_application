@@ -71,4 +71,8 @@ export const endpoint = {
   branch_profile_api: `${domain}/api/v1/branch-profile`,
   update_order_status_api: `${domain}/api/v1/update-order-status`,
 
+  // ── USER PROFILE
+  user_profile_api: `${domain}/api/v1/user-profile`,
+  change_password_api: `${domain}/api/v1/change-password`,
+
 };
