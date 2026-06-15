@@ -337,7 +337,7 @@ const POS = () => {
       });
 
       if (res?.data?.success) {
-        const orderId = res?.data?.order?.orderId || res?.data?.order?.offlineOrderId;
+        const orderId = res?.data?.order?.orderId ?? res?.data?.order?.offlineOrderId;
         const kotNo = res?.data?.order?.kotNo || 1;
         const captainName = res?.data?.order?.captainName || "—";
         const orderUniqueNo = res?.data?.order?.uniqueOrderId || `CBC-R${orderId}`;

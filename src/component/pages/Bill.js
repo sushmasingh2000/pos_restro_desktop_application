@@ -1086,13 +1086,22 @@ export default function BillModal({
                             key={m.id}
                             onClick={() => {
                               const updated = [...paymentSplits];
-                              updated[idx].mode = m.name;
+                              updated[idx] = { ...updated[idx], mode: m.name };
                               // Agar sirf ek split hai to full amount auto-fill
                               if (paymentSplits.length === 1) {
                                 updated[idx].amount =
                                   afterWalletTotal.toFixed(2);
                               }
                               setPaymentSplits(updated);
+                              // Given Amount auto-fill (dono side dikhane ke liye)
+                              const modeLower = m.name?.toLowerCase();
+                              if (
+                                paymentSplits.length === 1 &&
+                                modeLower !== "lending" &&
+                                modeLower !== "advance"
+                              ) {
+                                setGivenAmount(afterWalletTotal.toFixed(2));
+                              }
                             }}
                             className="payment_method_btn"
                             style={
@@ -1667,7 +1676,9 @@ export default function BillModal({
             Cancel
           </button>
           <div className="flex justify-end gap-3" style={{ width: "50%" }}>
-            {savedBillId && orderStatus !== "completed" && (
+            {(savedBillId || orderType === "dine_in") &&
+             orderStatus !== "completed" &&
+             (orderType !== "delivery" || orderStatus === "out_for_delivery") && (
               <button
                 onClick={handleCloseTable}
                 disabled={loading}
@@ -1686,9 +1697,7 @@ export default function BillModal({
                       ? `Save Advance & Close (Due: ₹${isReprint ? reprintRemainingDue.toFixed(2) : advanceRemaining.toFixed(2)})`
                       : orderType === "dine_in"
                         ? "🔒 Close Table"
-                        : orderStatus === "out_for_delivery"
-                          ? "✅ Delivery Done"           
-                          : "🚚 Mark Out for Delivery"} 
+                        : "✅ Delivery Done"}
               </button>
             )}
 

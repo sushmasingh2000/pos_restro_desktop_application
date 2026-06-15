@@ -5,6 +5,10 @@ const LIVE_DOMAIN = 'https://cbc.ferryinfotech.in';
 const LOCAL_DOMAIN = 'http://localhost:9047';
 
 const getActiveEndpoint = (endpoint) => {
+  // Login always through local backend so credentials get cached for offline use
+  if (endpoint.includes('/api/v1/login')) {
+    return endpoint.replace(LIVE_DOMAIN, LOCAL_DOMAIN);
+  }
   if (!navigator.onLine) {
     return endpoint.replace(LIVE_DOMAIN, LOCAL_DOMAIN);
   }
