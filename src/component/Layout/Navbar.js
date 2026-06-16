@@ -12,8 +12,37 @@ const Navbar = ({ toggleSidebar }) => {
   const type = localStorage.getItem("role");
 
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showSubDropdown, setShowSubDropdown] = useState(false);
   const [prevCount, setPrevCount] = useState(null);
   const audioRef = useRef(null);
+  const subDropRef = useRef(null);
+
+  const showBell = type !== "business_owner" && type !== "master_admin";
+
+  // ── Subscription alert ──
+  const { data: subData } = useQuery(
+    ["my_subscription_nav"],
+    () => apiConnectorGet(endpoint.get_my_subscription),
+    {
+      refetchOnWindowFocus: false,
+      retry: false,
+      staleTime: 5 * 60 * 1000,
+      enabled: type !== "master_admin",
+    }
+  );
+  const sub = subData?.data?.result;
+  const daysLeft = sub?.days_left ?? 999;
+  const showSubAlert = sub && daysLeft <= 15;
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (subDropRef.current && !subDropRef.current.contains(e.target)) {
+        setShowSubDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const { data: notifData } = useQuery(
     ["pending_notifications"],
@@ -24,6 +53,7 @@ const Navbar = ({ toggleSidebar }) => {
     {
       refetchInterval: 10000,
       refetchOnWindowFocus: true,
+      enabled: showBell,
     }
   );
 
@@ -84,10 +114,120 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
 
       <div className="flex items-center gap-md-3 gap-2">
-       
 
-        {/* Notification Bell */}
-        <div className="relative">
+        {/* Subscription Alert */}
+        {showSubAlert && (
+          <div className="relative" ref={subDropRef}>
+            <style>{`
+              @keyframes sub-pulse {
+                0%,100% { box-shadow: 0 0 0 0 #dc262666; }
+                50%      { box-shadow: 0 0 0 7px transparent; }
+              }
+            `}</style>
+            <button
+              className="notification_btn"
+              onClick={() => setShowSubDropdown(!showSubDropdown)}
+              style={{ position: "relative" }}
+            >
+              <div style={{ animation: "sub-pulse 1.4s infinite" }}>
+                {daysLeft <= 3 ? "🚨" : "⚠️"}
+              </div>
+              <span className="notification_count" style={{ background: "#dc2626" }}>
+                {daysLeft <= 0 ? "!" : daysLeft + "d"}
+              </span>
+            </button>
+
+            {showSubDropdown && (
+              <div
+                className="absolute right-0 mt-2 rounded-xl shadow-xl z-50 overflow-hidden"
+                style={{
+                  width: 300,
+                  background: "#fff",
+                  border: "1.5px solid #fca5a5",
+                  boxShadow: "0 4px 20px rgba(220,38,38,.15)",
+                }}
+              >
+                <div
+                  style={{
+                    background: daysLeft <= 3 ? "#fee2e2" : "#ffedd5",
+                    padding: "12px 16px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderBottom: `1px solid ${daysLeft <= 3 ? "#fca5a5" : "#fed7aa"}`,
+                  }}
+                >
+                  <span style={{ fontWeight: 700, fontSize: 13, color: daysLeft <= 3 ? "#991b1b" : "#92400e" }}>
+                    {daysLeft <= 3 ? "🚨 Subscription Critical" : "⚠️ Subscription Expiring"}
+                  </span>
+                  <button
+                    onClick={() => setShowSubDropdown(false)}
+                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#94a3b8" }}
+                  >✕</button>
+                </div>
+
+                <div style={{ padding: "14px 16px" }}>
+                  <div style={{ fontSize: 13, color: "#1e3a8a", fontWeight: 600, marginBottom: 6 }}>
+                    {sub?.package_name}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
+                    <i className="ri-calendar-event-line" style={{ marginRight: 4 }} />
+                    Expires:{" "}
+                    <strong>
+                      {sub?.end_date
+                        ? new Date(sub.end_date).toLocaleDateString("en-IN", {
+                            day: "2-digit", month: "short", year: "numeric",
+                          })
+                        : "—"}
+                    </strong>
+                  </div>
+
+                  <div
+                    style={{
+                      background: daysLeft <= 3 ? "#fee2e2" : "#ffedd5",
+                      border: `1px solid ${daysLeft <= 3 ? "#fca5a5" : "#fed7aa"}`,
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      textAlign: "center",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div style={{ fontSize: 22, fontWeight: 800, color: daysLeft <= 3 ? "#dc2626" : "#ea580c" }}>
+                      {daysLeft <= 0 ? "EXPIRED" : `${daysLeft} Day${daysLeft !== 1 ? "s" : ""} Left`}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
+                      {daysLeft <= 0
+                        ? "Service may be interrupted"
+                        : daysLeft <= 3
+                        ? "Renew immediately to avoid interruption"
+                        : "Contact owner to renew subscription"}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      background: "#eff6ff",
+                      border: "1px solid #bfdbfe",
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      fontSize: 12,
+                      color: "#1e40af",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 8,
+                    }}
+                  >
+                    <i className="ri-information-line" style={{ marginTop: 1, flexShrink: 0 }} />
+                    Please contact your business owner to renew the subscription plan before expiry.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Notification Bell — only for branch_admin / staff */}
+        {showBell && <div className="relative">
           <button
             className="notification_btn"
             onClick={() => setShowDropdown(!showDropdown)}
@@ -171,7 +311,7 @@ const Navbar = ({ toggleSidebar }) => {
               </div>
             </div>
           )}
-        </div>
+        </div>}
 
         <UserProfileMenu
           apiGet={apiConnectorGet}

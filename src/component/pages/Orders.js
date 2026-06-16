@@ -61,7 +61,11 @@ const Orders = () => {
     };
   });
 
-  const filtered = formattedOrders.filter((o) =>
+  const filteredOrders = formattedOrders.filter(
+  (order) => order.status !== "customer_placed"
+);
+
+  const filtered = filteredOrders.filter((o) =>
     o.orderId?.toLowerCase().includes(search.toLowerCase())
   );
 
