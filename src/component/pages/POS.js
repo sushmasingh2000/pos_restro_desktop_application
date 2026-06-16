@@ -384,7 +384,7 @@ const POS = () => {
         });
         await apiConnectorPost(endpoint.update_order_status_api, {
           orderId: savedOrderId || orderId,
-          status: "preparing"
+          status: "pending" || "preparing"
         });
       } else {
         toast.error(res?.data?.message || "Failed to save KOT");

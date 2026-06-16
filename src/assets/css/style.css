@@ -2655,6 +2655,11 @@ button.next_btn {
     color: #f59e0b;
     border: 1px solid #f59e0b40;
 }
+.bill_statues span.red_bg {
+    background: #f74c211a;
+    color: #cf1414;
+    border: 1px solid #df394140;
+}
 
 .main_wallet_box {
     border-bottom: 1px solid #80808038;

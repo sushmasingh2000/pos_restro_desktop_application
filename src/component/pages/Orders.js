@@ -200,10 +200,14 @@ const Orders = () => {
                       <td>
                         {order.paymentMethod || "--"}</td>
                       <td>
-                        <span className={`px-3 py-1 rounded-full text-xs ${order.status === "completed"
-                          ? "green_bg"
-                          : "yellow_bg"
-                          }`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs ${order.status === "completed"
+                              ? "green_bg"
+                              : order.status === "cancelled"
+                                ? "red_bg"
+                                : "yellow_bg"
+                            }`}
+                        >
                           {order.status}
                         </span>
                       </td>

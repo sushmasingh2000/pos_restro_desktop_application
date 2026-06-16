@@ -164,6 +164,8 @@ export default function BillModal({
         // if (bill.paymentMethod) setSelectedMode(bill.paymentMethod);
         if (bill.paid_amount && parseFloat(bill.paid_amount) > 0)
           setGivenAmount(String(bill.paid_amount));
+        else if (bill.total_amount && parseFloat(bill.total_amount) > 0)
+          setGivenAmount(parseFloat(bill.total_amount).toFixed(2));
         const discAmt = parseFloat(bill.discount || 0);
         const sub = parseFloat(bill.subtotal || 0);
         if (discAmt > 0 && sub > 0) {
