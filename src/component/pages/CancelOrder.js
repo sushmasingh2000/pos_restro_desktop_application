@@ -150,10 +150,7 @@ const CancelOrder = () => {
                                             </td>
 
                                             <td className="p-2">
-                                                <span className={` ${order.status === "completed"
-                                                    ? "green_bg"
-                                                    : "yellow_bg"
-                                                    }`}>
+                                                <span className={`red_bg`}>
                                                     {order.status}
                                                 </span>
                                             </td>

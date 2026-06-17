@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useQuery } from "react-query";
+import { useQuery, useQueries } from "react-query";
 import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import BillModal from "./Bill";
@@ -17,40 +17,45 @@ export default function PendingOrder() {
   const tabs = [
     "ALL SECTIONS",
     "DINE IN",
-    "TAKE AWAY",
+    "QR ORDER",
     "DOOR DELIVERY",
-    "PARK ITEMS",
+    // "PARK ITEMS",
   ];
 
-  const tabToTypeMap = {
-    "DINE IN": "dine_in",
-    "TAKE AWAY": "takeaway",
-    "DOOR DELIVERY": "delivery",
-    "PARK ITEMS": "park-items",
+  const getApiParams = (tab) => {
+    const base = { page, limit, status: ["pending"] };
+    if (tab === "ALL SECTIONS")  return base;
+    if (tab === "QR ORDER")      return { ...base, qrOnly: true };
+    if (tab === "DINE IN")       return { ...base, orderType: "dine_in" };
+    if (tab === "DOOR DELIVERY") return { ...base, orderType: "delivery" };
+    // if (tab === "PARK ITEMS")    return { ...base, orderType: "park-items" };
+    return base;
   };
 
-  const typeFilter =
-    activeTab === "ALL SECTIONS"
-      ? null
-      : tabToTypeMap[activeTab];
-
-  //  FIXED QUERY (no filteredOrders dependency)
   const { data, isLoading } = useQuery(
-    ["pending-orders", typeFilter, page],
-    () =>
-      apiConnectorPost(endpoint.order_branch_status_api, {
-        page,
-        limit,
-        status: ["pending"],
-        ...(typeFilter && { type: typeFilter }),
-      }),
-    {
-      keepPreviousData: true,
-    }
+    ["pending-orders", activeTab, page],
+    () => apiConnectorPost(endpoint.order_branch_status_api, getApiParams(activeTab)),
+    { keepPreviousData: true }
   );
 
   const orders = data?.data?.result?.orders || [];
   const pagination = data?.data?.result?.pagination || {};
+
+  const countQueries = useQueries([
+    { queryKey: ["pending-count", "all"],      queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"] }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "dine_in"],  queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "dine_in" }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "qr"],       queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], qrOnly: true }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "delivery"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "delivery" }), refetchInterval: 30000 },
+    // { queryKey: ["pending-count", "park"],     queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "park-items" }), refetchInterval: 30000 },
+  ]);
+
+  const tabCounts = {
+    "ALL SECTIONS":  countQueries[0]?.data?.data?.result?.pagination?.total || 0,
+    "DINE IN":       countQueries[1]?.data?.data?.result?.pagination?.total || 0,
+    "QR ORDER":      countQueries[2]?.data?.data?.result?.pagination?.total || 0,
+    "DOOR DELIVERY": countQueries[3]?.data?.data?.result?.pagination?.total || 0,
+    // "PARK ITEMS":    countQueries[4]?.data?.data?.result?.pagination?.total || 0,
+  };
 
   // FORMAT ORDERS
   const formattedOrders = useMemo(() => {
@@ -120,22 +125,31 @@ export default function PendingOrder() {
           <div className="flex">
             <div className="flex gap-2 live_filters">
 
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    setActiveTab(tab);
-                    setPage(1); // reset page on tab change
-                  }}
-                  className={`
-                ${activeTab === tab
-                      ? "active_tab"
-                      : ""
-                    }`}
-                >
-                  {tab}
-                </button>
-              ))}
+              {tabs.map((tab) => {
+                const count = tabCounts[tab] || 0;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => { setActiveTab(tab); setPage(1); }}
+                    className={activeTab === tab ? "active_tab" : ""}
+                  >
+                    {tab}
+                    {count > 0 && (
+                      <span style={{
+                        background: tab === "ALL SECTIONS" ? "#6366f1"
+                          : tab === "DINE IN" ? "#f59e0b"
+                          : tab === "QR ORDER" ? "#8b5cf6"
+                          : tab === "DOOR DELIVERY" ? "#ef4444"
+                          : "#10b981",
+                        color: "#fff", borderRadius: "50%",
+                        fontSize: 10, padding: "1px 5px", marginLeft: 6,
+                      }}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
           </div>

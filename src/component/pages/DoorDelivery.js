@@ -75,10 +75,6 @@ const DoorDelivery = () => {
     o.orderId?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // const handleView = (order) => {
-  //   setSelectedOrder(order);
-  //   setOpen(true);
-  // };
 const handleView = (order) => {
     setSelectedBillOrder(order);
     setShowBillModal(true);

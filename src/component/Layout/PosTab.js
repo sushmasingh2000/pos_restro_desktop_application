@@ -1,39 +1,108 @@
-import MenuIcon from "@mui/icons-material/Menu";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
+
+const badgeStyle = `
+  @keyframes badgePulse {
+    0%   { opacity: 1; transform: scale(1); }
+    50%  { opacity: 0.4; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+`;
+
+const Badge = ({ count }) => {
+  if (!count || count <= 0) return null;
+  return (
+    <>
+      <style>{badgeStyle}</style>
+      <span style={{
+        background: "#ef4444",
+        color: "#fff",
+        borderRadius: "50%",
+        fontSize: 10,
+        padding: "1px 6px",
+        marginLeft: 6,
+        fontWeight: "bold",
+        minWidth: 18,
+        display: "inline-block",
+        textAlign: "center",
+        animation: "badgePulse 1.2s ease-in-out infinite",
+      }}>
+        {count > 99 ? "99+" : count}
+      </span>
+    </>
+  );
+};
 
 const PosTab = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [qrCount, setQrCount] = useState(0);
 
-  useEffect(() => {
-    const fetchQrCount = async () => {
-      try {
-        const res = await apiConnectorPost(endpoint.get_customer_placed_orders);
-        const orders = (res?.data?.result || []).filter(
-          (o) => o.dg06_customer_session !== null 
-               && o.dg06_customer_session !== ""
-               && o.dg06_status === "customer_placed"
-        );
-        setQrCount(orders.length);
-      } catch { }
-    };
-    fetchQrCount();
-    const interval = setInterval(fetchQrCount, 30000);
-    return () => clearInterval(interval);
+  const [counts, setCounts] = useState({
+    dineIn: 0,
+    delivery: 0,
+    qr: 0,
+    online: 0,
+    pending: 0,
+  });
+
+  const fetchCounts = useCallback(async () => {
+    try {
+      // Call 1: customer-placed orders (QR, Delivery, Online)
+      const res1 = await apiConnectorPost(endpoint.get_customer_placed_orders);
+      const allPlaced = res1?.data?.result || [];
+
+      const qr = allPlaced.filter(
+        (o) =>
+          o.dg06_customer_session != null &&
+          o.dg06_customer_session !== "" &&
+          o.dg06_status === "customer_placed"
+      ).length;
+
+      const delivery = allPlaced.filter(
+        (o) =>
+          o.dg06_order_type === "delivery" &&
+          o.dg06_status === "customer_placed"
+      ).length;
+
+      const online = allPlaced.filter(
+        (o) =>
+          (o.platform?.toLowerCase() === "swiggy" ||
+            o.platform?.toLowerCase() === "zomato") &&
+          o.dg06_status === "customer_placed"
+      ).length;
+
+      // Call 2: pending branch orders (Dine-in + Pending tab)
+      const res2 = await apiConnectorPost(endpoint.order_branch_status_api, {
+        status: ["pending"],
+        limit: 999,
+      });
+      const pendingOrders = res2?.data?.result?.orders || [];
+      const pendingTotal = res2?.data?.result?.pagination?.total || pendingOrders.length;
+
+      const dineIn = pendingOrders.filter(
+        (o) => o.dg06_order_type === "dine_in"
+      ).length;
+
+      const pending = pendingTotal;
+
+      setCounts({ dineIn, delivery, qr, online, pending });
+    } catch { }
   }, []);
 
+  useEffect(() => {
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 30000);
+    return () => clearInterval(interval);
+  }, [fetchCounts]);
+
   const navItems = [
-    { name: "DINE IN", path: "/userdashboard" },
-    { name: "DOOR DELIVERY ORDERS", path: "/online-delivery-order" },
-    { name: "OR SCAN ORDERS", path: "/qr-order", count: qrCount },
-    { name: "ONLINE ORDERS", path: "/online-order" },
-    { name: "PENDING ORDERS", path: "/pending-order" },
+    { name: "DINE IN", path: "/userdashboard", count: counts.dineIn },
+    { name: "DOOR DELIVERY ORDERS", path: "/online-delivery-order", count: counts.delivery },
+    { name: "OR SCAN ORDERS", path: "/qr-order", count: counts.qr },
+    { name: "ONLINE ORDERS", path: "/online-order", count: counts.online },
+    { name: "PENDING ORDERS", path: "/pending-order", count: counts.pending },
   ];
 
   return (
@@ -47,19 +116,7 @@ const PosTab = () => {
             className={`${isActive ? "acive_tab" : ""}`}
           >
             {item.name}
-            {item.count > 0 && (
-              <span style={{
-                background: "#ef4444",
-                color: "#fff",
-                borderRadius: "50%",
-                fontSize: 10,
-                padding: "1px 6px",
-                marginLeft: 6,
-                fontWeight: "bold",
-              }}>
-                {item.count}
-              </span>
-            )}
+            <Badge count={item.count} />
           </button>
         );
       })}
