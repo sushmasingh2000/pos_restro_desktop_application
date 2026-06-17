@@ -24,7 +24,7 @@ export default function ItemOptionsModal({ isOpen, onClose, item, onConfirm }) {
     });
   };
 
- const extraPrice = Object.values(selections)
+  const extraPrice = Object.values(selections)
     .flat()
     .reduce((acc, o) => acc + parseFloat(o.dg029_amount || 0), 0); // ← dg029
 
@@ -33,7 +33,7 @@ export default function ItemOptionsModal({ isOpen, onClose, item, onConfirm }) {
     for (const group of groups) {
       const selected = selections[group.dg030_group_id] || [];
       if (selected.length < group.dg030_min_selectable) {
-        alert(`"${group.dg030_display_name}" mein kam se kam ${group.dg030_min_selectable} option select karo!`);
+        alert(`"${group.dg030_display_name}" at Least ${group.dg030_min_selectable} Please Select option !`);
         return;
       }
     }
@@ -81,7 +81,7 @@ export default function ItemOptionsModal({ isOpen, onClose, item, onConfirm }) {
                       }}>
                       {opt.dg029_display_name}   {/* ← dg029 wala naam */}
                       {parseFloat(opt.dg029_amount) > 0 && (
-                        <span className="ml-1" style={{color: "#1ca22e"}}>+₹{opt.dg029_amount}</span>
+                        <span className="ml-1" style={{ color: "#1ca22e" }}>+₹{opt.dg029_amount}</span>
                       )}
                     </button>
                   );
@@ -91,23 +91,23 @@ export default function ItemOptionsModal({ isOpen, onClose, item, onConfirm }) {
           ))}
         </div>
 
-          <div className="base_price px-3 mb-3">
-            Base: ₹{item.dg09_price}
-            {extraPrice > 0 && <span className="text-green ml-2">+₹{extraPrice}</span>}
-            <span className="font-bold ml-2">
-              = ₹{(parseFloat(item.dg09_price) + extraPrice).toFixed(2)}
-            </span>
-          </div>
+        <div className="base_price px-3 mb-3">
+          Base: ₹{item.dg09_price}
+          {extraPrice > 0 && <span className="text-green ml-2">+₹{extraPrice}</span>}
+          <span className="font-bold ml-2">
+            = ₹{(parseFloat(item.dg09_price) + extraPrice).toFixed(2)}
+          </span>
+        </div>
         {/* Footer */}
         <div className="flex justify-between gap-3 modal_footer px-3 py-3">
-            <button onClick={onClose}
-              className="cancel_btn">
-              Cancel
-            </button>
-            <button onClick={handleConfirm}
-              className="update_btn" >
-              Add to Order
-            </button>
+          <button onClick={onClose}
+            className="cancel_btn">
+            Cancel
+          </button>
+          <button onClick={handleConfirm}
+            className="update_btn" >
+            Add to Order
+          </button>
         </div>
       </div>
     </div>

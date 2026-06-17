@@ -115,7 +115,7 @@ export default function BillModal({
       return false;
     }
     if (useWallet && !selectedCustomerId) {
-      toast.error("Wallet use ke liye customer select karo!");
+      toast.error("Please Select customer !");
       return false;
     }
     return true;
