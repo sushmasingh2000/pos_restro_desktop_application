@@ -280,14 +280,12 @@ const UserProfileMenu = ({ apiGet, apiPost, profileEndpoint, changePasswordEndpo
   return (
     <>
       <div ref={menuRef} className="relative flex items-center gap-2">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setMenuOpen((p) => !p)}>
-          <div className="profile-avatar-sm" style={{ background: color }}>
-            {initials}
-          </div>
-          <span className="profile-display-name d-none d-md-block">
-            {displayName}
-          </span>
+          <div className="email_sidebar cursor-pointer"  onClick={() => setMenuOpen((p) => !p)}>
+        <div className="ba_mails"> {initials}</div>
+        <div>
+          <h6> {displayName}</h6>
         </div>
+      </div>
 
         <button
           className="profile-three-dot"
@@ -308,7 +306,7 @@ const UserProfileMenu = ({ apiGet, apiPost, profileEndpoint, changePasswordEndpo
                 {initials}
               </div>
               <div>
-                <div className="font-semibold text-sm">{displayName}</div>
+                <div className="font-semibold text-sm text-black">{displayName}</div>
                 <div className="text-xs" style={{ color: "#6b7280" }}>
                   {profile?.email || localStorage.getItem("user_email") || ""}
                 </div>

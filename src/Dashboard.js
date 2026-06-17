@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import table_avialable from "./assets/images/chair-availble.png";
 import table_busy from "./assets/images/chair-busy.png";
 import { useNavigate } from "react-router-dom";
-import { apiConnectorPost } from "./utils/APIConnector";
+import { apiConnectorGet, apiConnectorPost } from "./utils/APIConnector";
 import { endpoint } from "./utils/APIRoutes";
 import { useQuery, useQueryClient } from "react-query";
 import toast from "react-hot-toast";
@@ -308,6 +308,64 @@ const ConfirmBtn = ({ onClick, label, disabled, color = "purple" }) => (
 const Dashboard = () => {
   const navigate = useNavigate();
   const client = useQueryClient();
+
+  const today = new Date().toISOString().split("T")[0];
+  const { data: mainData } = useQuery(
+    ["panel_dashboard_main"],
+    () => apiConnectorGet(`${endpoint.dashboard_main_api}?startDate=${today}&endDate=${today}`),
+    { refetchOnWindowFocus: false }
+  );
+  const main = mainData?.data?.result || {};
+  const summaryStats = [
+    {
+      label: "Today's Bills",
+      value: main.total_bills ?? "—",
+      color: "#2563eb",
+      bg: "#EFF6FF",
+      border: "#DBEAFE",
+      icon: (
+        <svg width="22" height="22" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="3" /><line x1="8" y1="9" x2="16" y2="9" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="12" y2="17" />
+        </svg>
+      ),
+    },
+    {
+      label: "Today's Revenue",
+      value: main.revenue != null ? `₹${Number(main.revenue).toLocaleString("en-IN")}` : "—",
+      color: "#16a34a",
+      bg: "#F0FDF4",
+      border: "#BBF7D0",
+      icon: (
+        <svg width="22" height="22" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" /><path d="M12 7v1m0 8v1m-3-5h6m-6 0a3 3 0 1 0 6 0" />
+        </svg>
+      ),
+    },
+    {
+      label: "Lending Amount",
+      value: main.lending_amount != null ? `₹${Number(main.lending_amount).toLocaleString("en-IN")}` : "—",
+      color: "#d97706",
+      bg: "#FFFBEB",
+      border: "#FDE68A",
+      icon: (
+        <svg width="22" height="22" fill="none" stroke="#d97706" strokeWidth="2" viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      ),
+    },
+    {
+      label: "Avg. Rating",
+      value: main.customer_feedback != null ? `${Number(main.customer_feedback).toFixed(1)} ★` : "—",
+      color: "#7c3aed",
+      bg: "#F5F3FF",
+      border: "#DDD6FE",
+      icon: (
+        <svg width="22" height="22" fill="none" stroke="#7c3aed" strokeWidth="2" viewBox="0 0 24 24">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      ),
+    },
+  ];
   const [qrModal, setQrModal] = useState(null);
   const [allQrModal, setAllQrModal] = useState(false);
 
@@ -457,6 +515,23 @@ const Dashboard = () => {
 
   return (
     <div className="main_dashboard">
+      {/* ── Dynamic Sales Stats ── */}
+      <Row className="mb-3">
+        {summaryStats.map((s) => (
+          <Col xl={3} lg={6} md={6} sm={6} className="mb-3" key={s.label}>
+            <div style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 14, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 8px rgba(0,0,0,.06)" }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 2px 8px ${s.border}` }}>
+                {s.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: s.color, lineHeight: 1.2 }}>{s.value}</div>
+                <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{s.label}</div>
+              </div>
+            </div>
+          </Col>
+        ))}
+      </Row>
+
       <Row>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb">

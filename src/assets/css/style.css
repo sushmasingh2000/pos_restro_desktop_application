@@ -4607,6 +4607,14 @@ width: 100% !important;
     color: #dc2626;
 }
 
+/* sidebar ke andar dropdown upar ki taraf khule */
+.email_sidebar .profile-dropdown {
+    top: auto;
+    bottom: calc(100% + 8px);
+    right: auto;
+    left: 0;
+}
+
 .profile-role-badge {
     display: inline-block;
     padding: 3px 12px;

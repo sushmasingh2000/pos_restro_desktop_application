@@ -18,6 +18,7 @@ import TakeAway from "../component/pages/TakeAway";
 import ExpenseManagementReport from "../component/pages/expense/Expense";
 import OnlineDeliveryOrder from "../component/pages/OnlineDeliveryOrder";
 import QROrder from "../component/pages/QROrder";
+import FeedbackPage from "../component/pages/FeedbackPage";
 
 
 export const routes = [
@@ -165,6 +166,14 @@ export const routes = [
     element: (
       <MainLayout>
         <ExpenseManagementReport />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/feedback",
+    element: (
+      <MainLayout>
+        <FeedbackPage />
       </MainLayout>
     ),
   },

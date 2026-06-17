@@ -4,7 +4,6 @@ import { useQuery } from "react-query";
 import { useState, useEffect, useRef } from "react";
 import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
-import UserProfileMenu from "../UserProfileMenu";
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -312,13 +311,6 @@ const Navbar = ({ toggleSidebar }) => {
             </div>
           )}
         </div>}
-
-        <UserProfileMenu
-          apiGet={apiConnectorGet}
-          apiPost={apiConnectorPost}
-          profileEndpoint={endpoint.user_profile_api}
-          changePasswordEndpoint={endpoint.change_password_api}
-        />
 
         <div className="tottle_btn mobile_btn">
           <button onClick={toggleSidebar}>

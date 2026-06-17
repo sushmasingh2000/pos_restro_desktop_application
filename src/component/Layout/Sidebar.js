@@ -5,6 +5,9 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
 import StoreIcon from "@mui/icons-material/Store";
 import { GraphicEqSharp, Logout, Money, PeopleAlt } from "@mui/icons-material";
+import UserProfileMenu from "../UserProfileMenu";
+import { apiConnectorGet, apiConnectorPost } from "../../utils/APIConnector";
+import { endpoint } from "../../utils/APIRoutes";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -42,16 +45,18 @@ export default function Sidebar() {
         {/* <SidebarLink to="/take-away-order" icon={<PeopleAlt fontSize="small" />} label="Take Away Orders" /> */}
         <SidebarLink to="/cancelled-order" icon={<PeopleAlt fontSize="small" />} label="Cancelled Orders" />
         <SidebarLink to="/kitchen-order" icon={<LiveTvIcon fontSize="small" />} label="Kitchen Orders" />
+        <SidebarLink to="/feedback" icon={<AssessmentIcon fontSize="small" />} label="Feedback" />
 
       </ul>
 
       
       <div className="email_sidebar">
-        <div className="ba_mails">BA</div>
-        <div>
-          <h6>Branch Admin</h6>
-          <p>admin@ferryrestro.in</p>
-        </div>
+        <UserProfileMenu
+          apiGet={apiConnectorGet}
+          apiPost={apiConnectorPost}
+          profileEndpoint={endpoint.user_profile_api}
+          changePasswordEndpoint={endpoint.change_password_api}
+        />
       </div>
 
     </aside>

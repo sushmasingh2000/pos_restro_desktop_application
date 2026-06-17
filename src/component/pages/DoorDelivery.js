@@ -1,11 +1,110 @@
 
 import React, { useState } from "react";
-import { useQuery } from "react-query";
-import { apiConnectorPost } from "../../utils/APIConnector";
+import { useQuery, useQueryClient } from "react-query";
+import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import BillModal from "./Bill";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import toast from "react-hot-toast";
+
+// ── Feedback Modal ────────────────────────────────────────────────────
+const FeedbackModal = ({ order, onClose, onSuccess }) => {
+  const [rating, setRating] = useState(0);
+  const [hovered, setHovered] = useState(0);
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!rating) { toast.error("Please select a rating"); return; }
+    setLoading(true);
+    try {
+      const res = await apiConnectorPost(endpoint.feedback_submit_api, {
+        order_id: order.rawId,
+        unique_order_id: order.orderId,
+        customer_name: order.customerName,
+        customer_phone: order.customerPhone,
+        rating,
+        comment,
+      });
+      if (res?.data?.success) {
+        toast.success(res.data.message);
+        onSuccess();
+        onClose();
+      } else {
+        toast.error(res?.data?.message || "Failed to submit");
+      }
+    } catch {
+      toast.error("Server error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="Order_Details_modal w-full max-w-md">
+        <div className="Order_Details_modal_header">
+          <div className="flex items-center gap-3">
+            <div className="modal_header_icon">⭐</div>
+            <div><h2>Customer Feedback</h2></div>
+          </div>
+          <button onClick={onClose}>×</button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="text-center text-sm" style={{ color: "#64748b" }}>
+            Order <strong>{order.orderId}</strong>
+            {order.customerName && <> — {order.customerName}</>}
+          </div>
+
+          {/* Stars */}
+          <div className="flex justify-center gap-2" style={{ fontSize: 36 }}>
+            {[1, 2, 3, 4, 5].map((s) => (
+              <span
+                key={s}
+                style={{ cursor: "pointer", color: s <= (hovered || rating) ? "#f59e0b" : "#d1d5db", transition: "color .15s" }}
+                onMouseEnter={() => setHovered(s)}
+                onMouseLeave={() => setHovered(0)}
+                onClick={() => setRating(s)}
+              >★</span>
+            ))}
+          </div>
+          {rating > 0 && (
+            <div className="text-center text-sm font-semibold" style={{ color: "#f59e0b" }}>
+              {["", "Poor", "Fair", "Good", "Very Good", "Excellent"][rating]}
+            </div>
+          )}
+
+          {/* Comment */}
+          <div className="main_input">
+            <label>Comment (optional)</label>
+            <textarea
+              rows={3}
+              placeholder="Customer feedback..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              style={{ resize: "none" }}
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button onClick={onClose} className="update_btn flex-1" disabled={loading}>Cancel</button>
+            <button
+              onClick={handleSubmit}
+              className="main_btn flex-1"
+              disabled={loading}
+            >
+              {loading ? "Submitting..." : "Submit Feedback"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const DoorDelivery = () => {
   const [search, setSearch] = useState("");
@@ -14,6 +113,8 @@ const DoorDelivery = () => {
   const [page, setPage] = useState(1);
   const [showBillModal, setShowBillModal] = useState(false);
   const [selectedBillOrder, setSelectedBillOrder] = useState(null);
+  const [feedbackOrder, setFeedbackOrder] = useState(null);
+  const queryClient = useQueryClient();
   const limit = 10;
   const type = "delivery"
 
@@ -211,15 +312,24 @@ const handleView = (order) => {
                         </span>
                       </td>
 
-                      <td >
-                        {order.status === "cancelled" ? "--" :
-                          <button
-                            onClick={() => handleView(order)}
-                            className="purple_bg"
-                          >
-                            View
-                          </button>
-                        }
+                      <td>
+                        <div className="flex items-center justify-center gap-2">
+                          {order.status !== "cancelled" && (
+                            <button onClick={() => handleView(order)} className="purple_bg">
+                              View
+                            </button>
+                          )}
+                          {order.status === "completed" && (
+                            <button
+                              onClick={() => setFeedbackOrder(order)}
+                              className="main_btn"
+                              style={{ fontSize: 11, padding: "4px 10px" }}
+                            >
+                              ⭐ Feedback
+                            </button>
+                          )}
+                          {order.status === "cancelled" && "--"}
+                        </div>
                       </td>
 
                     </tr>
@@ -266,6 +376,14 @@ const handleView = (order) => {
 
         </div>
       </div>
+      {feedbackOrder && (
+        <FeedbackModal
+          order={feedbackOrder}
+          onClose={() => setFeedbackOrder(null)}
+          onSuccess={() => queryClient.invalidateQueries(["orders"])}
+        />
+      )}
+
       {showBillModal && selectedBillOrder && (
         <BillModal
           isOpen={showBillModal}
