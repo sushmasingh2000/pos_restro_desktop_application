@@ -355,7 +355,7 @@ const Dashboard = () => {
     },
     {
       label: "Avg. Rating",
-      value: main.customer_feedback != null ? `${Number(main.customer_feedback).toFixed(1)} ★` : "—",
+      value: main.customer_feedback > 0 ? `${Number(main.customer_feedback).toFixed(1)} ★` : "—",
       color: "#7c3aed",
       bg: "#F5F3FF",
       border: "#DDD6FE",

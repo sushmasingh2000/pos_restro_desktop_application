@@ -115,7 +115,7 @@ function createWindow() {
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, "build/index.html"));
   } else {
-    mainWindow.loadURL("http://localhost:3000");
+    mainWindow.loadURL("http://localhost:3001");
   }
 
   setTimeout(() => {
@@ -342,8 +342,23 @@ function buildBillContent(p, billData) {
       const amount = Number(t.amount).toFixed(2);
       p.align("LT").text(`${label.padEnd(28)}${amount.padStart(10)}`);
     });
-    p.drawLine();
   }
+
+  if (billData.charge_breakdown?.length > 0) {
+    billData.charge_breakdown.forEach((c) => {
+      const label = `${PAD}${c.name}:`;
+      const amount = Number(c.amount).toFixed(2);
+      p.align("LT").text(`${label.padEnd(28)}${amount.padStart(10)}`);
+    });
+  }
+
+  if (parseFloat(billData.discount || 0) > 0) {
+    const discLabel = `${PAD}Discount:`;
+    const discVal = `-${Number(billData.discount).toFixed(2)}`;
+    p.align("LT").text(`${discLabel.padEnd(28)}${discVal.padStart(10)}`);
+  }
+
+  p.drawLine();
 
   p.align("LT");
   p.text(`${"      Total :".padEnd(28)}${String(billData.total_amount).padStart(10)}`);

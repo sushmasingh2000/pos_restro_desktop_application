@@ -5,7 +5,34 @@ import { endpoint } from "../../utils/APIRoutes";
 import toast from "react-hot-toast";
 import { useQueryClient } from "react-query";
 
-const tabs = ["PLACED", "IN PROGRESS", "COMPLETED", "CANCELLED"];
+const tabs = ["PLACED", "PENDING", "PREPARING", "READY", "OUT FOR DELIVERY", "COMPLETED", "CANCELLED"];
+
+const statusMap = {
+  "PLACED": "customer_placed",
+  "PENDING": "pending",
+  "PREPARING": "preparing",
+  "READY": "ready",
+  "OUT FOR DELIVERY": "out_for_delivery",
+  "COMPLETED": "completed",
+  "CANCELLED": "cancelled",
+};
+
+const tabColors = {
+  "PLACED": "#C389FF",
+  "PENDING": "#f59e0b",
+  "PREPARING": "#3b82f6",
+  "READY": "#06b6d4",
+  "OUT FOR DELIVERY": "#8b5cf6",
+  "COMPLETED": "#10b981",
+  "CANCELLED": "#ef4444",
+};
+
+const nextStatus = {
+  "PENDING": { status: "preparing", label: "Start Preparing" },
+  "PREPARING": { status: "ready", label: "Mark Ready" },
+  "READY": { status: "out_for_delivery", label: "Out for Delivery" },
+  "OUT FOR DELIVERY": { status: "completed", label: "Mark Delivered" },
+};
 
 const rupee = "₹";
 
@@ -185,13 +212,24 @@ export default function OnlineDeliveryOrder() {
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
-    if (activeTab === "PLACED") return order.dg06_status === "customer_placed";
-    if (activeTab === "IN PROGRESS") return order.dg06_status === "pending";
-    if (activeTab === "COMPLETED") return order.dg06_status === "completed";
-    if (activeTab === "CANCELLED") return order.dg06_status === "cancelled";
-    return false;
-  });
+  const handleStatusUpdate = async (orderId, newStatus, label) => {
+    try {
+      const res = await apiConnectorPost(endpoint.update_order_status_api, { orderId, status: newStatus });
+      if (res?.data?.success) {
+        toast.success(`${label} ✓`);
+        fetchOrders();
+      } else {
+        toast.error("Status update failed");
+      }
+    } catch {
+      toast.error("Server error");
+    }
+  };
+
+  const filteredOrders = orders.filter((o) => o.dg06_status === statusMap[activeTab]);
+
+  const hasAction = !!nextStatus[activeTab];
+  const showAcceptCol = activeTab === "PLACED";
 
   return (
     <div>
@@ -203,14 +241,8 @@ export default function OnlineDeliveryOrder() {
             <p>Click any order row to view items before accepting</p>
           </div>
           <div className="flex main_tanses">
-            <div className="flex gap-2 live_filters">
+            <div className="flex gap-2 live_filters" style={{ flexWrap: "wrap" }}>
               {tabs.map((tab) => {
-                const statusMap = {
-                  "PLACED": "customer_placed",
-                  "IN PROGRESS": "pending",
-                  "COMPLETED": "completed",
-                  "CANCELLED": "cancelled",
-                };
                 const count = orders.filter((o) => o.dg06_status === statusMap[tab]).length;
                 return (
                   <button
@@ -221,10 +253,7 @@ export default function OnlineDeliveryOrder() {
                     {tab}
                     {count > 0 && (
                       <span style={{
-                        background: tab === "PLACED" ? "#C389FF"
-                          : tab === "IN PROGRESS" ? "#f59e0b"
-                          : tab === "COMPLETED" ? "#10b981"
-                          : "red",
+                        background: tabColors[tab],
                         color: "#fff", borderRadius: "50%",
                         fontSize: 10, padding: "1px 5px", marginLeft: 6,
                       }}>
@@ -249,7 +278,7 @@ export default function OnlineDeliveryOrder() {
                   <th>Amount</th>
                   <th>Time</th>
                   <th>Status</th>
-                  {activeTab === "PLACED" && <th>Action</th>}
+                  {(showAcceptCol || hasAction) && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -264,12 +293,11 @@ export default function OnlineDeliveryOrder() {
                       onClick={() => setSelectedOrder(order)}
                     >
                       <td>{order.unique_order_id}</td>
-                      <td >
-                        {order.dg06_customer_name || "—"}
-                      </td>
+                      <td>{order.dg06_customer_name || "—"}</td>
                       <td>
                         <span style={{
-                          background: "#FDECEC", color: "green", border: "green", border:"1px solid",
+                          background: "#FDECEC", color: "green",
+                          border: "1px solid green",
                           borderRadius: 12, padding: "2px 8px", fontSize: 11,
                         }}>
                           {order.item_count} items
@@ -278,25 +306,45 @@ export default function OnlineDeliveryOrder() {
                       <td>{rupee}{order.dg06_total_amount}</td>
                       <td>{new Date(order.dg06_created_at).toLocaleTimeString()}</td>
                       <td>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          order.dg06_status === "completed" ? "green_bg"
-                          : order.dg06_status === "cancelled" ? "red_bg"
-                          : order.dg06_status === "pending" ? "yellow_bg"
-                          : "purple_bg"
-                        }`}>
-                          {order.dg06_status}
+                        <span style={{
+                          background: tabColors[activeTab] + "22",
+                          color: tabColors[activeTab],
+                          border: `1px solid ${tabColors[activeTab]}55`,
+                          borderRadius: 12, padding: "2px 10px", fontSize: 11, fontWeight: 600,
+                        }}>
+                          {order.dg06_status?.replace(/_/g, " ")}
                         </span>
                       </td>
-                      {activeTab === "PLACED" && (
+
+                      {/* Action column */}
+                      {(showAcceptCol || hasAction) && (
                         <td onClick={(e) => e.stopPropagation()}>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setSelectedOrder(order)}
-                              className="main_btn"
-                              style={{ padding: "4px 12px", fontSize: 12 }}
-                            >
-                              👁 View & Accept
-                            </button>
+                          <div className="flex gap-2 justify-center">
+                            {showAcceptCol && (
+                              <button
+                                onClick={() => setSelectedOrder(order)}
+                                className="main_btn"
+                                style={{ padding: "4px 12px", fontSize: 12 }}
+                              >
+                                👁 View & Accept
+                              </button>
+                            )}
+                            {hasAction && (
+                              <button
+                                onClick={() => handleStatusUpdate(
+                                  order.dg06_order_id,
+                                  nextStatus[activeTab].status,
+                                  nextStatus[activeTab].label
+                                )}
+                                className="main_btn"
+                                style={{
+                                  padding: "4px 12px", fontSize: 12,
+                                  background: tabColors[activeTab],
+                                }}
+                              >
+                                {nextStatus[activeTab].label}
+                              </button>
+                            )}
                           </div>
                         </td>
                       )}

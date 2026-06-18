@@ -18,6 +18,14 @@ const Navbar = ({ toggleSidebar }) => {
 
   const showBell = type !== "business_owner" && type !== "master_admin";
 
+  // ── Branch name ──
+  const { data: branchData } = useQuery(
+    ["navbar_branch_profile"],
+    () => apiConnectorGet(endpoint.branch_profile_api),
+    { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
+  );
+  const branchName = branchData?.data?.result?.branch_name || "";
+
   // ── Subscription alert ──
   const { data: subData } = useQuery(
     ["my_subscription_nav"],
@@ -113,6 +121,21 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
 
       <div className="flex items-center gap-md-3 gap-2">
+
+        {/* Branch Name Badge */}
+        {branchName && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 5,
+            background: "rgba(59,130,246,0.12)",
+            border: "1px solid rgba(59,130,246,0.3)",
+            borderRadius: 8, padding: "4px 10px",
+            fontSize: 12, color: "#60a5fa", fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}>
+            <i className="ri-store-2-line" style={{ fontSize: 13 }} />
+            {branchName}
+          </div>
+        )}
 
         {/* Subscription Alert */}
         {showSubAlert && (

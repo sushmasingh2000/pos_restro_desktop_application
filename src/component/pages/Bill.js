@@ -282,10 +282,10 @@ export default function BillModal({
   );
   const taxes = taxData?.data?.result || [];
 
-  // ── Fetch charges ─────────────────────────────────
+  // ── Fetch charges (filtered by orderType) ─────────
   const { data: chargesData } = useQuery(
-    ["get_charges"],
-    () => apiConnectorGet(endpoint.charge_get_api),
+    ["get_charges", orderType],
+    () => apiConnectorGet(`${endpoint.charge_get_api}?orderType=${orderType || ""}`),
     { enabled: isOpen, refetchOnWindowFocus: false }
   );
   const charges = chargesData?.data?.result || [];
@@ -312,13 +312,21 @@ export default function BillModal({
   }));
   const totalTax = taxBreakdown.reduce((s, t) => s + t.amount, 0);
 
-  const chargeBreakdown = charges.map((c) => ({
-    name: c.dg035_name,
-    amount:
+  const totalItemQty = orderItems.reduce((s, i) => s + i.qty, 0);
+
+  const chargeBreakdown = charges.map((c) => {
+    const isItemLevel = c.dg035_field === "Item";
+    const baseAmount =
       c.dg035_type === "Percentage"
         ? (subTotal * parseFloat(c.dg035_value)) / 100
-        : parseFloat(c.dg035_value),
-  }));
+        : parseFloat(c.dg035_value);
+    // Item-level flat charges multiply by total qty; percentage stays the same
+    const amount =
+      isItemLevel && c.dg035_type !== "Percentage"
+        ? baseAmount * totalItemQty
+        : baseAmount;
+    return { name: c.dg035_name, amount, field: c.dg035_field };
+  });
   const totalCharges = chargeBreakdown.reduce((s, c) => s + c.amount, 0);
 
   const discountAmount =
@@ -564,6 +572,7 @@ export default function BillModal({
         table_no: tableId ? tableNameMap[tableId] || tableId : null,
         date_time: new Date().toLocaleString("en-IN"),
         tax_breakdown: taxBreakdown,
+        charge_breakdown: chargeBreakdown,
         customer_name: customer.name,
         customer_phone: customer.phone,
         subtotal: subTotal.toFixed(2),
@@ -868,7 +877,7 @@ export default function BillModal({
               {chargeBreakdown.map((c, i) => (
                 <Row
                   key={i}
-                  label={`${c.name} (Charge)`}
+                  label={c.field === "Item" ? `${c.name} (per item ×${totalItemQty})` : `${c.name} (Charge)`}
                   value={`₹${c.amount.toFixed(2)}`}
                   muted
                 />
@@ -1724,7 +1733,7 @@ export default function BillModal({
           restaurant_name: branch.branch_name || "Restaurant",
           restaurant_address: branch.address || "",
           gstin: branch.gst_no || "",
-          uniqueOrderId: uniqueOrderId || orderId,  // ← unique_order_id pehle, fallback orderId
+          uniqueOrderId: uniqueOrderId || orderId,
           captain_name: branch.captain_name || "",
           customer_name: customer.name,
           customer_phone: customer.phone,
@@ -1734,12 +1743,15 @@ export default function BillModal({
           items: orderItems.map((i) => ({
             name: i.dg09_name,
             qty: i.qty,
-            rate: Number(i.basePrice || i.price).toFixed(2),  // ← basePrice
+            rate: Number(i.basePrice || i.price).toFixed(2),
             total: ((i.basePrice || i.price) * i.qty).toFixed(2),
             remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),
           })),
           subtotal: subTotal.toFixed(2),
           tax_breakdown: taxBreakdown,
+          charge_breakdown: chargeBreakdown,
+          total_charges: totalCharges,
+          discount: discountAmount.toFixed(2),
           total_amount: grandTotal.toFixed(2),
           round_off: roundOff,
           payment_splits: paymentSplits,

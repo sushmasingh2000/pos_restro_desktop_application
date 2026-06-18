@@ -8,7 +8,7 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
     restaurant_address = "",
     gstin = "",
     captain_name = "",
-    customer_name = "",   // ← ADD
+    customer_name = "",
     customer_phone = "",
     billNo,
     uniqueOrderId,
@@ -17,6 +17,9 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
     items = [],
     subtotal = "0.00",
     tax_breakdown = [],
+    charge_breakdown = [],
+    total_charges = 0,
+    discount = 0,
     total_amount = "0.00",
     round_off = 0,
     payment_splits = [],
@@ -152,6 +155,25 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
           {tax_breakdown.map((t, i) => (
             <AmtRow key={i} label={`${t.name}(${t.pct}%)`} value={t.amount?.toFixed(2)} muted />
           ))}
+
+          {/* Charges breakdown */}
+          {charge_breakdown.length > 0 && (
+            <>
+              {charge_breakdown.map((c, i) => (
+                <AmtRow
+                  key={i}
+                  label={c.field === "Item" ? `${c.name}(per item)` : c.name}
+                  value={Number(c.amount).toFixed(2)}
+                  muted
+                />
+              ))}
+            </>
+          )}
+
+          {/* Discount */}
+          {parseFloat(discount) > 0 && (
+            <AmtRow label="Discount" value={`-${Number(discount).toFixed(2)}`} muted />
+          )}
 
           <Divider />
 

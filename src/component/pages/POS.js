@@ -32,6 +32,7 @@ const POS = () => {
   const location = useLocation();
   const { type } = useParams();
   const table = location.state?.table;
+  const clickReady = React.useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [optionItem, setOptionItem] = useState(null);
@@ -59,6 +60,13 @@ const POS = () => {
 
   const navigate = useNavigate();
   const client = useQueryClient();
+
+  // Ghost-click guard: ignore menu clicks for 500ms after page mounts
+  useEffect(() => {
+    clickReady.current = false;
+    const t = setTimeout(() => { clickReady.current = true; }, 800);
+    return () => clearTimeout(t);
+  }, []);
 
   // ── Fetch tables ──────────────────────────────────────────
   useEffect(() => {
@@ -199,6 +207,7 @@ const POS = () => {
   };
 
   const addToOrder = async (item) => {
+    if (!clickReady.current) return;
     try {
       const res = await apiConnectorGet(endpoint.item_options_pos_api + item.dg09_menu_id);
       console.log("FULL RESPONSE:", res);        // ← add karo
@@ -224,7 +233,6 @@ const POS = () => {
       : parseFloat(item.dg09_price);
     const finalPrice = basePrice + extraPrice;
 
-    // Selected options ka label banao
     const optionLabel = selections
       ? Object.values(selections).flat()
         .map((o) => o.dg029_display_name)
@@ -235,22 +243,24 @@ const POS = () => {
       ? `${item.dg09_name} (${optionLabel})`
       : item.dg09_name;
 
-    const existing = orderItems.find((i) => i.id === item.dg09_menu_id);
-    if (existing) {
-      setOrderItems(orderItems.map((i) =>
-        i.id === item.dg09_menu_id ? { ...i, qty: i.qty + 1 } : i
-      ));
-    } else {
-      setOrderItems((prev) => [...prev, {
+    // Functional update so rapid double-clicks never see stale state
+    setOrderItems((prev) => {
+      const existing = prev.find((i) => i.id === item.dg09_menu_id);
+      if (existing) {
+        return prev.map((i) =>
+          i.id === item.dg09_menu_id ? { ...i, qty: i.qty + 1 } : i
+        );
+      }
+      return [...prev, {
         ...item,
         qty: 1,
         id: item.dg09_menu_id,
-        dg09_name: displayName,  // ← "POHA (Large)"
+        dg09_name: displayName,
         tax_group_id: item.dg09_tax_group_id || null,
         basePrice: parseFloat(item.dg09_price),
         price: finalPrice,
-      }]);
-    }
+      }];
+    });
   };
 
   // const addToOrder = (item) => {
@@ -535,12 +545,17 @@ const POS = () => {
                 <div className="cart-item-name">{item.dg09_name}</div>
                 <div className="cart-qty-wrap">
                   {modifyMode ? (
-                    <input
-                      type="number"
-                      value={item.qty}
-                      onChange={(e) => updateQty(item.id, +e.target.value)}
-                      className=""
-                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <button
+                        onClick={() => updateQty(item.id, item.qty - 1)}
+                        style={{ width: 18, height: 18, borderRadius: 4, background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171", fontWeight: 700, fontSize: 13, lineHeight: 1, cursor: "pointer", padding: 0 }}
+                      >−</button>
+                      <span style={{ minWidth: 16, textAlign: "center", fontWeight: 600, fontSize: 12 }}>{item.qty}</span>
+                      <button
+                        onClick={() => updateQty(item.id, item.qty + 1)}
+                        style={{ width: 18, height: 18, borderRadius: 4, background: "rgba(34,197,94,0.2)", border: "1px solid rgba(34,197,94,0.4)", color: "#4ade80", fontWeight: 700, fontSize: 13, lineHeight: 1, cursor: "pointer", padding: 0 }}
+                      >+</button>
+                    </div>
                   ) : item.qty}
                 </div>
                 <div className="cart-price">₹{(item.basePrice || item.price).toFixed(2)}</div>
