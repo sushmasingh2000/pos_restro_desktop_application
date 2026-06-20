@@ -567,13 +567,15 @@ const Dashboard = () => {
           </div>
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
-          <div className="table_dsb">
-            <div className="main_icon" style={{ background: "#fef9c3", borderColor: "#f7f1ae" }}>
+          <div className="table_dsb" style={{ cursor: "pointer" }} onClick={() => navigate("/pos/door-delivery")}>
+            <div className="main_icon" style={{ background: main.pending_delivery_orders > 0 ? "#fee2e2" : "#fef9c3", borderColor: main.pending_delivery_orders > 0 ? "#fcd7d7" : "#f7f1ae" }}>
               <img src={utilisationi} />
             </div>
             <div>
-              <h4>{utilisation}%</h4>
-              <p>Utilisation</p>
+              <h4 style={{ color: main.pending_delivery_orders > 0 ? "#dc2626" : undefined }}>
+                {main.pending_delivery_orders }
+              </h4>
+              <p>Pending Delivery</p>
             </div>
           </div>
         </Col>

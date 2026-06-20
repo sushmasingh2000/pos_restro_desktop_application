@@ -328,13 +328,8 @@ const PaymentLendingWallet = () => {
     (activeTab === "wallet" && walletLoading);
 
   return (
-    <div className="main_analysisrder">
-
-      {/*  Modal */}
-      <LendingModal customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />
-      <WalletModal customer={selectedWalletCustomer} onClose={() => setSelectedWalletCustomer(null)} />
-
-      <div className="flex justify-end gap-3 px-3" >
+    <>
+    <div className="flex justify-end gap-3 px-3 mb-4" >
           <div className="main_input">
             <label>
               Start Date <span className="text-red-500">*</span>
@@ -359,6 +354,13 @@ const PaymentLendingWallet = () => {
             />
           </div>
       </div>
+      <div className="main_analysisrder">
+
+      {/*  Modal */}
+      <LendingModal customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />
+      <WalletModal customer={selectedWalletCustomer} onClose={() => setSelectedWalletCustomer(null)} />
+
+      
 
       <div className="chart_header">
         <div className="chart_heading">
@@ -708,6 +710,8 @@ const PaymentLendingWallet = () => {
         </>
       )}
     </div>
+    </>
+    
   );
 };
 

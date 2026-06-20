@@ -10,7 +10,7 @@ const CancelOrder = () => {
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
     const [page, setPage] = useState(1);
-    const limit = 5;
+    const limit = 8;
 
     const [filters, setFilters] = useState({
         startDate: "",

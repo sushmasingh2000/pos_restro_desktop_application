@@ -321,6 +321,20 @@ const Navbar = ({ toggleSidebar }) => {
                         {" • "}₹{order.dg06_total_amount}
                       </div>
 
+                      {order.dg06_order_type === "delivery" && (
+                        <div style={{ marginTop: 5 }}>
+                          {Number(order.repeat_order_count) === 0 ? (
+                            <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>
+                              🆕 New Customer
+                            </span>
+                          ) : (
+                            <span style={{ background: "#fef3c7", color: "#b45309", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>
+                              🔁 Repeated Order: {order.repeat_order_count}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       <div className="np-time">
                         <i class="ri-timer-2-line"></i>
                         {new Date(

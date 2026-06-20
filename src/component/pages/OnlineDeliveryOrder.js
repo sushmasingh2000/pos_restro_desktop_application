@@ -4,15 +4,16 @@ import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import toast from "react-hot-toast";
 import { useQueryClient } from "react-query";
+import BillModal from "./Bill";
 
-const tabs = ["PLACED", "PENDING", "PREPARING", "READY", "OUT FOR DELIVERY", "COMPLETED", "CANCELLED"];
+const tabs = ["PLACED", "PENDING", "PREPARING", "READY", "COMPLETED", "CANCELLED"];
 
 const statusMap = {
   "PLACED": "customer_placed",
   "PENDING": "pending",
   "PREPARING": "preparing",
   "READY": "ready",
-  "OUT FOR DELIVERY": "out_for_delivery",
+  // "OUT FOR DELIVERY": "out_for_delivery",/
   "COMPLETED": "completed",
   "CANCELLED": "cancelled",
 };
@@ -22,7 +23,7 @@ const tabColors = {
   "PENDING": "#f59e0b",
   "PREPARING": "#3b82f6",
   "READY": "#06b6d4",
-  "OUT FOR DELIVERY": "#8b5cf6",
+  // "OUT FOR DELIVERY": "#8b5cf6",
   "COMPLETED": "#10b981",
   "CANCELLED": "#ef4444",
 };
@@ -31,7 +32,7 @@ const nextStatus = {
   "PENDING": { status: "preparing", label: "Start Preparing" },
   "PREPARING": { status: "ready", label: "Mark Ready" },
   "READY": { status: "out_for_delivery", label: "Out for Delivery" },
-  "OUT FOR DELIVERY": { status: "completed", label: "Mark Delivered" },
+  // "OUT FOR DELIVERY": { status: "completed", label: "Mark Delivered" },
 };
 
 const rupee = "₹";
@@ -164,6 +165,8 @@ export default function OnlineDeliveryOrder() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showBillModal, setShowBillModal] = useState(false);
+  const [billOrder, setBillOrder] = useState(null);
   const client = useQueryClient();
 
   useEffect(() => {
@@ -331,11 +334,19 @@ export default function OnlineDeliveryOrder() {
                             )}
                             {hasAction && (
                               <button
-                                onClick={() => handleStatusUpdate(
-                                  order.dg06_order_id,
-                                  nextStatus[activeTab].status,
-                                  nextStatus[activeTab].label
-                                )}
+                                onClick={() => {
+                                  if (activeTab === "READY") {
+                                    handleStatusUpdate(order.dg06_order_id, "out_for_delivery", "Out for Delivery");
+                                    setBillOrder(order);
+                                    setShowBillModal(true);
+                                  } else {
+                                    handleStatusUpdate(
+                                      order.dg06_order_id,
+                                      nextStatus[activeTab].status,
+                                      nextStatus[activeTab].label
+                                    );
+                                  }
+                                }}
                                 className="main_btn"
                                 style={{
                                   padding: "4px 12px", fontSize: 12,
@@ -368,6 +379,41 @@ export default function OnlineDeliveryOrder() {
         onCancel={handleCancel}
         showActions={selectedOrder?.dg06_status === "customer_placed"}
       />
+
+      {showBillModal && billOrder && (
+        <BillModal
+          isOpen={showBillModal}
+          onClose={() => { setShowBillModal(false); setBillOrder(null); }}
+          orderItems={(billOrder.items || []).map(i => ({
+            id: i.dg07_menu_id,
+            dg09_name: i.name,
+            qty: i.qty,
+            price: parseFloat(i.price),
+            tax_group_id: i.dg09_tax_group_id || null,
+            basePrice: parseFloat(i.dg07_base_price || i.price),
+            dg09_apply_charges: i.dg09_apply_charges || 0,
+            qtyRemark: i.dg07_item_remark || "",
+            globalRemark: i.dg07_global_remark || "",
+            predefinedRemarks: i.dg07_predefined_remark
+              ? i.dg07_predefined_remark.split(", ").filter(Boolean)
+              : [],
+          }))}
+          deliveryCustomerName={billOrder.dg06_customer_name || ""}
+          deliveryCustomerPhone={billOrder.dg06_customer_phone || ""}
+          deliveryCustomerAddress={billOrder.dg06_delivery_address || ""}
+          orderId={billOrder.dg06_order_id}
+          tableId={billOrder.dg06_table_id || null}
+          orderType="delivery"
+          tableNameMap={{}}
+          existingBillId={null}
+          orderStatus="out_for_delivery"
+          onBillDone={() => {
+            setShowBillModal(false);
+            setBillOrder(null);
+            fetchOrders();
+          }}
+        />
+      )}
     </div>
   );
 }

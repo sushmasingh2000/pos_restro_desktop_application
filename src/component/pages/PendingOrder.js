@@ -12,7 +12,7 @@ export default function PendingOrder() {
   const [selectedBillOrder, setSelectedBillOrder] = useState(null);
   const [page, setPage] = useState(1);
 
-  const limit = 5;
+  const limit = 8;
 
   const tabs = [
     "ALL SECTIONS",

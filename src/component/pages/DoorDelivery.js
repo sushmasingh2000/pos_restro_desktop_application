@@ -115,7 +115,7 @@ const DoorDelivery = () => {
   const [selectedBillOrder, setSelectedBillOrder] = useState(null);
   const [feedbackOrder, setFeedbackOrder] = useState(null);
   const queryClient = useQueryClient();
-  const limit = 10;
+  const limit = 8;
   const type = "delivery"
 
   const [filters, setFilters] = useState({
@@ -162,9 +162,10 @@ const DoorDelivery = () => {
       totalAmount: Number(order.dg06_total_amount || 0),
 
       mop: order.dg010_payment_method || "--",
-      customerName: order.dg06_customer_name || "",      // ← ADD
-      customerPhone: order.dg06_customer_phone || "",    // ← ADD  
+      customerName: order.dg06_customer_name || "",
+      customerPhone: order.dg06_customer_phone || "",
       customerAddress: order.dg06_delivery_address || "",
+      repeatCount: Number(order.repeat_order_count ?? 0),
       status: order.dg06_status,
       items: order.items || [],
       billId: order.dg010_bill_id || null,
@@ -256,9 +257,9 @@ const handleView = (order) => {
               <tr>
                 {["S.No.",
                   "Order Id", "Date", "Time", "SubTotal", "Charge",
-                  "Tax", "Discount", "Paid", "MOP", "Status", "Action"
+                  "Tax", "Discount", "Paid", "MOP", "Repeat", "Status", "Action"
                 ].map((h) => (
-                  <th key={h} >{h}</th>
+                  <th key={h}>{h}</th>
                 ))}
 
               </tr>
@@ -301,13 +302,20 @@ const handleView = (order) => {
                       <td>
                         ₹{order.totalAmount}
                       </td>
-                      <td >
-                        {order.mop || "--"} </td>
-                      <td >
-                        <span className={` ${order.status === "completed"
-                          ? "green_bg"
-                          : "yellow_bg"
-                          }`}>
+                      <td>{order.mop || "--"}</td>
+                      <td>
+                        {order.repeatCount === 0 ? (
+                          <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                            🆕 New
+                          </span>
+                        ) : (
+                          <span style={{ background: "#fef3c7", color: "#b45309", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                            🔁 {order.repeatCount}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`${order.status === "completed" ? "green_bg" : "yellow_bg"}`}>
                           {order.status}
                         </span>
                       </td>
@@ -395,7 +403,8 @@ const handleView = (order) => {
             qty: i.dg07_quantity,
             price: parseFloat(i.dg07_price),
             tax_group_id: i.dg09_tax_group_id,
-            basePrice: parseFloat(i.dg07_base_price),
+            basePrice: parseFloat(i.dg07_base_price || i.dg07_price),
+            dg09_apply_charges: i.dg09_apply_charges,
             qtyRemark: i.dg07_item_remark || "",
             globalRemark: i.dg07_global_remark || "",
             predefinedRemarks: i.dg07_predefined_remark

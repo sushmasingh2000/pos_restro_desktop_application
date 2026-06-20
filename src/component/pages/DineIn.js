@@ -13,7 +13,7 @@ const DineIn = () => {
   const [page, setPage] = useState(1);
   const [showBillModal, setShowBillModal] = useState(false);
   const [selectedBillOrder, setSelectedBillOrder] = useState(null);
-  const limit = 5;
+  const limit = 8;
   const type = "dine_in"
 
   const [filters, setFilters] = useState({
@@ -274,8 +274,9 @@ const DineIn = () => {
             dg09_name: i.dg07_menu_name_snapshot,
             qty: i.dg07_quantity,
             price: parseFloat(i.dg07_price),
-             tax_group_id: i.dg09_tax_group_id,
-            basePrice: parseFloat(i.dg07_base_price),
+            tax_group_id: i.dg09_tax_group_id,
+            basePrice: parseFloat(i.dg07_base_price || i.dg07_price),
+            dg09_apply_charges: i.dg09_apply_charges,
             qtyRemark: i.dg07_item_remark || "",
             globalRemark: i.dg07_global_remark || "",
             predefinedRemarks: i.dg07_predefined_remark

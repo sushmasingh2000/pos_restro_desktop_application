@@ -30,6 +30,9 @@ export default function BillModal({
   const [reprintWalletUsed, setReprintWalletUsed] = useState(0); //NAYA
   const [showPreview, setShowPreview] = useState(false);
   const [estimatedTime, setEstimatedTime] = useState("");
+  const [currentStatus, setCurrentStatus] = useState(orderStatus);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(null);
   const [customer, setCustomer] = useState({
     name: "",
     phone: "",
@@ -242,6 +245,8 @@ export default function BillModal({
   // ── Reset on open ─────────────────────────────────
   useEffect(() => {
     if (isOpen) {
+      setCurrentStatus(orderStatus);
+      setStatusLoading(false);
       setCustomer({
         name: deliveryCustomerName || "",      // ← CHANGE
         phone: deliveryCustomerPhone || "",    // ← CHANGE
@@ -314,19 +319,26 @@ export default function BillModal({
 
   const totalItemQty = orderItems.reduce((s, i) => s + i.qty, 0);
 
-  const chargeBreakdown = charges.map((c) => {
-    const isItemLevel = c.dg035_field === "Item";
-    const baseAmount =
-      c.dg035_type === "Percentage"
-        ? (subTotal * parseFloat(c.dg035_value)) / 100
-        : parseFloat(c.dg035_value);
-    // Item-level flat charges multiply by total qty; percentage stays the same
-    const amount =
-      isItemLevel && c.dg035_type !== "Percentage"
-        ? baseAmount * totalItemQty
-        : baseAmount;
-    return { name: c.dg035_name, amount, field: c.dg035_field };
-  });
+  const chargeableSubTotal = orderItems.reduce((acc, i) =>
+    i.dg09_apply_charges === 1 || i.dg09_apply_charges === true
+      ? acc + parseFloat(i.basePrice || i.price) * i.qty
+      : acc, 0
+  );
+
+  const chargeBreakdown = chargeableSubTotal > 0
+    ? charges.map((c) => {
+        const isItemLevel = c.dg035_field === "Item";
+        const baseAmount =
+          c.dg035_type === "Percentage"
+            ? (chargeableSubTotal * parseFloat(c.dg035_value)) / 100
+            : parseFloat(c.dg035_value);
+        const amount =
+          isItemLevel && c.dg035_type !== "Percentage"
+            ? baseAmount * totalItemQty
+            : baseAmount;
+        return { name: c.dg035_name, amount, field: c.dg035_field };
+      })
+    : [];
   const totalCharges = chargeBreakdown.reduce((s, c) => s + c.amount, 0);
 
   const discountAmount =
@@ -877,7 +889,7 @@ export default function BillModal({
               {chargeBreakdown.map((c, i) => (
                 <Row
                   key={i}
-                  label={c.field === "Item" ? `${c.name} (per item ×${totalItemQty})` : `${c.name} (Charge)`}
+                  label={c.field === "Item" ? `${c.name} (per item ×${totalItemQty})` : c.name}
                   value={`₹${c.amount.toFixed(2)}`}
                   muted
                 />
@@ -889,13 +901,6 @@ export default function BillModal({
                   discountAmount > 0
                     ? `-₹${discountAmount.toFixed(2)}`
                     : "₹0.00"
-                }
-                muted
-              />
-              <Row
-                label="Charges"
-                value={
-                  totalCharges > 0 ? `₹${totalCharges.toFixed(2)}` : "₹0.00"
                 }
                 muted
               />
@@ -1609,9 +1614,9 @@ export default function BillModal({
         {orderType === "delivery" && (
           <div style={{ margin: 8 }}>
 
-            {/* Estimated Time input — sirf out_for_delivery status mein dikhao */}
-            {orderStatus === "out_for_delivery" && (
-              <div style={{ display: "flex", gap: 8, justifyItems:"end", alignItems: "center", margin: "8px 12px", width:"40%" }}>
+            {/* Estimated Time — shows immediately when Out for Delivery is active */}
+            {currentStatus === "out_for_delivery" && currentStatus !== "completed" && (
+              <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "8px 12px", width: "45%" }}>
                 <input
                   type="text"
                   placeholder="⏱️ e.g. 30 mins"
@@ -1619,8 +1624,8 @@ export default function BillModal({
                   onChange={(e) => setEstimatedTime(e.target.value)}
                   style={{
                     flex: 1, padding: "8px 12px", borderRadius: 8, fontSize: 13,
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.06)", color: "black", outline: "none"
+                    border: "1px solid rgba(139,92,246,0.4)",
+                    background: "rgba(139,92,246,0.08)", color: "#c4b5fd", outline: "none"
                   }}
                 />
                 <button
@@ -1638,8 +1643,8 @@ export default function BillModal({
                   }}
                   style={{
                     padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-                    background: "blue", border: "1px solid rgba(139,92,246,0.4)",
-                    color: "white", cursor: "pointer"
+                    background: "rgba(139,92,246,0.3)", border: "1px solid rgba(139,92,246,0.5)",
+                    color: "#c4b5fd", cursor: "pointer", whiteSpace: "nowrap"
                   }}
                 >
                   Set Time
@@ -1647,49 +1652,229 @@ export default function BillModal({
               </div>
             )}
 
-            <div style={{ display: "flex", gap: 8, marginBottom: 8 }} className="p-3">
-              {[
-                { key: "preparing", label: "Preparing", icon: "🍳", color: "#f59e0b", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.4)" },
-                { key: "ready", label: "Ready", icon: "📦", color: "#3b82f6", bg: "rgba(59,130,246,0.15)", border: "rgba(59,130,246,0.4)" },
-                { key: "out_for_delivery", label: "Out for Delivery", icon: "🛵", color: "#8b5cf6", bg: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.4)" },
-              ].map((s) => (
+            {(() => {
+              const statusOrder = ["preparing", "ready", "out_for_delivery"];
+              const isCompleted = currentStatus === "completed";
+              const currentIdx = isCompleted ? statusOrder.length : statusOrder.indexOf(currentStatus);
+              const steps = [
+                { key: "preparing",        label: "Preparing",        icon: "🍳", color: "#f59e0b", rgb: "245,158,11" },
+                { key: "ready",            label: "Ready",            icon: "📦", color: "#3b82f6", rgb: "59,130,246" },
+                { key: "out_for_delivery", label: "Out for Delivery", icon: "🛵", color: "#a855f7", rgb: "168,85,247" },
+              ];
+              return (
+                <div style={{ padding: "10px 16px 14px" }}>
+                  <style>{`
+                    @keyframes stepPulse {
+                      0%,100% { transform: scale(1);    box-shadow: var(--sp-sm); }
+                      50%     { transform: scale(1.08); box-shadow: var(--sp-lg); }
+                    }
+                    @keyframes sweetIn {
+                      0%   { opacity: 0; transform: scale(0.6) translateY(20px); }
+                      70%  { transform: scale(1.04) translateY(-2px); }
+                      100% { opacity: 1; transform: scale(1) translateY(0); }
+                    }
+                    @keyframes overlayIn {
+                      from { opacity: 0; } to { opacity: 1; }
+                    }
+                    .step-active-amber  { --sp-sm: 0 0 0 4px rgba(245,158,11,0.25), 0 0 16px rgba(245,158,11,0.6);  --sp-lg: 0 0 0 7px rgba(245,158,11,0.2), 0 0 32px rgba(245,158,11,0.9);  animation: stepPulse 1.7s ease-in-out infinite; }
+                    .step-active-blue   { --sp-sm: 0 0 0 4px rgba(59,130,246,0.25),  0 0 16px rgba(59,130,246,0.6);  --sp-lg: 0 0 0 7px rgba(59,130,246,0.2),  0 0 32px rgba(59,130,246,0.9);  animation: stepPulse 1.7s ease-in-out infinite; }
+                    .step-active-purple { --sp-sm: 0 0 0 4px rgba(168,85,247,0.25),  0 0 16px rgba(168,85,247,0.6);  --sp-lg: 0 0 0 7px rgba(168,85,247,0.2),  0 0 32px rgba(168,85,247,0.9);  animation: stepPulse 1.7s ease-in-out infinite; }
+                  `}</style>
+
+                  {/* Timeline row */}
+                  <div style={{ display: "flex", alignItems: "flex-start" }}>
+                    {steps.flatMap((s, idx) => {
+                      const isActive = currentStatus === s.key;
+                      const isPast   = idx < currentIdx;
+                      const glowCls  = ["step-active-amber","step-active-blue","step-active-purple"][idx];
+
+                      const parts = [];
+
+                      /* ── Step node ── */
+                      parts.push(
+                        <div key={s.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 82 }}>
+                          <button
+                            className={isActive ? glowCls : ""}
+                            disabled={statusLoading || isPast || isCompleted}
+                            onClick={() => !isCompleted && setConfirmDialog(s)}
+                            style={{
+                              width: 58, height: 58,
+                              borderRadius: "50%",
+                              border: `2px solid ${isPast ? s.color : isActive ? s.color : `rgba(${s.rgb},0.45)`}`,
+                              background: isPast
+                                ? s.color
+                                : isActive
+                                  ? `rgba(${s.rgb},0.18)`
+                                  : `rgba(${s.rgb},0.08)`,
+                              fontSize: isPast ? 20 : 26,
+                              cursor: isPast || statusLoading ? "default" : "pointer",
+                              color: isPast ? "#fff" : s.color,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              outline: "none",
+                              transition: "background 0.3s, border 0.3s",
+                              opacity: isPast ? 0.75 : 1,
+                            }}
+                          >
+                            {isPast ? "✓" : s.icon}
+                          </button>
+
+                          {/* Label */}
+                          <div style={{ marginTop: 8, textAlign: "center" }}>
+                            <div style={{
+                              fontSize: 11, fontWeight: 700,
+                              color: isActive ? s.color : isPast ? "#888" : `rgba(${s.rgb},0.7)`,
+                            }}>
+                              {s.label}
+                            </div>
+                            {isActive && (
+                              <div style={{
+                                fontSize: 9, fontWeight: 800, letterSpacing: "0.1em",
+                                color: s.color, marginTop: 3,
+                              }}>
+                                ● ACTIVE
+                              </div>
+                            )}
+                            {isPast && (
+                              <div style={{ fontSize: 9, color: "#999", marginTop: 3 }}>
+                                ✓ done
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+
+                      /* ── Connector line (not after last) ── */
+                      if (idx < steps.length - 1) {
+                        const lineColor = isPast
+                          ? `linear-gradient(to right, ${s.color}, ${steps[idx + 1].color})`
+                          : `rgba(${s.rgb},0.2)`;
+                        parts.push(
+                          <div key={`line-${idx}`} style={{
+                            flex: 1,
+                            height: 3,
+                            marginTop: 28,
+                            borderRadius: 2,
+                            background: lineColor,
+                            alignSelf: "flex-start",
+                          }} />
+                        );
+                      }
+
+                      return parts;
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ── Custom SweetAlert Confirm Dialog ── */}
+        {confirmDialog && (
+          <div
+            onClick={() => setConfirmDialog(null)}
+            style={{
+              position: "fixed", inset: 0, zIndex: 9999,
+              background: "rgba(0,0,0,0.55)",
+              backdropFilter: "blur(6px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              animation: "overlayIn 0.2s ease",
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#fff",
+                borderRadius: 24,
+                padding: "36px 32px 28px",
+                width: 320,
+                textAlign: "center",
+                boxShadow: `0 24px 64px rgba(0,0,0,0.25), 0 0 0 1px rgba(${confirmDialog.rgb},0.2)`,
+                animation: "sweetIn 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+              }}
+            >
+              {/* Icon circle */}
+              <div style={{
+                width: 80, height: 80, borderRadius: "50%",
+                background: `rgba(${confirmDialog.rgb},0.1)`,
+                border: `3px solid ${confirmDialog.color}`,
+                margin: "0 auto 20px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 38,
+                boxShadow: `0 0 0 6px rgba(${confirmDialog.rgb},0.08)`,
+              }}>
+                {confirmDialog.icon}
+              </div>
+
+              {/* Title */}
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#1e293b", marginBottom: 8 }}>
+                Are you sure?
+              </div>
+
+              {/* Subtitle */}
+              <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6, marginBottom: 28 }}>
+                Mark this order as{" "}
+                <span style={{
+                  fontWeight: 700, color: confirmDialog.color,
+                  background: `rgba(${confirmDialog.rgb},0.1)`,
+                  padding: "2px 8px", borderRadius: 6,
+                }}>
+                  {confirmDialog.label}
+                </span>
+                ?
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: "flex", gap: 12 }}>
                 <button
-                  key={s.key}
-                  onClick={async () => {
-                    // ✅ out_for_delivery pe seedha complete mat karo
-                    await apiConnectorPost(endpoint.update_order_status_api, {
-                      orderId,
-                      status: s.key
-                    });
-                    toast.success(`${s.icon} ${s.label}`);
-                  }}
+                  onClick={() => setConfirmDialog(null)}
                   style={{
-                    flex: 1, padding: "10px 6px",
-                    background: orderStatus === s.key
-                      ? s.bg.replace("0.15", "0.35")  // active highlight
-                      : s.bg,
-                    border: `1px solid ${orderStatus === s.key ? s.border : s.border}`,
-                    borderRadius: 10, color: s.color, fontSize: 12, fontWeight: 600,
-                    cursor: "pointer", display: "flex", flexDirection: "column",
-                    alignItems: "center", gap: 4,
-                    outline: orderStatus === s.key ? `2px solid ${s.color}` : "none"
+                    flex: 1, padding: "12px", borderRadius: 12,
+                    fontSize: 14, fontWeight: 700,
+                    background: "#f1f5f9", border: "1px solid #e2e8f0",
+                    color: "#64748b", cursor: "pointer",
                   }}
                 >
-                  <span style={{ fontSize: 18 }}>{s.icon}</span>
-                  {s.label}
+                  ✕ Cancel
                 </button>
-              ))}
+                <button
+                  onClick={async () => {
+                    const s = confirmDialog;
+                    setConfirmDialog(null);
+                    setStatusLoading(true);
+                    try {
+                      await apiConnectorPost(endpoint.update_order_status_api, { orderId, status: s.key });
+                      setCurrentStatus(s.key);
+                      toast.success(`${s.icon} ${s.label}`);
+                    } catch {
+                      toast.error("Status update failed");
+                    } finally {
+                      setStatusLoading(false);
+                    }
+                  }}
+                  style={{
+                    flex: 1, padding: "12px", borderRadius: 12,
+                    fontSize: 14, fontWeight: 700,
+                    background: `linear-gradient(135deg, ${confirmDialog.color}, rgba(${confirmDialog.rgb},0.75))`,
+                    border: "none", color: "#fff", cursor: "pointer",
+                    boxShadow: `0 4px 14px rgba(${confirmDialog.rgb},0.4)`,
+                  }}
+                >
+                  ✓ Yes!
+                </button>
+              </div>
             </div>
           </div>
         )}
+
         <div className="flex justify-between gap-3 modal_footer px-3 py-3">
           <button onClick={onClose} className="cancel_btn">
             Cancel
           </button>
           <div className="flex justify-end gap-3" style={{ width: "50%" }}>
             {(savedBillId || orderType === "dine_in") &&
-             orderStatus !== "completed" &&
-             (orderType !== "delivery" || orderStatus === "out_for_delivery") && (
+             currentStatus !== "completed" &&
+             (orderType !== "delivery" || currentStatus === "out_for_delivery") && (
               <button
                 onClick={handleCloseTable}
                 disabled={loading}
