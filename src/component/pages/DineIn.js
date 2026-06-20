@@ -62,6 +62,9 @@ const DineIn = () => {
       items: order.items || [],
       billId: order.dg010_bill_id || null,
       billNo: order.dg06_bill_no || null,
+      repeatCount: Number(order.repeat_order_count ?? 0),
+      customerName: order.dg06_customer_name || "",
+      customerPhone: order.dg06_customer_phone || "",
     };
   });
 
@@ -154,8 +157,8 @@ const DineIn = () => {
             <thead>
               <tr>
                 {["S.No.",
-                  "Order Id", "Date", "Time", "Table No", "SubTotal", "Discount", "Charge",
-                  "Tax", "Paid", "MOP", "Status", "Action"
+                  "Order Id", "Date", "Time", "Table No", "Customer", "SubTotal", "Discount", "Charge",
+                  "Tax", "Paid", "MOP", "Repeat", "Status", "Action"
                 ].map((h) => (
                   <th key={h} >{h}</th>
                 ))}
@@ -167,13 +170,13 @@ const DineIn = () => {
 
               {isLoading ? (
                 <tr>
-                  <td colSpan="14" className="text-center p-6 text-white/50">
+                  <td colSpan="16" className="text-center p-6 text-white/50">
                     Loading orders...
                   </td>
                 </tr>
               ) : formattedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="14" className="text-center p-6 text-white/40">
+                  <td colSpan="16" className="text-center p-6 text-white/40">
                     No orders found
                   </td>
                 </tr>
@@ -191,13 +194,33 @@ const DineIn = () => {
                       <td>{order.date}</td>
                       <td>{order.time}</td>
                       <td>{order.tableNo}</td>
+                      <td>
+                        {order.customerName
+                          ? <div>
+                              <div style={{ fontWeight: 600, fontSize: 12 }}>{order.customerName}</div>
+                              {order.customerPhone && <div style={{ fontSize: 11, opacity: 0.6 }}>{order.customerPhone}</div>}
+                            </div>
+                          : "--"}
+                      </td>
                       <td>₹{order.subTotal}</td>
                       <td>₹{order.discount}</td>
                       <td>₹{order.charge}</td>
                       <td>₹{order.tax}</td>
-                      <td> ₹{order.totalAmount}</td>
+                      <td>₹{order.totalAmount}</td>
+                      <td>{order.mop || "--"}</td>
                       <td>
-                        {order.mop || "--"}</td>
+                        {!order.customerPhone ? (
+                          <span style={{ fontSize: 11, opacity: 0.4 }}>--</span>
+                        ) : order.repeatCount === 0 ? (
+                          <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                            🆕 New
+                          </span>
+                        ) : (
+                          <span style={{ background: "#fef3c7", color: "#b45309", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                            🔁 {order.repeatCount}x
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <span className={` ${order.status === "completed"
                           ? "green_bg"
