@@ -38,8 +38,9 @@ const Navbar = ({ toggleSidebar }) => {
     }
   );
   const sub = subData?.data?.result;
-  const daysLeft = sub?.days_left ?? 999;
-  const showSubAlert = sub && daysLeft <= 15;
+  const daysLeft = sub?.days_left !== undefined ? Number(sub.days_left) : 999;
+  const isExpired = sub ? (sub.is_expired || daysLeft < 0) : false;
+  const showSubAlert = sub && !isExpired && daysLeft <= 15;
 
   useEffect(() => {
     const handler = (e) => {
@@ -95,11 +96,8 @@ const Navbar = ({ toggleSidebar }) => {
 
   return (
     <nav className="flex items-center justify-between">
-      <audio
-        ref={audioRef}
-        src="/notification.wav"
-        preload="auto"
-      />
+      <audio ref={audioRef} src="/notification.wav" preload="auto" />
+
 
       <div className="flex items-center gap-4">
         <div className="sidebar_logo logo_mobile_responsvie">
@@ -143,7 +141,7 @@ const Navbar = ({ toggleSidebar }) => {
             <style>{`
               @keyframes sub-pulse {
                 0%,100% { box-shadow: 0 0 0 0 #dc262666; }
-                50%      { box-shadow: 0 0 0 7px transparent; }
+                50%      { box-shadow: 0 0 0 8px transparent; }
               }
             `}</style>
             <button
@@ -155,7 +153,7 @@ const Navbar = ({ toggleSidebar }) => {
                 {daysLeft <= 3 ? "🚨" : "⚠️"}
               </div>
               <span className="notification_count" style={{ background: "#dc2626" }}>
-                {daysLeft <= 0 ? "!" : daysLeft + "d"}
+                {daysLeft + "d"}
               </span>
             </button>
 
@@ -204,41 +202,28 @@ const Navbar = ({ toggleSidebar }) => {
                     </strong>
                   </div>
 
-                  <div
-                    style={{
-                      background: daysLeft <= 3 ? "#fee2e2" : "#ffedd5",
-                      border: `1px solid ${daysLeft <= 3 ? "#fca5a5" : "#fed7aa"}`,
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                      textAlign: "center",
-                      marginBottom: 12,
-                    }}
-                  >
-                    <div style={{ fontSize: 22, fontWeight: 800, color: daysLeft <= 3 ? "#dc2626" : "#ea580c" }}>
-                      {daysLeft <= 0 ? "EXPIRED" : `${daysLeft} Day${daysLeft !== 1 ? "s" : ""} Left`}
+                  <div style={{
+                    background: "#ffedd5",
+                    border: "1px solid #fed7aa",
+                    borderRadius: 8, padding: "10px 12px",
+                    textAlign: "center", marginBottom: 12,
+                  }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#ea580c" }}>
+                      {`${daysLeft} Day${daysLeft !== 1 ? "s" : ""} Left`}
                     </div>
                     <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                      {daysLeft <= 0
-                        ? "Service may be interrupted"
-                        : daysLeft <= 3
+                      {daysLeft <= 3
                         ? "Renew immediately to avoid interruption"
                         : "Contact owner to renew subscription"}
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      background: "#eff6ff",
-                      border: "1px solid #bfdbfe",
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                      fontSize: 12,
-                      color: "#1e40af",
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 8,
-                    }}
-                  >
+                  <div style={{
+                    background: "#eff6ff", border: "1px solid #bfdbfe",
+                    borderRadius: 8, padding: "10px 12px",
+                    fontSize: 12, color: "#1e40af",
+                    display: "flex", alignItems: "flex-start", gap: 8,
+                  }}>
                     <i className="ri-information-line" style={{ marginTop: 1, flexShrink: 0 }} />
                     Please contact your business owner to renew the subscription plan before expiry.
                   </div>

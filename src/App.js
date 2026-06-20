@@ -10,9 +10,11 @@ import { routes } from "./routes/Routes";
 import { useEffect } from "react";
 import { isTokenValid } from "./authentication/authexpiry";
 import { Navigate } from "react-router-dom";
+import { SubscriptionGuard } from "./component/pages/SubscriptionExpiredPage";
 
 const ProtectedRoute = ({ element }) => {
-  return isTokenValid() ? element : <Navigate to="/" replace />;
+  if (!isTokenValid()) return <Navigate to="/" replace />;
+  return <SubscriptionGuard>{element}</SubscriptionGuard>;
 };
 
 const App = () => {

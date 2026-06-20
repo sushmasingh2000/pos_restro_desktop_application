@@ -213,11 +213,11 @@ const DineIn = () => {
                           <span style={{ fontSize: 11, opacity: 0.4 }}>--</span>
                         ) : order.repeatCount === 0 ? (
                           <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
-                            🆕 New
+                             New
                           </span>
                         ) : (
                           <span style={{ background: "#fef3c7", color: "#b45309", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
-                            🔁 {order.repeatCount}x
+                             {order.repeatCount}x
                           </span>
                         )}
                       </td>
