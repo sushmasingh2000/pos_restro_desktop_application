@@ -39,7 +39,7 @@ const Navbar = ({ toggleSidebar }) => {
   );
   const sub = subData?.data?.result;
   const daysLeft = sub?.days_left !== undefined ? Number(sub.days_left) : 999;
-  const isExpired = sub ? (sub.is_expired || daysLeft < 0) : false;
+  const isExpired = sub ? (sub.is_expired || daysLeft <= 0) : false;
   const showSubAlert = sub && !isExpired && daysLeft <= 15;
 
   useEffect(() => {
