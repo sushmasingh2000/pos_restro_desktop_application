@@ -20,6 +20,7 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
     charge_breakdown = [],
     total_charges = 0,
     discount = 0,
+    coupon_name = null,
     total_amount = "0.00",
     round_off = 0,
     payment_splits = [],
@@ -149,8 +150,6 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
 
           <Divider />
 
-          <AmtRow label="Sub Total" value={subtotal} />
-
           {/* Tax breakdown */}
           {tax_breakdown.map((t, i) => (
             <AmtRow key={i} label={`${t.name}(${t.pct}%)`} value={t.amount?.toFixed(2)} muted />
@@ -172,7 +171,7 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
 
           {/* Discount */}
           {parseFloat(discount) > 0 && (
-            <AmtRow label="Discount" value={`-${Number(discount).toFixed(2)}`} muted />
+            <AmtRow label={coupon_name ? `Discount (${coupon_name})` : "Discount"} value={`-${Number(discount).toFixed(2)}`} muted />
           )}
 
           <Divider />

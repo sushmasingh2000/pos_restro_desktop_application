@@ -75,6 +75,10 @@ export const endpoint = {
   user_profile_api: `${domain}/api/v1/user-profile`,
   change_password_api: `${domain}/api/v1/change-password`,
 
+  // ── OFFERS
+  get_active_offers_api: `${domain}/api/v1/offer/active-offers`,
+  apply_coupon_api: `${domain}/api/v1/offer/apply-coupon`,
+
   // ── SUBSCRIPTION
   get_my_subscription: `${domain}/api/v1/subscription-my`,
   get_my_alerts: `${domain}/api/v1/subscription-alerts`,

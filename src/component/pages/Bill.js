@@ -51,6 +51,7 @@ export default function BillModal({
   const [discountPct, setDiscountPct] = useState(0);
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedOfferName, setAppliedOfferName] = useState("");
 
   // ── Payment ───────────────────────────────────────
   // const [selectedMode, setSelectedMode] = useState("");
@@ -262,6 +263,7 @@ export default function BillModal({
       setDiscountPct(0);
       setCouponCode("");
       setCouponDiscount(0);
+      setAppliedOfferName("");
       // setSelectedMode("");
       setPaymentSplits([{ mode: "", amount: "" }]);
 
@@ -365,23 +367,56 @@ export default function BillModal({
     ? Math.max(0, afterWalletTotal - givenAmt)
     : 0;
 
+  // ── Active offers ─────────────────────────────────
+  const { data: offersData } = useQuery(
+    ["active_offers_bill"],
+    () => apiConnectorGet(endpoint.get_active_offers_api),
+    { enabled: isOpen && discountMode === "coupon", staleTime: 5 * 60 * 1000, retry: false }
+  );
+  const activeOffers = offersData?.data?.result || [];
+
   // ── Coupon apply ──────────────────────────────────
-  const applyCoupon = async () => {
-    if (!couponCode.trim()) return toast.error("Please enter coupon code!");
+  const applyCoupon = async (code) => {
+    const c = (code || couponCode).trim();
+    if (!c) return toast.error("Please enter coupon code!");
+    if (code) setCouponCode(code);
+    const categoryIds = [...new Set(orderItems.map(i => i.category_id || i.dg09_category_id).filter(Boolean))];
     try {
       const res = await apiConnectorPost(endpoint.apply_coupon_api, {
-        coupon_code: couponCode,
+        coupon_code: c,
         order_amount: subTotal,
+        category_ids: categoryIds,
       });
       if (res?.data?.success) {
         setCouponDiscount(res?.data?.discount_amount || 0);
-        toast.success("Coupon applied!");
+        setAppliedOfferName(res?.data?.offer_name || c);
+        toast.success(res?.data?.message || "Coupon applied!");
       } else {
         toast.error(res?.data?.message || "Invalid coupon");
       }
     } catch {
       toast.error("Failed to validate coupon");
     }
+  };
+
+  const applyOfferDirect = (offer) => {
+    const minAmt = parseFloat(offer.dg037_min_amount || 0);
+    if (minAmt > 0 && subTotal < minAmt) {
+      toast.error(`Minimum order ₹${minAmt} required for this offer`);
+      return;
+    }
+    const pct  = parseFloat(offer.dg037_offer_price_pct || 0);
+    const flat = parseFloat(offer.dg037_offer_price || 0);
+    let disc = 0;
+    if      (offer.dg037_offer_type === "Percentage") disc = (subTotal * pct) / 100;
+    else if (offer.dg037_offer_type === "Flat")       disc = flat;
+    else if (offer.dg037_offer_type === "BOGO" || offer.dg037_is_bogo) disc = flat || (subTotal * pct) / 100;
+    else disc = flat > 0 ? flat : (subTotal * pct) / 100;
+    disc = Math.min(Math.round(disc * 100) / 100, subTotal);
+    setCouponDiscount(disc);
+    setCouponCode(`__offer_${offer.dg037_offer_id}`);
+    setAppliedOfferName(offer.dg037_offer_name);
+    toast.success(`"${offer.dg037_offer_name}" applied!`);
   };
 
   // ── Validate ──────────────────────────────────────
@@ -589,6 +624,7 @@ export default function BillModal({
         customer_phone: customer.phone,
         subtotal: subTotal.toFixed(2),
         discount: discountAmount.toFixed(2),
+        coupon_name: appliedOfferName || null,
         wallet_used: useWallet || isAdvance ? maxWalletUse.toFixed(2) : 0,
         advance_used: isAdvance ? maxWalletUse.toFixed(2) : 0,
         total_amount: grandTotal.toFixed(2),
@@ -1592,18 +1628,74 @@ export default function BillModal({
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <div className="main_input">
-                    <input
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      placeholder="Enter coupon code"
-                      className={inp}
-                    />
+                <div>
+                  {/* Active offer cards */}
+                  {activeOffers.length > 0 && (
+                    <div style={{ marginBottom: 10 }}>
+                      <p style={{ fontSize: 11, color: "#a78bfa", fontWeight: 600, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                        Available Offers
+                      </p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {activeOffers.map(offer => (
+                          <div
+                            key={offer.dg037_offer_id}
+                            onClick={() => {
+                              if (couponDiscount > 0) return;
+                              if (offer.dg037_coupon) applyCoupon(offer.dg037_coupon);
+                              else applyOfferDirect(offer);
+                            }}
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.15)",
+                              borderRadius: 8, padding: "6px 10px", cursor: couponDiscount > 0 ? "default" : "pointer",
+                              transition: "all 0.15s",
+                              opacity: couponDiscount > 0 ? 0.5 : 1,
+                            }}
+                          >
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#e2e8f0" }}>
+                              {offer.dg037_offer_name}
+                            </div>
+                            <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>
+                              {offer.dg037_offer_type === "Percentage"
+                                ? `${offer.dg037_offer_price_pct}% off`
+                                : offer.dg037_offer_type === "Flat"
+                                ? `₹${offer.dg037_offer_price} off`
+                                : offer.dg037_offer_type}
+                              {offer.dg037_min_amount > 0 && ` · Min ₹${offer.dg037_min_amount}`}
+                              {offer.category_name && ` · ${offer.category_name}`}
+                            </div>
+                            {offer.dg037_coupon && (
+                              <div style={{ fontSize: 10, color: "#a78bfa", marginTop: 2, fontWeight: 600 }}>
+                                {offer.dg037_coupon}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Coupon input + apply */}
+                  <div className="flex gap-2">
+                    <div className="main_input" style={{ flex: 1 }}>
+                      <input
+                        value={couponCode}
+                        onChange={(e) => { setCouponCode(e.target.value); setCouponDiscount(0); }}
+                        placeholder="Enter coupon code"
+                        className={inp}
+                        onKeyDown={e => e.key === "Enter" && applyCoupon()}
+                      />
+                    </div>
+                    <button onClick={() => applyCoupon()} className="main_btn">
+                      Apply
+                    </button>
                   </div>
-                  <button onClick={applyCoupon} className="main_btn">
-                    Apply
-                  </button>
+                  {couponDiscount > 0 && (
+                    <div style={{ fontSize: 12, color: "#4ade80", marginTop: 6, display: "flex", justifyContent: "space-between" }}>
+                      <span>✓ Coupon applied</span>
+                      <span>-₹{couponDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
