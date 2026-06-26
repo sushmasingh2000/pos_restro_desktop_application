@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
-import BillModal from "./Bill";
+import { useNavigate } from "react-router-dom";
 
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -13,9 +13,8 @@ const TakeAway = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [showBillModal, setShowBillModal] = useState(false);
-  const [selectedBillOrder, setSelectedBillOrder] = useState(null);
   const limit = 10;
+  const navigate = useNavigate();
 
   const [filters, setFilters] = useState({
     startDate: "",
@@ -67,8 +66,29 @@ const TakeAway = () => {
   );
 
   const handleView = (order) => {
-    setSelectedBillOrder(order);
-    setShowBillModal(true);
+    navigate("/bill", {
+      state: {
+        orderItems: order.items.map(i => ({
+          id: i.dg07_menu_id,
+          dg09_name: i.dg07_menu_name_snapshot,
+          qty: i.dg07_quantity,
+          price: parseFloat(i.dg07_price),
+          tax_group_id: i.dg09_tax_group_id,
+          basePrice: parseFloat(i.dg07_base_price || i.dg07_price),
+          dg09_apply_charges: i.dg09_apply_charges,
+          qtyRemark: i.dg07_item_remark || "",
+          globalRemark: i.dg07_global_remark || "",
+          predefinedRemarks: i.dg07_predefined_remark
+            ? i.dg07_predefined_remark.split(", ").filter(Boolean)
+            : [],
+        })),
+        orderId: order.rawId,
+        tableId: order.tableNo,
+        orderType: order.type,
+        tableNameMap: {},
+        existingBillId: order.billId,
+      },
+    });
   };
 
   return (
@@ -261,39 +281,6 @@ const TakeAway = () => {
         </div>
       </div>
 
-      {showBillModal && selectedBillOrder && (
-        <BillModal
-          isOpen={showBillModal}
-          onClose={() => { setShowBillModal(false); setSelectedBillOrder(null); }}
-
-          // Items map karo — Orders page ke field names alag hain
-          orderItems={selectedBillOrder.items.map(i => ({
-            id: i.dg07_menu_id,
-            dg09_name: i.dg07_menu_name_snapshot,
-            qty: i.dg07_quantity,
-            price: parseFloat(i.dg07_price),
-            tax_group_id: i.dg09_tax_group_id,
-            basePrice: parseFloat(i.dg07_base_price || i.dg07_price),
-            dg09_apply_charges: i.dg09_apply_charges,
-            qtyRemark: i.dg07_item_remark || "",
-            globalRemark: i.dg07_global_remark || "",
-            predefinedRemarks: i.dg07_predefined_remark
-              ? i.dg07_predefined_remark.split(", ").filter(Boolean)
-              : [],
-          }))}
-
-          orderId={selectedBillOrder.rawId}
-          tableId={selectedBillOrder.tableNo}
-          orderType={selectedBillOrder.type}
-          tableNameMap={{}}  // Orders page pe table name map nahi hai, blank do
-          existingBillId={selectedBillOrder.billId}
-          onBillDone={() => {
-            setShowBillModal(false);
-            setSelectedBillOrder(null);
-            // Orders list refresh karo
-          }}
-        />
-      )}
     </div>
   );
 };

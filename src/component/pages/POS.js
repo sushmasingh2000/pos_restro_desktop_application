@@ -7,7 +7,6 @@ import { endpoint } from "../../utils/APIRoutes";
 import { useQuery, useQueryClient } from "react-query";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
-import BillModal from "./Bill";
 import CancelOrderModal from "./Cancel";
 import AddQtyRemarkModal from "./AddQtyRemark";
 import KOTPrintSlip from "./KOTPrintSlip";
@@ -45,7 +44,6 @@ const POS = () => {
   const [tableNameMap, setTableNameMap] = useState({});
   const [showQtyModal, setShowQtyModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [showBillModal, setShowBillModal] = useState(false);
   const [savedOrderId, setSavedOrderId] = useState(null);
   const [existingBillId, setExistingBillId] = useState(null);
   const [existingBillNo, setExistingBillNo] = useState(null);
@@ -412,7 +410,21 @@ const POS = () => {
   const handleOpenBill = () => {
     if (!orderItems.length) { toast.error("Please add items first", { id: 1 }); return; }
     if (!savedOrderId) { toast.error("Please save KOT first", { id: 1 }); return; }
-    setShowBillModal(true);
+    navigate("/bill", {
+      state: {
+        orderItems,
+        orderId: savedOrderId,
+        uniqueOrderId: currentOrder?.uniqueId || null,
+        tableId: table,
+        orderType: getOrderTypeEnum(),
+        orderStatus: currentOrderStatus,
+        tableNameMap,
+        existingBillId,
+        deliveryCustomerName: currentOrder?.customerName || "",
+        deliveryCustomerPhone: currentOrder?.customerPhone || "",
+        deliveryCustomerAddress: currentOrder?.customerAddress || "",
+      },
+    });
   };
 
   // ── After Bill Done ───────────────────────────────────────
@@ -634,24 +646,6 @@ const POS = () => {
             setShowOptionsModal(false);
           }}
         />
-        <BillModal
-          isOpen={showBillModal}
-          onClose={() => setShowBillModal(false)}
-          orderItems={orderItems}
-          orderId={savedOrderId}
-          uniqueOrderId={currentOrder?.uniqueId || null}
-          tableId={table}
-          orderType={getOrderTypeEnum()}
-          orderStatus={currentOrderStatus}
-          tableNameMap={tableNameMap}
-          onBillDone={handleBillDone}
-          existingBillId={existingBillId}
-          existingBillNo={existingBillNo}
-          deliveryCustomerName={currentOrder?.customerName || ""}
-          deliveryCustomerPhone={currentOrder?.customerPhone || ""}
-          deliveryCustomerAddress={currentOrder?.customerAddress || ""}
-        />
-
         <CancelOrderModal
           isOpen={showCancelModal}
           onClose={() => setShowCancelModal(false)}

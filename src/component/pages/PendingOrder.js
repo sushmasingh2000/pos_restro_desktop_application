@@ -2,15 +2,14 @@ import React, { useState, useMemo } from "react";
 import { useQuery, useQueries } from "react-query";
 import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
-import BillModal from "./Bill";
+import { useNavigate } from "react-router-dom";
 import PosTab from "../Layout/PosTab";
 
 export default function PendingOrder() {
   const [activeTab, setActiveTab] = useState("ALL SECTIONS");
   const [search, setSearch] = useState("");
-  const [showBillModal, setShowBillModal] = useState(false);
-  const [selectedBillOrder, setSelectedBillOrder] = useState(null);
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
 
   const limit = 8;
 
@@ -107,8 +106,18 @@ export default function PendingOrder() {
   }, [formattedOrders, search]);
 
   const handleView = (order) => {
-    setSelectedBillOrder(order);
-    setShowBillModal(true);
+    navigate("/bill", {
+      state: {
+        orderItems: order.items,
+        orderId: order.rawId,
+        tableId: order.tableNo,
+        orderType: order.type,
+        existingBillId: order.billId,
+        deliveryCustomerName: order?.customerName || "",
+        deliveryCustomerPhone: order?.customerPhone || "",
+        deliveryCustomerAddress: order?.customerAddress || "",
+      },
+    });
   };
 
   return (
@@ -289,24 +298,6 @@ export default function PendingOrder() {
         </div>
       </div>
 
-      {/* BILL MODAL */}
-      {showBillModal && selectedBillOrder && (
-        <BillModal
-          isOpen={showBillModal}
-          onClose={() => {
-            setShowBillModal(false);
-            setSelectedBillOrder(null);
-          }}
-          orderItems={selectedBillOrder.items}
-          orderId={selectedBillOrder.rawId}
-          tableId={selectedBillOrder.tableNo}
-          orderType={selectedBillOrder.type}
-          existingBillId={selectedBillOrder.billId}  //  FIX
-           deliveryCustomerName={selectedBillOrder?.customerName || ""}
-          deliveryCustomerPhone={selectedBillOrder?.customerPhone || ""}
-          deliveryCustomerAddress={selectedBillOrder?.customerAddress || ""}
-        />
-      )}
     </div>
   );
 }

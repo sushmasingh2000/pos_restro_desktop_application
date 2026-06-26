@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
-import BillModal from "./Bill";
+import { useNavigate } from "react-router-dom";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import toast from "react-hot-toast";
@@ -111,12 +111,11 @@ const DoorDelivery = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [showBillModal, setShowBillModal] = useState(false);
-  const [selectedBillOrder, setSelectedBillOrder] = useState(null);
   const [feedbackOrder, setFeedbackOrder] = useState(null);
   const queryClient = useQueryClient();
   const limit = 8;
-  const type = "delivery"
+  const type = "delivery";
+  const navigate = useNavigate();
 
   const [filters, setFilters] = useState({
     startDate: "",
@@ -178,8 +177,33 @@ const DoorDelivery = () => {
   );
 
 const handleView = (order) => {
-    setSelectedBillOrder(order);
-    setShowBillModal(true);
+    navigate("/bill", {
+      state: {
+        orderItems: order.items.map(i => ({
+          id: i.dg07_menu_id,
+          dg09_name: i.dg07_menu_name_snapshot,
+          qty: i.dg07_quantity,
+          price: parseFloat(i.dg07_price),
+          tax_group_id: i.dg09_tax_group_id,
+          basePrice: parseFloat(i.dg07_base_price || i.dg07_price),
+          dg09_apply_charges: i.dg09_apply_charges,
+          qtyRemark: i.dg07_item_remark || "",
+          globalRemark: i.dg07_global_remark || "",
+          predefinedRemarks: i.dg07_predefined_remark
+            ? i.dg07_predefined_remark.split(", ").filter(Boolean)
+            : [],
+        })),
+        deliveryCustomerName: order?.customerName || "",
+        deliveryCustomerPhone: order?.customerPhone || "",
+        deliveryCustomerAddress: order?.customerAddress || "",
+        orderId: order.rawId,
+        tableId: order.tableNo,
+        orderType: type,
+        tableNameMap: {},
+        existingBillId: order.billId,
+        orderStatus: order?.status || "",
+      },
+    });
   };
 
 
@@ -392,41 +416,6 @@ const handleView = (order) => {
         />
       )}
 
-      {showBillModal && selectedBillOrder && (
-        <BillModal
-          isOpen={showBillModal}
-          onClose={() => { setShowBillModal(false); setSelectedBillOrder(null); }}
-
-          orderItems={selectedBillOrder.items.map(i => ({
-            id: i.dg07_menu_id,
-            dg09_name: i.dg07_menu_name_snapshot,
-            qty: i.dg07_quantity,
-            price: parseFloat(i.dg07_price),
-            tax_group_id: i.dg09_tax_group_id,
-            basePrice: parseFloat(i.dg07_base_price || i.dg07_price),
-            dg09_apply_charges: i.dg09_apply_charges,
-            qtyRemark: i.dg07_item_remark || "",
-            globalRemark: i.dg07_global_remark || "",
-            predefinedRemarks: i.dg07_predefined_remark
-              ? i.dg07_predefined_remark.split(", ").filter(Boolean)
-              : [],
-          }))}
-          deliveryCustomerName={selectedBillOrder?.customerName || ""}
-          deliveryCustomerPhone={selectedBillOrder?.customerPhone || ""}
-          deliveryCustomerAddress={selectedBillOrder?.customerAddress || ""}
-          orderId={selectedBillOrder.rawId}
-          tableId={selectedBillOrder.tableNo}
-          orderType={type}
-          tableNameMap={{}}
-          existingBillId={selectedBillOrder.billId}
-          orderStatus={selectedBillOrder?.status || ""}
-          onBillDone={() => {
-            setShowBillModal(false);
-            setSelectedBillOrder(null);
-            // Orders list refresh karo
-          }}
-        />
-      )}
     </div>
   );
 };

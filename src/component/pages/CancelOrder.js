@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
-import BillModal from "./Bill";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 

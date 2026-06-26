@@ -1,6 +1,7 @@
 
 import Dashboard from "../Dashboard";
 import MainLayout from "../component/Layout/MainLayout";
+import BillPage from "../component/pages/Bill";
 import CancelOrder from "../component/pages/CancelOrder";
 import CustomerLedger from "../component/pages/Customerledger";
 import DineIn from "../component/pages/DineIn";
@@ -22,6 +23,14 @@ import FeedbackPage from "../component/pages/FeedbackPage";
 
 
 export const routes = [
+  {
+    path: "/bill",
+    element: (
+      <MainLayout>
+        <BillPage />
+      </MainLayout>
+    ),
+  },
   {
     path: "/userdashboard",
     element: (

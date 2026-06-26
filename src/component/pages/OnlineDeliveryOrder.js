@@ -4,7 +4,7 @@ import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import toast from "react-hot-toast";
 import { useQueryClient } from "react-query";
-import BillModal from "./Bill";
+import { useNavigate } from "react-router-dom";
 
 const tabs = ["PLACED", "PENDING", "PREPARING", "READY", "COMPLETED", "CANCELLED"];
 
@@ -165,9 +165,8 @@ export default function OnlineDeliveryOrder() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showBillModal, setShowBillModal] = useState(false);
-  const [billOrder, setBillOrder] = useState(null);
   const client = useQueryClient();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
@@ -337,8 +336,33 @@ export default function OnlineDeliveryOrder() {
                                 onClick={() => {
                                   if (activeTab === "READY") {
                                     handleStatusUpdate(order.dg06_order_id, "out_for_delivery", "Out for Delivery");
-                                    setBillOrder(order);
-                                    setShowBillModal(true);
+                                    navigate("/bill", {
+                                      state: {
+                                        orderItems: (order.items || []).map(i => ({
+                                          id: i.dg07_menu_id,
+                                          dg09_name: i.name,
+                                          qty: i.qty,
+                                          price: parseFloat(i.price),
+                                          tax_group_id: i.dg09_tax_group_id || null,
+                                          basePrice: parseFloat(i.dg07_base_price || i.price),
+                                          dg09_apply_charges: i.dg09_apply_charges || 0,
+                                          qtyRemark: i.dg07_item_remark || "",
+                                          globalRemark: i.dg07_global_remark || "",
+                                          predefinedRemarks: i.dg07_predefined_remark
+                                            ? i.dg07_predefined_remark.split(", ").filter(Boolean)
+                                            : [],
+                                        })),
+                                        deliveryCustomerName: order.dg06_customer_name || "",
+                                        deliveryCustomerPhone: order.dg06_customer_phone || "",
+                                        deliveryCustomerAddress: order.dg06_delivery_address || "",
+                                        orderId: order.dg06_order_id,
+                                        tableId: order.dg06_table_id || null,
+                                        orderType: "delivery",
+                                        tableNameMap: {},
+                                        existingBillId: null,
+                                        orderStatus: "out_for_delivery",
+                                      },
+                                    });
                                   } else {
                                     handleStatusUpdate(
                                       order.dg06_order_id,
@@ -380,40 +404,6 @@ export default function OnlineDeliveryOrder() {
         showActions={selectedOrder?.dg06_status === "customer_placed"}
       />
 
-      {showBillModal && billOrder && (
-        <BillModal
-          isOpen={showBillModal}
-          onClose={() => { setShowBillModal(false); setBillOrder(null); }}
-          orderItems={(billOrder.items || []).map(i => ({
-            id: i.dg07_menu_id,
-            dg09_name: i.name,
-            qty: i.qty,
-            price: parseFloat(i.price),
-            tax_group_id: i.dg09_tax_group_id || null,
-            basePrice: parseFloat(i.dg07_base_price || i.price),
-            dg09_apply_charges: i.dg09_apply_charges || 0,
-            qtyRemark: i.dg07_item_remark || "",
-            globalRemark: i.dg07_global_remark || "",
-            predefinedRemarks: i.dg07_predefined_remark
-              ? i.dg07_predefined_remark.split(", ").filter(Boolean)
-              : [],
-          }))}
-          deliveryCustomerName={billOrder.dg06_customer_name || ""}
-          deliveryCustomerPhone={billOrder.dg06_customer_phone || ""}
-          deliveryCustomerAddress={billOrder.dg06_delivery_address || ""}
-          orderId={billOrder.dg06_order_id}
-          tableId={billOrder.dg06_table_id || null}
-          orderType="delivery"
-          tableNameMap={{}}
-          existingBillId={null}
-          orderStatus="out_for_delivery"
-          onBillDone={() => {
-            setShowBillModal(false);
-            setBillOrder(null);
-            fetchOrders();
-          }}
-        />
-      )}
     </div>
   );
 }
