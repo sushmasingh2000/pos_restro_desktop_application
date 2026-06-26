@@ -89,6 +89,7 @@ const DineIn = () => {
             : [],
         })),
         orderId: order.rawId,
+        uniqueOrderId: order.orderId,
         tableId: order.tableNo,
         orderType: type,
         tableNameMap: {},
@@ -113,55 +114,55 @@ const DineIn = () => {
           <Col md={3}>
             <div className="main_input">
               <label>Start Date <span className="text-red-500">*</span></label>
-                <input
+              <input
                 type="date"
                 className=""
                 onChange={(e) =>
-                  setFilters({ ...filters, startDate: e.target.value })}/>
+                  setFilters({ ...filters, startDate: e.target.value })} />
             </div>
           </Col>
           <Col md={3}>
             <div className="main_input">
-                <label>End Date <span className="text-red-500">*</span></label>
-                <input
-                  type="date"
-                  className=""
+              <label>End Date <span className="text-red-500">*</span></label>
+              <input
+                type="date"
+                className=""
 
-                  onChange={(e) =>
-                    setFilters({ ...filters, endDate: e.target.value })
-                  }
-                />
+                onChange={(e) =>
+                  setFilters({ ...filters, endDate: e.target.value })
+                }
+              />
             </div>
           </Col>
           <Col md={3}>
             <div className="main_input">
-                <label>Mode of Payment <span className="text-red-500">*</span></label>
-                <select
-                  onChange={(e) =>
-                    setFilters({ ...filters, paymentMethod: e.target.value })
-                  }>
-                  <option>Mode of Payment</option>
-                  <option value="Cash" >Cash</option>
-                  <option value="Card" >Card</option>
-                  <option value="UPI">UPI</option>
-                </select>
+              <label>Mode of Payment <span className="text-red-500">*</span></label>
+              <select
+                onChange={(e) =>
+                  setFilters({ ...filters, paymentMethod: e.target.value })
+                }>
+                <option>Mode of Payment</option>
+                <option value="Cash" >Cash</option>
+                <option value="Card" >Card</option>
+                <option value="UPI">UPI</option>
+              </select>
             </div>
           </Col>
           <Col md={3}>
             <div className="main_input">
-                <label>Payment Status <span className="text-red-500">*</span></label>
-                 <select 
-                  onChange={(e) =>
-                    setFilters({ ...filters, paymentStatus: e.target.value })
-                  }>
-                  <option>Payment Status</option>
-                  <option value="paid" >Paid</option>
-                  <option value="unpaid" >Pending</option>
-                </select>
+              <label>Payment Status <span className="text-red-500">*</span></label>
+              <select
+                onChange={(e) =>
+                  setFilters({ ...filters, paymentStatus: e.target.value })
+                }>
+                <option>Payment Status</option>
+                <option value="paid" >Paid</option>
+                <option value="unpaid" >Pending</option>
+              </select>
             </div>
           </Col>
-          
-        
+
+
 
         </Row>
       </div>
@@ -169,7 +170,7 @@ const DineIn = () => {
 
       {/* TABLE */}
 
-      <div className="main_table_container mt-4 border-0 " style={{borderRadius: '0px'}}>
+      <div className="main_table_container mt-4 border-0 " style={{ borderRadius: '0px' }}>
 
         {/* SCROLL WRAPPER */}
         <div className="overflow-x-auto" >
@@ -218,9 +219,9 @@ const DineIn = () => {
                       <td>
                         {order.customerName
                           ? <div>
-                              <div style={{ fontWeight: 600, fontSize: 12 }}>{order.customerName}</div>
-                              {order.customerPhone && <div style={{ fontSize: 11, opacity: 0.6 }}>{order.customerPhone}</div>}
-                            </div>
+                            <div style={{ fontWeight: 600, fontSize: 12 }}>{order.customerName}</div>
+                            {order.customerPhone && <div style={{ fontSize: 11, opacity: 0.6 }}>{order.customerPhone}</div>}
+                          </div>
                           : "--"}
                       </td>
                       <td>₹{order.subTotal}</td>
@@ -234,18 +235,18 @@ const DineIn = () => {
                           <span style={{ fontSize: 11, opacity: 0.4 }}>--</span>
                         ) : order.repeatCount === 0 ? (
                           <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
-                             New
+                            New
                           </span>
                         ) : (
                           <span style={{ background: "#fef3c7", color: "#b45309", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
-                             {order.repeatCount}x
+                            {order.repeatCount}x
                           </span>
                         )}
                       </td>
                       <td>
                         <span className={` ${order.status === "completed"
                           ? "green_bg"
-                          :order.status === "pending" ? "yellow_bg" : "red_bg"
+                          : order.status === "pending" ? "yellow_bg" : "red_bg"
                           }`}>
                           {order.status}
                         </span>

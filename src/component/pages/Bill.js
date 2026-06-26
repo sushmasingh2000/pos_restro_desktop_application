@@ -27,6 +27,8 @@ export default function BillPage() {
     deliveryCustomerAddress = "",
   } = location.state || {};
 
+  console.log("location.state:", location.state);
+  console.log("uniqueOrderId:", uniqueOrderId);
   // ── Customer ──────────────────────────────────────
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerList, setCustomerList] = useState([]);
@@ -37,6 +39,8 @@ export default function BillPage() {
   const [currentStatus, setCurrentStatus] = useState(orderStatus);
   const [statusLoading, setStatusLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  // ── Top pe state add karo ──
+  const [billUniqueOrderId, setBillUniqueOrderId] = useState(uniqueOrderId || null);
   const [customer, setCustomer] = useState({
     name: deliveryCustomerName || "",
     phone: deliveryCustomerPhone || "",
@@ -159,6 +163,8 @@ export default function BillPage() {
         );
         const bill = res?.data?.result;
         if (!bill) return;
+        setBillUniqueOrderId(bill.uniqueOrderId || null); // ← पहली line में add karo
+
         setCustomer({
           name: bill.customer_name || "",
           phone: bill.customer_phone || "",
@@ -283,17 +289,17 @@ export default function BillPage() {
 
   const chargeBreakdown = chargeableSubTotal > 0
     ? charges.map((c) => {
-        const isItemLevel = c.dg035_field === "Item";
-        const baseAmount =
-          c.dg035_type === "Percentage"
-            ? (chargeableSubTotal * parseFloat(c.dg035_value)) / 100
-            : parseFloat(c.dg035_value);
-        const amount =
-          isItemLevel && c.dg035_type !== "Percentage"
-            ? baseAmount * totalItemQty
-            : baseAmount;
-        return { name: c.dg035_name, amount, field: c.dg035_field };
-      })
+      const isItemLevel = c.dg035_field === "Item";
+      const baseAmount =
+        c.dg035_type === "Percentage"
+          ? (chargeableSubTotal * parseFloat(c.dg035_value)) / 100
+          : parseFloat(c.dg035_value);
+      const amount =
+        isItemLevel && c.dg035_type !== "Percentage"
+          ? baseAmount * totalItemQty
+          : baseAmount;
+      return { name: c.dg035_name, amount, field: c.dg035_field };
+    })
     : [];
   const totalCharges = chargeBreakdown.reduce((s, c) => s + c.amount, 0);
 
@@ -359,11 +365,11 @@ export default function BillPage() {
       toast.error(`Minimum order ₹${minAmt} required for this offer`);
       return;
     }
-    const pct  = parseFloat(offer.dg037_offer_price_pct || 0);
+    const pct = parseFloat(offer.dg037_offer_price_pct || 0);
     const flat = parseFloat(offer.dg037_offer_price || 0);
     let disc = 0;
-    if      (offer.dg037_offer_type === "Percentage") disc = (subTotal * pct) / 100;
-    else if (offer.dg037_offer_type === "Flat")       disc = flat;
+    if (offer.dg037_offer_type === "Percentage") disc = (subTotal * pct) / 100;
+    else if (offer.dg037_offer_type === "Flat") disc = flat;
     else if (offer.dg037_offer_type === "BOGO" || offer.dg037_is_bogo) disc = flat || (subTotal * pct) / 100;
     else disc = flat > 0 ? flat : (subTotal * pct) / 100;
     disc = Math.min(Math.round(disc * 100) / 100, subTotal);
@@ -822,29 +828,29 @@ export default function BillPage() {
         </button>
         <div className="flex justify-end gap-3" style={{ width: "50%" }}>
           {(savedBillId || orderType === "dine_in") &&
-           currentStatus !== "completed" &&
-           (orderType !== "delivery" || currentStatus === "out_for_delivery") && (
-            <button
-              onClick={handleCloseTable}
-              disabled={loading}
-              className="update_btn disabled:opacity-50"
-              style={{
-                background: "rgba(239,68,68,0.2)",
-                border: "1px solid rgba(248,113,113,0.35)",
-                color: "#F94E34",
-              }}
-            >
-              {loading
-                ? "Processing..."
-                : isLending
-                  ? "📋 Save Due & Close"
-                  : isAdvance && advanceRemaining > 0
-                    ? `Save Advance & Close (Due: ₹${isReprint ? reprintRemainingDue.toFixed(2) : advanceRemaining.toFixed(2)})`
-                    : orderType === "dine_in"
-                      ? "🔒 Close Table"
-                      : "✅ Delivery Done"}
-            </button>
-          )}
+            currentStatus !== "completed" &&
+            (orderType !== "delivery" || currentStatus === "out_for_delivery") && (
+              <button
+                onClick={handleCloseTable}
+                disabled={loading}
+                className="update_btn disabled:opacity-50"
+                style={{
+                  background: "rgba(239,68,68,0.2)",
+                  border: "1px solid rgba(248,113,113,0.35)",
+                  color: "#F94E34",
+                }}
+              >
+                {loading
+                  ? "Processing..."
+                  : isLending
+                    ? "📋 Save Due & Close"
+                    : isAdvance && advanceRemaining > 0
+                      ? `Save Advance & Close (Due: ₹${isReprint ? reprintRemainingDue.toFixed(2) : advanceRemaining.toFixed(2)})`
+                      : orderType === "dine_in"
+                        ? "🔒 Close Table"
+                        : "✅ Delivery Done"}
+              </button>
+            )}
 
           <button
             onClick={() => setShowPreview(true)}
@@ -867,11 +873,11 @@ export default function BillPage() {
           restaurant_name: branch.branch_name || "Restaurant",
           restaurant_address: branch.address || "",
           gstin: branch.gst_no || "",
-          uniqueOrderId: uniqueOrderId || orderId,
+          uniqueOrderId: billUniqueOrderId || uniqueOrderId || orderId,  // ← यह भी fix karo
           captain_name: branch.captain_name || "",
           customer_name: customer.name,
           customer_phone: customer.phone,
-          billNo: savedBillNo,
+          billNo: billUniqueOrderId || uniqueOrderId || savedBillNo,
           table_no: tableId ? tableNameMap[tableId] || tableId : null,
           date_time: new Date().toLocaleString("en-IN"),
           items: orderItems.map((i) => ({

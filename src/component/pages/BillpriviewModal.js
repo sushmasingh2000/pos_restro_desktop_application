@@ -90,7 +90,7 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
 
           <div style={{ textAlign: "center", fontSize: 11, marginBottom: 2 }}>
             <div>GSTIN &nbsp;&nbsp; {gstin}</div>
-            <div>INVOICE NO. &nbsp;&nbsp; {billNo || uniqueOrderId}</div>
+            <div>INVOICE NO. &nbsp;&nbsp; {uniqueOrderId }</div>
             <div>TABLE NO. &nbsp;&nbsp; {table_no || "Takeaway"}</div>
           </div>
 

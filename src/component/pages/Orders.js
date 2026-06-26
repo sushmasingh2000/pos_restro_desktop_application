@@ -152,8 +152,8 @@ const Orders = () => {
   });
 
   const filteredOrders = formattedOrders.filter(
-  (order) => order.status !== "customer_placed"
-);
+    (order) => order.status !== "customer_placed"
+  );
 
   const filtered = filteredOrders.filter((o) =>
     o.orderId?.toLowerCase().includes(search.toLowerCase())
@@ -185,6 +185,7 @@ const Orders = () => {
         tableNameMap: {},
         existingBillId: order.billId,
         orderStatus: order?.status || "",
+        uniqueOrderId: order.orderId,
       },
     });
   };
@@ -321,10 +322,10 @@ const Orders = () => {
                       <td>
                         <span
                           className={`px-3 py-1 rounded-full text-xs ${order.status === "completed"
-                              ? "green_bg"
-                              : order.status === "cancelled"
-                                ? "red_bg"
-                                : "yellow_bg"
+                            ? "green_bg"
+                            : order.status === "cancelled"
+                              ? "red_bg"
+                              : "yellow_bg"
                             }`}
                         >
                           {order.status}

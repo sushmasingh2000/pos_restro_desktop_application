@@ -361,6 +361,7 @@ export default function OnlineDeliveryOrder() {
                                         tableNameMap: {},
                                         existingBillId: null,
                                         orderStatus: "out_for_delivery",
+                                        uniqueOrderId: order.orderId , 
                                       },
                                     });
                                   } else {

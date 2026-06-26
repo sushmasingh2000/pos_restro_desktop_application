@@ -176,7 +176,7 @@ const DoorDelivery = () => {
     o.orderId?.toLowerCase().includes(search.toLowerCase())
   );
 
-const handleView = (order) => {
+  const handleView = (order) => {
     navigate("/bill", {
       state: {
         orderItems: order.items.map(i => ({
@@ -197,6 +197,7 @@ const handleView = (order) => {
         deliveryCustomerPhone: order?.customerPhone || "",
         deliveryCustomerAddress: order?.customerAddress || "",
         orderId: order.rawId,
+        uniqueOrderId: order.orderId,
         tableId: order.tableNo,
         orderType: type,
         tableNameMap: {},
@@ -330,11 +331,11 @@ const handleView = (order) => {
                       <td>
                         {order.repeatCount === 0 ? (
                           <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
-                             New
+                            New
                           </span>
                         ) : (
                           <span style={{ background: "#fef3c7", color: "#b45309", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
-                             {order.repeatCount}
+                            {order.repeatCount}
                           </span>
                         )}
                       </td>

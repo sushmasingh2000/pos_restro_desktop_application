@@ -23,9 +23,9 @@ export default function PendingOrder() {
 
   const getApiParams = (tab) => {
     const base = { page, limit, status: ["pending"] };
-    if (tab === "ALL SECTIONS")  return base;
-    if (tab === "QR ORDER")      return { ...base, qrOnly: true };
-    if (tab === "DINE IN")       return { ...base, orderType: "dine_in" };
+    if (tab === "ALL SECTIONS") return base;
+    if (tab === "QR ORDER") return { ...base, qrOnly: true };
+    if (tab === "DINE IN") return { ...base, orderType: "dine_in" };
     if (tab === "DOOR DELIVERY") return { ...base, orderType: "delivery" };
     // if (tab === "PARK ITEMS")    return { ...base, orderType: "park-items" };
     return base;
@@ -41,17 +41,17 @@ export default function PendingOrder() {
   const pagination = data?.data?.result?.pagination || {};
 
   const countQueries = useQueries([
-    { queryKey: ["pending-count", "all"],      queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"] }), refetchInterval: 30000 },
-    { queryKey: ["pending-count", "dine_in"],  queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "dine_in" }), refetchInterval: 30000 },
-    { queryKey: ["pending-count", "qr"],       queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], qrOnly: true }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "all"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"] }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "dine_in"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "dine_in" }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "qr"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], qrOnly: true }), refetchInterval: 30000 },
     { queryKey: ["pending-count", "delivery"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "delivery" }), refetchInterval: 30000 },
     // { queryKey: ["pending-count", "park"],     queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "park-items" }), refetchInterval: 30000 },
   ]);
 
   const tabCounts = {
-    "ALL SECTIONS":  countQueries[0]?.data?.data?.result?.pagination?.total || 0,
-    "DINE IN":       countQueries[1]?.data?.data?.result?.pagination?.total || 0,
-    "QR ORDER":      countQueries[2]?.data?.data?.result?.pagination?.total || 0,
+    "ALL SECTIONS": countQueries[0]?.data?.data?.result?.pagination?.total || 0,
+    "DINE IN": countQueries[1]?.data?.data?.result?.pagination?.total || 0,
+    "QR ORDER": countQueries[2]?.data?.data?.result?.pagination?.total || 0,
     "DOOR DELIVERY": countQueries[3]?.data?.data?.result?.pagination?.total || 0,
     // "PARK ITEMS":    countQueries[4]?.data?.data?.result?.pagination?.total || 0,
   };
@@ -109,6 +109,7 @@ export default function PendingOrder() {
     navigate("/bill", {
       state: {
         orderItems: order.items,
+        uniqueOrderId: order.orderId,
         orderId: order.rawId,
         tableId: order.tableNo,
         orderType: order.type,
@@ -147,9 +148,9 @@ export default function PendingOrder() {
                       <span style={{
                         background: tab === "ALL SECTIONS" ? "#6366f1"
                           : tab === "DINE IN" ? "#f59e0b"
-                          : tab === "QR ORDER" ? "#8b5cf6"
-                          : tab === "DOOR DELIVERY" ? "#ef4444"
-                          : "#10b981",
+                            : tab === "QR ORDER" ? "#8b5cf6"
+                              : tab === "DOOR DELIVERY" ? "#ef4444"
+                                : "#10b981",
                         color: "#fff", borderRadius: "50%",
                         fontSize: 10, padding: "1px 5px", marginLeft: 6,
                       }}>

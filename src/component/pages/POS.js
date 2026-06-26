@@ -410,11 +410,15 @@ const POS = () => {
   const handleOpenBill = () => {
     if (!orderItems.length) { toast.error("Please add items first", { id: 1 }); return; }
     if (!savedOrderId) { toast.error("Please save KOT first", { id: 1 }); return; }
+    const uniqueId = currentOrder?.uniqueId
+      || allOrders.find(o => o.orderId === savedOrderId)?.uniqueId
+      || null;
+
     navigate("/bill", {
       state: {
         orderItems,
         orderId: savedOrderId,
-        uniqueOrderId: currentOrder?.uniqueId || null,
+        uniqueOrderId: uniqueId,  // ← yahan use karo
         tableId: table,
         orderType: getOrderTypeEnum(),
         orderStatus: currentOrderStatus,

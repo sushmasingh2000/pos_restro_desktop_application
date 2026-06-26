@@ -83,6 +83,7 @@ const TakeAway = () => {
             : [],
         })),
         orderId: order.rawId,
+         uniqueOrderId: order.unique_order_id , 
         tableId: order.tableNo,
         orderType: order.type,
         tableNameMap: {},
