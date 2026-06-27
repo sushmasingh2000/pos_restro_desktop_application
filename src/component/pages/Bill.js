@@ -27,8 +27,6 @@ export default function BillPage() {
     deliveryCustomerAddress = "",
   } = location.state || {};
 
-  console.log("location.state:", location.state);
-  console.log("uniqueOrderId:", uniqueOrderId);
   // ── Customer ──────────────────────────────────────
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerList, setCustomerList] = useState([]);
