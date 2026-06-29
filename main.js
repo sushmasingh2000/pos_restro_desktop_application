@@ -218,15 +218,17 @@ async function printOnPrinter(printer, buildContent) {
     return new Promise((resolve, reject) => {
       const printerName = printer.printer_value;
       const lines = [];
+      const BOLD = "\x1F"; // bold marker prefix
+      let _bold = false;
 
       const textBuilder = {
         align: () => textBuilder,
-        style: () => textBuilder,
+        style: (s) => { _bold = (s === "B"); return textBuilder; },
         size: () => textBuilder,
         raw: () => textBuilder,
         drawLine: () => { lines.push("-".repeat(48)); return textBuilder; },
-        text: (t) => { lines.push(t || ""); return textBuilder; },
-        cut: () => { lines.push("\n\n\n"); return textBuilder; },
+        text: (t) => { lines.push((_bold ? BOLD : "") + (t || "")); return textBuilder; },
+        cut: () => { lines.push(""); lines.push(""); lines.push(""); return textBuilder; },
         close: (cb) => { if (cb) cb(); },
       };
 
@@ -237,26 +239,36 @@ async function printOnPrinter(printer, buildContent) {
         return reject(e);
       }
 
-      const textContent = lines.join("\r\n");
+      const textContent = lines.join("\n");
       const txtFile = path.join(os.tmpdir(), `print_${Date.now()}.txt`);
       fs.writeFileSync(txtFile, textContent, 'utf8');
       log("Text file written:", txtFile);
 
       const safeFile = txtFile.replace(/\\/g, '\\\\');
       const psScript = `
-      Add-Type -AssemblyName System.Drawing
-      $content = [System.IO.File]::ReadAllText('${safeFile}')
-      $pd = New-Object System.Drawing.Printing.PrintDocument
-      $pd.PrinterSettings.PrinterName = '${printerName}'
-      $pd.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(0,0,0,0)
-      $font = New-Object System.Drawing.Font('Courier New', 8)
-      $pd.Add_PrintPage({
-        param($sender, $e)
-        $e.Graphics.DrawString($content, $font, [System.Drawing.Brushes]::Black, 0, 0)
-      })
-      $pd.Print()
-      Write-Host "Done"
-      `.trim();
+Add-Type -AssemblyName System.Drawing
+$lines = [System.IO.File]::ReadAllLines('${safeFile}', [System.Text.Encoding]::UTF8)
+$pd = New-Object System.Drawing.Printing.PrintDocument
+$pd.PrinterSettings.PrinterName = '${printerName}'
+$pd.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(0,0,0,0)
+$fontN = New-Object System.Drawing.Font('Courier New', 8)
+$fontB = New-Object System.Drawing.Font('Courier New', 8, [System.Drawing.FontStyle]::Bold)
+$pd.Add_PrintPage({
+  param($sender, $e)
+  $y = [float]0
+  $lh = $fontN.GetHeight($e.Graphics)
+  foreach ($line in $lines) {
+    if ($line.Length -gt 0 -and [int][char]$line[0] -eq 31) {
+      $e.Graphics.DrawString($line.Substring(1), $fontB, [System.Drawing.Brushes]::Black, [float]0, $y)
+    } else {
+      $e.Graphics.DrawString($line, $fontN, [System.Drawing.Brushes]::Black, [float]0, $y)
+    }
+    $y += $lh
+  }
+})
+$pd.Print()
+Write-Host "Done"
+`.trim();
 
       const psFile = path.join(os.tmpdir(), `print_${Date.now()}.ps1`);
       fs.writeFileSync(psFile, psScript, 'utf8');
@@ -288,14 +300,16 @@ function buildBillContent(p, billData) {
   const PAD = "  ";
 
   p.raw(Buffer.from([0x1B, 0x6C, 0x04]));
-  p.text(name.trim().padStart(Math.floor((48 + name.trim().length) / 2)));
+  p.style("B").text(name.trim().padStart(Math.floor((48 + name.trim().length) / 2))).style("NORMAL");
   p.text(address.trim().padStart(Math.floor((48 + address.trim().length) / 2)));
   p.drawLine();
 
-  p.align("CT");
-  p.text(`GSTIN - ${gstin}`);
-  p.text(`INVOICE NO. - ${billData.uniqueOrderId}`);
-  p.text(`TABLE NO. - ${billData.table_no || "Takeaway"}`);
+  const gstLine = `GSTIN - ${gstin}`;
+  const invLine = `INVOICE NO. - ${billData.uniqueOrderId}`;
+  const tblLine = `TABLE NO. - ${billData.table_no || "Takeaway"}`;
+  p.text(gstLine.padStart(Math.floor((48 + gstLine.length) / 2)));
+  p.text(invLine.padStart(Math.floor((48 + invLine.length) / 2)));
+  p.text(tblLine.padStart(Math.floor((48 + tblLine.length) / 2)));
   p.drawLine();
 
   p.align("LT");
@@ -386,10 +400,10 @@ function buildBillContent(p, billData) {
     p.align("CT").style("B").text(`DUE: Rs.${billData.remaining_amount}`).style("NORMAL");
   }
 
-  p.drawLine();
+  p.style("B").text("=".repeat(48)).style("NORMAL");
   const gt = `Grand Total:(INR) ${Number(billData.total_amount).toFixed(2)}`;
-  p.text(gt.padStart(Math.floor((48 + gt.length) / 2)));
-  p.drawLine();
+  p.style("B").text(gt.padStart(Math.floor((48 + gt.length) / 2))).style("NORMAL");
+  p.style("B").text("=".repeat(48)).style("NORMAL");
   const ty = "Thank You..";
   const va = "Visit Again!!!";
   p.text(ty.padStart(Math.floor((48 + ty.length) / 2)));
@@ -403,13 +417,9 @@ function buildBillContent(p, billData) {
 function buildKotContent(p, kotData) {
   p.raw(Buffer.from([0x1D, 0x4C, 0x08, 0x00]));
 
-  p.align("CT").style("B").size(1, 1);
-  p.text("KOT");
-  p.raw(Buffer.from([0x1D, 0x21, 0x00]));
-  p.size(0, 0).style("NORMAL");
+  p.text("KOT".padStart(Math.floor((48 + 3) / 2)));
   p.drawLine();
 
-  p.align("LT");
   p.text(`ORDER NO.-    ${kotData.orderId || kotData.orderNo || "—"}`);
   p.text(`TABLE NO.-    ${kotData.table_no || kotData.tableNo || "Takeaway"}`);
   p.text(`KOT NO.-      ${kotData.kotNo || "1"}`);

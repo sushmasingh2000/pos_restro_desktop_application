@@ -175,7 +175,7 @@ const CustomerLedger = () => {
         <div className="flex gap-3">
           <button
             onClick={() => setRegisterModal(true)}>
-            <span>+</span> Customer Registe
+            <span>+</span> Customer Registeration
           </button>
 
         </div>
@@ -222,34 +222,34 @@ const CustomerLedger = () => {
                     <h4>{customer.name}</h4>
                     <p>📞 {customer.phone}</p>
                     {customer.address && (
-                    <p> {customer.address}</p>
-                     )}
-                      <button
+                      <p> {customer.address}</p>
+                    )}
+                    <button
                       onClick={() => setTopupModal(true)}
                       className="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
                       style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(52,211,153,0.3)", color: "#6ee7b7" }}>
                       + Add to Wallet
-                     </button>
+                    </button>
                   </div>
                 </div>
-              </Col>  
+              </Col>
               <Col lg={8} md={8} className="mt-3 mt-md-0">
                 <div className="landing_body grid grid-cols-3 gap-2">
-                    <div className="landin_box landin_box_2">
-                        <p>🧾 Wallet Balance</p>
-                        <h3>{`₹${customer.walletBalance.toFixed(2)}`}</h3>
-                        <h6>Available Advance</h6>
-                    </div>
-                    <div className="landin_box landin_box_3">
-                        <p>✅ Total Due</p>
-                        <h3>{`₹${ledger.totalDue.toFixed(2)}`}</h3>
-                        <h6>{`${ledger.pendingDues?.length || 0} pending order(s)`}</h6>
-                    </div>
-                    <div className="landin_box landin_box_1">
-                        <p>⚠️ Transactions</p>
-                        <h3>{ledger.walletHistory?.length || 0}</h3>
-                        <h6>Recent entries</h6>
-                    </div>
+                  <div className="landin_box landin_box_2">
+                    <p>🧾 Wallet Balance</p>
+                    <h3>{`₹${customer.walletBalance.toFixed(2)}`}</h3>
+                    <h6>Available Advance</h6>
+                  </div>
+                  <div className="landin_box landin_box_3">
+                    <p>✅ Total Due</p>
+                    <h3>{`₹${ledger.totalDue.toFixed(2)}`}</h3>
+                    <h6>{`${ledger.pendingDues?.length || 0} pending order(s)`}</h6>
+                  </div>
+                  <div className="landin_box landin_box_1">
+                    <p>⚠️ Transactions</p>
+                    <h3>{ledger.walletHistory?.length || 0}</h3>
+                    <h6>Recent entries</h6>
+                  </div>
                 </div>
               </Col>
             </Row>
@@ -257,157 +257,157 @@ const CustomerLedger = () => {
           <div className="history_box mt-3 mx-3">
             <div className="history_header flex justify-between items-center">
               <h6>Pending Dues</h6>
-              {ledger.totalDue > 0 && ( 
-              <p className="red_bg">₹{ledger.totalDue.toFixed(2)} due</p>
+              {ledger.totalDue > 0 && (
+                <p className="red_bg">₹{ledger.totalDue.toFixed(2)} due</p>
               )}
             </div>
-              {ledger.pendingDues?.length === 0 ? (
-                <div className="px-5 py-10 text-center text-dark text-sm">No pending due</div>
-              ) : (
+            {ledger.pendingDues?.length === 0 ? (
+              <div className="px-5 py-10 text-center text-dark text-sm">No pending due</div>
+            ) : (
               <div className="divide-y divide-white/5">
                 {ledger.pendingDues.map((due) => (
-                    <div key={due.dg042_lending_id}s className="main_box_bill">
-                        <div className="flex justify-between item-center">
-                          <div className="bill_statues">
-                            {due.dg042_bill_no}  <span className="yellow_bg">Pending</span>
-                          </div>
-                          <div className="bill-date">
-                            🕐  {new Date(due.dg042_order_date || due.dg042_created_at).toLocaleDateString("en-IN", {
-                              day: "2-digit", month: "short", year: "numeric",
-                            })}
-                          </div>
-                        </div>
-                        {/* Bill amounts row */}
-                        <Row>
-                          <Col lg={3} md={3}>
-                            <div className="bill_card">
-                              <p>Bill Amount</p>
-                              <h5>₹{parseFloat(due.dg042_bill_amount).toFixed(2)}</h5>
-                            </div>
-                          </Col>
-                           <Col lg={3} md={3}>
-                            <div className="bill_card">
-                              <p>Paid</p>
-                              <h5 className="paid">₹{parseFloat(due.dg042_paid_amount).toFixed(2)}</h5>
-                            </div>
-                          </Col>
-                           <Col lg={3} md={3}>
-                            <div className="bill_card">
-                              <p>Remaining</p>
-                              <h5 className={`${due.dg042_status === "settled" ? "text-white/40" : "unpaid"}`}>₹{parseFloat(due.dg042_remaining_amount).toFixed(2)}</h5>
-                            </div>
-                          </Col>
-                           <Col lg={3} md={3}>
-                            <div className="bill_card flex justify-content-md-end">
-                             
-                                  <button
-                                    className="px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex-shrink-0"
-                                    style={{
-                                      background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2))",
-                                      border: "1px solid rgba(52,211,153,0.35)",
-                                      color: "#6ee7b7",
-                                    }}
-                                  >
-                                    💰 Due
-                                  </button>
-                            </div>
-                          </Col>
-                        </Row>
-                       
+                  <div key={due.dg042_lending_id} s className="main_box_bill">
+                    <div className="flex justify-between item-center">
+                      <div className="bill_statues">
+                        {due.dg042_bill_no}  <span className="yellow_bg">Pending</span>
+                      </div>
+                      <div className="bill-date">
+                        🕐  {new Date(due.dg042_order_date || due.dg042_created_at).toLocaleDateString("en-IN", {
+                          day: "2-digit", month: "short", year: "numeric",
+                        })}
+                      </div>
                     </div>
-                    
-                 ))}
+                    {/* Bill amounts row */}
+                    <Row>
+                      <Col lg={3} md={3}>
+                        <div className="bill_card">
+                          <p>Bill Amount</p>
+                          <h5>₹{parseFloat(due.dg042_bill_amount).toFixed(2)}</h5>
+                        </div>
+                      </Col>
+                      <Col lg={3} md={3}>
+                        <div className="bill_card">
+                          <p>Paid</p>
+                          <h5 className="paid">₹{parseFloat(due.dg042_paid_amount).toFixed(2)}</h5>
+                        </div>
+                      </Col>
+                      <Col lg={3} md={3}>
+                        <div className="bill_card">
+                          <p>Remaining</p>
+                          <h5 className={`${due.dg042_status === "settled" ? "text-white/40" : "unpaid"}`}>₹{parseFloat(due.dg042_remaining_amount).toFixed(2)}</h5>
+                        </div>
+                      </Col>
+                      <Col lg={3} md={3}>
+                        <div className="bill_card flex justify-content-md-end">
+
+                          <button
+                            className="px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex-shrink-0"
+                            style={{
+                              background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2))",
+                              border: "1px solid rgba(52,211,153,0.35)",
+                              color: "#6ee7b7",
+                            }}
+                          >
+                            💰 Due
+                          </button>
+                        </div>
+                      </Col>
+                    </Row>
+
+                  </div>
+
+                ))}
               </div>
-              )}
+            )}
           </div>
           <div className="wallet_histotry_box mt-3 mx-3 mb-3">
             <div className="history_header flex justify-between items-center">
               <h6>Wallet / Transaction History</h6>
             </div>
-             {!ledger.walletHistory?.length ? (
-                <div className="px-5 py-10 text-center text-dark text-sm">No transactions found</div>
-              ) : (
+            {!ledger.walletHistory?.length ? (
+              <div className="px-5 py-10 text-center text-dark text-sm">No transactions found</div>
+            ) : (
               <div>
-              {ledger.walletHistory.map((tx, i) => (
-                <div className="flex justify-between items-center main_wallet_box" key={i}>
-                  <div className="flex gap-3 item-center">
-                    <div className="wallet_histoy_icon"
-                    style={
-                              tx.dg043_type === "credit"
-                                ? {
-                                  background: "rgba(16,185,129,0.15)",
-                                  color: "#6ee7b7",
-                                }
-                                : {
-                                  background: "rgba(239,68,68,0.15)",
-                                  color: "#fca5a5",
-                                }
+                {ledger.walletHistory.map((tx, i) => (
+                  <div className="flex justify-between items-center main_wallet_box" key={i}>
+                    <div className="flex gap-3 item-center">
+                      <div className="wallet_histoy_icon"
+                        style={
+                          tx.dg043_type === "credit"
+                            ? {
+                              background: "rgba(16,185,129,0.15)",
+                              color: "#6ee7b7",
                             }
+                            : {
+                              background: "rgba(239,68,68,0.15)",
+                              color: "#fca5a5",
+                            }
+                        }
                       >
-                      {tx.dg043_type === "credit" ? "↑" : "↓"}
-                    </div>
-                    <div className="wallet_names">
-                      <h5>{tx.dg043_remark || "Wallet Transaction"}</h5>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {tx.dg043_type === "credit" ? "↑" : "↓"}
+                      </div>
+                      <div className="wallet_names">
+                        <h5>{tx.dg043_remark || "Wallet Transaction"}</h5>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
 
-                              {/* DATE */}
-                              <span className="text-xs text-dark">
-                                {new Date(tx.dg043_created_at).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                              </span>
+                          {/* DATE */}
+                          <span className="text-xs text-dark">
+                            {new Date(tx.dg043_created_at).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
 
-                              {/* TIME */}
+                          {/* TIME */}
+                          <span className="text-xs text-white/20">•</span>
+
+                          <span className="text-xs text-dark">
+                            {new Date(tx.dg043_created_at).toLocaleTimeString("en-IN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+
+                          {/* PAYMENT MODE */}
+                          {tx.dg043_payment_mode && (
+                            <>
                               <span className="text-xs text-white/20">•</span>
 
-                              <span className="text-xs text-dark">
-                                {new Date(tx.dg043_created_at).toLocaleTimeString("en-IN", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
+                              <span
+                                className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full"
+                                style={{
+                                  background: "rgba(255,255,255,0.06)",
+                                  border: "1px solid rgba(255,255,255,0.08)",
+                                  color: "rgba(255,255,255,0.6)",
+                                }}
+                              >
+                                {tx.dg043_payment_mode}
                               </span>
-
-                              {/* PAYMENT MODE */}
-                              {tx.dg043_payment_mode && (
-                                <>
-                                  <span className="text-xs text-white/20">•</span>
-
-                                  <span
-                                    className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full"
-                                    style={{
-                                      background: "rgba(255,255,255,0.06)",
-                                      border: "1px solid rgba(255,255,255,0.08)",
-                                      color: "rgba(255,255,255,0.6)",
-                                    }}
-                                  >
-                                    {tx.dg043_payment_mode}
-                                  </span>
-                                </>
-                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <div className="wallet_amouts">
+                      <h4 className="m-0"
+                        style={{
+                          color:
+                            tx.dg043_type === "credit"
+                              ? "#6ee7b7"
+                              : "#fca5a5",
+                        }}>
+                        {tx.dg043_type === "credit" ? "+" : "-"}₹
+                        {parseFloat(tx.dg043_amount).toFixed(2)}
+                      </h4>
+                      <p className="m-0">{tx.dg043_type}</p>
+                    </div>
                   </div>
-                  <div className="wallet_amouts">
-                    <h4 className="m-0"
-                    style={{
-                              color:
-                                tx.dg043_type === "credit"
-                                  ? "#6ee7b7"
-                                  : "#fca5a5",
-                            }}>
-                      {tx.dg043_type === "credit" ? "+" : "-"}₹
-                      {parseFloat(tx.dg043_amount).toFixed(2)}
-                    </h4>
-                    <p className="m-0">{tx.dg043_type}</p>
-                  </div>
-                </div>
                 ))}
               </div>
-              )}
+            )}
           </div>
-         
+
         </>
       )}
 
@@ -436,29 +436,31 @@ const CustomerLedger = () => {
             {/* HEADER */}
             <div className="Order_Details_modal_header">
               <div className="flex items-center gap-3">
-                  <div className="modal_header_icon">🗂️</div>
-                  <div>
+                <div className="modal_header_icon">🗂️</div>
+                <div>
                   <h2>New Customer Register</h2>
-                  <p>Customer ka naam, phone aur address bharein</p>
+                  <p>Fill the Customer name , phone & address </p>
                 </div>
               </div>
               <button onClick={closeRegisterModal}>×</button>
             </div>
-       
-            
-            <div className="main_input px-3">
-              <label>Full Name <span className="text-red-400">*</span></label>
-              <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="e.g. Ramesh Kumar"  autoFocus />
+
+
+            <div className="grid grid-cols-3">
+              <div className="main_input px-3">
+                <label>Full Name <span className="text-red-400">*</span></label>
+                <input type="text" value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="e.g. Ramesh Kumar" autoFocus />
+              </div>
+              <div className="main_input px-3">
+                <label>Phone Number <span className="text-red-400">*</span></label>
+                <input type="tel" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} placeholder="e.g. 9876543210" />
+              </div>
+              <div className="main_input px-3">
+                <label>Address <span className="text-white/20 normal-case">(optional)</span></label>
+                <textarea value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="e.g. 12, Main Bazaar..." rows={2} style={{ resize: "none" }} />
+              </div>
             </div>
-            <div className="main_input px-3">
-              <label>Phone Number <span className="text-red-400">*</span></label>
-              <input type="tel" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} placeholder="e.g. 9876543210"  />
-            </div>
-            <div className="main_input px-3">
-              <label>Address <span className="text-white/20 normal-case">(optional)</span></label>
-              <textarea value={regAddress} onChange={(e) => setRegAddress(e.target.value)} placeholder="e.g. 12, Main Bazaar..." rows={2}  style={{ resize: "none" }} />
-            </div>
-            <div className="rounded-xl mx-3 p-3 mb-5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="rounded-xl  mx-3 p-3 mb-5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center justify-between cursor-pointer" onClick={() => setRegWalletToggle((p) => !p)}>
                 <div>
                   <div className="text-sm font-medium"> add advance Wallet ?</div>
@@ -469,22 +471,30 @@ const CustomerLedger = () => {
                 </div>
               </div>
               {regWalletToggle && (
-                <div className="mt-4 space-y-3">
+               <>
+                <div className="mt-4 space-y-3 grid grid-cols-2 gap-3">
                   <div className="main_input">
                     <label >Amount (₹) <span className="text-red-400">*</span></label>
-                    <input type="number" value={regWalletAmount} onChange={(e) => setRegWalletAmount(e.target.value)} placeholder="e.g. 500"  />
+                    <input type="number" value={regWalletAmount} onChange={(e) => setRegWalletAmount(e.target.value)} placeholder="e.g. 500" />
                   </div>
                   {/* Payment Method */}
+
+                  <div className="main_input">
+                    <label>Remark <span className="text-white/20 normal-case">(optional)</span></label>
+                    <input type="text" value={regWalletRemark} onChange={(e) => setRegWalletRemark(e.target.value)} placeholder="e.g. Registration advance..." />
+                  </div>
+                
+                </div>
                   <div className="main_input">
                     <label>
                       Payment Method <span className="text-red-400">*</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex gap-2 w-full">
                       {[
                         { id: "cash", label: "Cash", icon: "" },
-                        { id: "upi", label: "UPI", icon: "📲" },
+                        { id: "upi", label: "UPI", icon: "" },
                         { id: "card", label: "Card", icon: "" },
-                        { id: "paytm", label: "Paytm", icon: "🟦" },
+                        { id: "paytm", label: "Paytm", icon: "" },
                       ].map((m) => (
                         <button
                           key={m.id}
@@ -494,11 +504,11 @@ const CustomerLedger = () => {
                           style={{
                             border: topupPaymentMode === m.id
                               ? "1.5px solid #7c3aed"
-                              : "1px solid rgba(255,255,255,0.1)",
+                              : "1px solid #1d4ed8",
                             background: topupPaymentMode === m.id
                               ? "rgba(124,58,237,0.18)"
                               : "rgba(255,255,255,0.04)",
-                            color: topupPaymentMode === m.id ? "#c4b5fd" : "rgba(255,255,255,0.5)",
+                            color: topupPaymentMode === m.id ? "#212529" : "#c4b5fd",
                           }}
                         >
                           {m.icon} {m.label}
@@ -506,11 +516,7 @@ const CustomerLedger = () => {
                       ))}
                     </div>
                   </div>
-                  <div className="main_input">
-                    <label>Remark <span className="text-white/20 normal-case">(optional)</span></label>
-                    <input type="text" value={regWalletRemark} onChange={(e) => setRegWalletRemark(e.target.value)} placeholder="e.g. Registration advance..."  />
-                  </div>
-                </div>
+               </>
               )}
             </div>
             <div className="flex justify-between gap-3 modal_footer px-3 py-3">
@@ -526,23 +532,23 @@ const CustomerLedger = () => {
       {topupModal && customer && (
         <div style={modalOverlay}>
           <div className="Order_Details_modal">
-             {/* HEADER */}
-              <div className="Order_Details_modal_header">
-                <div className="flex items-center gap-3">
-                    <div className="modal_header_icon">🗂️</div>
-                    <div>
-                    <h2>Add to Wallet</h2>
-                    <p>{customer.name} — Current balance: ₹{customer.walletBalance.toFixed(2)}</p>
-                  </div>
+            {/* HEADER */}
+            <div className="Order_Details_modal_header">
+              <div className="flex items-center gap-3">
+                <div className="modal_header_icon">🗂️</div>
+                <div>
+                  <h2>Add to Wallet</h2>
+                  <p>{customer.name} — Current balance: ₹{customer.walletBalance.toFixed(2)}</p>
                 </div>
-                <button onClick={() => {
-                  setTopupModal(false);
-                  setTopupAmount("");
-                  setTopupRemark("");
-                  setTopupPaymentMode("cash"); // ← reset
-                }}>×</button>
               </div>
-            
+              <button onClick={() => {
+                setTopupModal(false);
+                setTopupAmount("");
+                setTopupRemark("");
+                setTopupPaymentMode("cash"); // ← reset
+              }}>×</button>
+            </div>
+
             <div className="space-y-3 mb-5 mx-3">
               <div className="main_input">
                 <label>Amount</label>
@@ -551,7 +557,7 @@ const CustomerLedger = () => {
                   value={topupAmount}
                   onChange={(e) => setTopupAmount(e.target.value)}
                   placeholder="Enter amount"
-                  autoFocus/>
+                  autoFocus />
               </div>
 
               {/* ── Payment Method ── */}
@@ -615,7 +621,7 @@ const CustomerLedger = () => {
                 onClick={handleTopup}
                 disabled={topupMutation.isLoading}
                 className="update_btn disabled:opacity-50"
-               >
+              >
                 {topupMutation.isLoading ? "Saving..." : "✓ Add to Wallet"}
               </button>
             </div>

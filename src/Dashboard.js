@@ -426,9 +426,12 @@ const Dashboard = () => {
       const orderItems = (order.items || []).map((item) => ({
         dg09_name: item.dg07_menu_name_snapshot,
         qty: item.dg07_quantity,
-        price: parseFloat(item.dg07_unit_price || item.dg07_total / item.dg07_quantity || 0),
+        price: parseFloat(item.dg07_unit_price || item.dg07_price || item.dg07_total / item.dg07_quantity || 0),
+        basePrice: parseFloat(item.dg07_base_price || item.dg07_unit_price || item.dg07_price || 0),
+        tax_group_id: item.dg09_tax_group_id || null,
+        dg09_apply_charges: item.dg09_apply_charges ?? null,
         predefinedRemarks: [],
-        qtyRemark: item.dg07_remark || "",
+        qtyRemark: item.dg07_remark || item.dg07_item_remark || "",
       }));
 
       setQuickPrint({
@@ -436,6 +439,7 @@ const Dashboard = () => {
         orderId: order.dg06_order_id,
         uniqueOrderId: order.unique_order_id,
         orderItems,
+        discount: parseFloat(order.dg06_discount || 0),
       });
     } catch (err) {
       console.error(err);
@@ -847,6 +851,7 @@ const Dashboard = () => {
           tableId={quickPrint.tableId}
           tableNameMap={tableNameMap}
           orderItems={quickPrint.orderItems}
+          discount={quickPrint.discount || 0}
         />
       )}
     </div>

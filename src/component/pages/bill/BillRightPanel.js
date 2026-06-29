@@ -41,11 +41,11 @@ export default function BillRightPanel({
       {!isReprint && (
         <div className="main_input">
           <label>
-            s Search Customer
+             Search Customer
             {/*Advance ke liye mandatory indicator */}
             {isAdvance && (
               <span className="text-red-400 ml-1">
-                * (Advance ke liye required)
+                * (Advance is Required)
               </span>
             )}
           </label>
@@ -219,7 +219,7 @@ export default function BillRightPanel({
               : {
                 background: "rgba(245,158,11,0.1)",
                 border: "1px solid rgba(245,158,11,0.2)",
-                color: "rgba(252,211,77,0.8)",
+                // color: "rgba(252,211,77,0.8)",
               }
         }
       >

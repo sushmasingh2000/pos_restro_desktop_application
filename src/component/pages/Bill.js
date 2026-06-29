@@ -433,6 +433,7 @@ export default function BillPage() {
 
       subtotal: subTotal,
       tax_amount: totalTax,
+      charge_amount: totalCharges,
       discount: discountAmount,
       round_off: roundOff,
 
@@ -516,10 +517,26 @@ export default function BillPage() {
         if (billRes?.data?.offline) {
           const offlinePrintData = {
             ...billRes.data.printData,
+            restaurant_name: branch.branch_name || "Restaurant",
+            restaurant_address: branch.address || "",
+            gstin: branch.gst_no || "",
+            captain_name: branch.captain_name || "",
+            uniqueOrderId: billUniqueOrderId || uniqueOrderId || orderId,
             billNo: billRes.data.billNo,
             table_no: tableId ? tableNameMap[tableId] || tableId : null,
             date_time: new Date().toLocaleString("en-IN"),
             tax_breakdown: taxBreakdown,
+            charge_breakdown: chargeBreakdown,
+            items: orderItems.map((i) => {
+              const itemRate = parseFloat(i.basePrice || i.price);
+              return {
+                name: i.dg09_name,
+                qty: i.qty,
+                rate: itemRate.toFixed(2),
+                total: (itemRate * i.qty).toFixed(2),
+                remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),
+              };
+            }),
           };
 
           const token = localStorage.getItem("token");
@@ -563,7 +580,12 @@ export default function BillPage() {
 
       // ── ONLINE — normal bill data ─────────────
       const billData = {
+        restaurant_name: branch.branch_name || "Restaurant",
+        restaurant_address: branch.address || "",
+        gstin: branch.gst_no || "",
+        captain_name: branch.captain_name || "",
         billNo: finalBillNo || finalBillId,
+        uniqueOrderId: billUniqueOrderId || uniqueOrderId || orderId,
         orderId,
         table_no: tableId ? tableNameMap[tableId] || tableId : null,
         date_time: new Date().toLocaleString("en-IN"),
@@ -584,13 +606,16 @@ export default function BillPage() {
         is_lending: isLending,
         is_advance: isAdvance,
         round_off: roundOff,
-        items: orderItems.map((i) => ({
-          name: i.dg09_name,
-          qty: i.qty,
-          rate: Number(i.price).toFixed(2),
-          total: (i.price * i.qty).toFixed(2),
-          remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),
-        })),
+        items: orderItems.map((i) => {
+          const itemRate = parseFloat(i.basePrice || i.price);
+          return {
+            name: i.dg09_name,
+            qty: i.qty,
+            rate: itemRate.toFixed(2),
+            total: (itemRate * i.qty).toFixed(2),
+            remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),
+          };
+        }),
       };
 
       const token = localStorage.getItem("token");

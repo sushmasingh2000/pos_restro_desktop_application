@@ -12,6 +12,7 @@ export default function TableQuickPrintModal({
     tableId,
     tableNameMap = {},
     orderItems = [],
+    discount = 0,
 }) {
     const [loading, setLoading] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
@@ -33,31 +34,52 @@ export default function TableQuickPrintModal({
 
     // ── Fetch charges ─────────────────────────────────
     const { data: chargesData } = useQuery(
-        ["get_charges"],
-        () => apiConnectorGet(endpoint.charge_get_api),
+        ["get_charges_dine_in"],
+        () => apiConnectorGet(`${endpoint.charge_get_api}?orderType=dine_in`),
         { enabled: isOpen, refetchOnWindowFocus: false }
     );
     const charges = chargesData?.data?.result || [];
 
     // ── Calculations ──────────────────────────────────
-    const subTotal = orderItems.reduce((acc, i) => acc + i.price * i.qty, 0);
+    const taxableSubTotal = orderItems.reduce((acc, i) =>
+        i.tax_group_id ? acc + parseFloat(i.basePrice || i.price) * i.qty : acc, 0
+    );
+    const nonTaxableSubTotal = orderItems.reduce((acc, i) =>
+        !i.tax_group_id ? acc + i.price * i.qty : acc, 0
+    );
+    const subTotal = taxableSubTotal + nonTaxableSubTotal;
 
     const taxBreakdown = taxes.map((t) => ({
         name: t.dg032_name,
         pct: parseFloat(t.dg032_percentage),
-        amount: Math.round(((subTotal * parseFloat(t.dg032_percentage)) / 100) * 100) / 100,
+        amount: Math.round(((taxableSubTotal * parseFloat(t.dg032_percentage)) / 100) * 100) / 100,
     }));
     const totalTax = taxBreakdown.reduce((s, t) => s + t.amount, 0);
 
-    const chargeBreakdown = charges.map((c) => ({
-        name: c.dg035_name,
-        amount: c.dg035_type === "Percentage"
-            ? (subTotal * parseFloat(c.dg035_value)) / 100
-            : parseFloat(c.dg035_value),
-    }));
+    const totalItemQty = orderItems.reduce((s, i) => s + i.qty, 0);
+
+    const chargeableSubTotal = orderItems.reduce((acc, i) =>
+        i.dg09_apply_charges === 1 || i.dg09_apply_charges === true
+            ? acc + parseFloat(i.basePrice || i.price) * i.qty
+            : acc, 0
+    );
+
+    const chargeBreakdown = chargeableSubTotal > 0
+        ? charges.map((c) => {
+            const isItemLevel = c.dg035_field === "Item";
+            const baseAmount = c.dg035_type === "Percentage"
+                ? (chargeableSubTotal * parseFloat(c.dg035_value)) / 100
+                : parseFloat(c.dg035_value);
+            const amount = isItemLevel && c.dg035_type !== "Percentage"
+                ? baseAmount * totalItemQty
+                : baseAmount;
+            return { name: c.dg035_name, amount };
+        })
+        : [];
     const totalCharges = chargeBreakdown.reduce((s, c) => s + c.amount, 0);
 
-    const beforeRound = Math.round((subTotal + totalTax + totalCharges) * 100) / 100;
+    const totalDiscount = parseFloat(discount || 0);
+    const beforeRound = Math.round((subTotal + totalTax + totalCharges - totalDiscount) * 100) / 100;
     const grandTotal = Math.round(beforeRound);
     const roundOff = parseFloat((grandTotal - beforeRound).toFixed(2));
 
@@ -71,22 +93,27 @@ export default function TableQuickPrintModal({
                 restaurant_address: branch.address || "",
                 gstin: branch.gst_no || "",
                 captain_name: branch.captain_name || "",
-                orderId: uniqueOrderId || orderId,
+                uniqueOrderId: uniqueOrderId || orderId,
                 table_no: tableId ? tableNameMap[tableId] || tableId : null,
                 date_time: new Date().toLocaleString("en-IN"),
                 tax_breakdown: taxBreakdown,
                 subtotal: subTotal.toFixed(2),
                 total_amount: grandTotal.toFixed(2),
                 round_off: roundOff,
+                charge_breakdown: chargeBreakdown,
+                discount: totalDiscount,
                 is_quick_print: true,
-                items: orderItems.map((i) => ({
-                    name: i.dg09_name,
-                    qty: i.qty,
-                    rate: Number(i.price).toFixed(2),
-                    total: (i.price * i.qty).toFixed(2),
-                    remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""]
-                        .filter(Boolean).join(", "),
-                })),
+                items: orderItems.map((i) => {
+                    const itemRate = parseFloat(i.basePrice || i.price);
+                    return {
+                        name: i.dg09_name,
+                        qty: i.qty,
+                        rate: itemRate.toFixed(2),
+                        total: (itemRate * i.qty).toFixed(2),
+                        remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""]
+                            .filter(Boolean).join(", "),
+                    };
+                }),
             };
 
             const token = localStorage.getItem("token");
@@ -199,8 +226,8 @@ export default function TableQuickPrintModal({
                                             {item.dg09_name}
                                         </span>
                                         <span style={{ width: 30, textAlign: "right" }}>{item.qty}</span>
-                                        <span style={{ width: 50, textAlign: "right" }}>{Number(item.price).toFixed(2)}</span>
-                                        <span style={{ width: 55, textAlign: "right" }}>{(item.price * item.qty).toFixed(2)}</span>
+                                        <span style={{ width: 50, textAlign: "right" }}>{Number(item.basePrice || item.price).toFixed(2)}</span>
+                                        <span style={{ width: 55, textAlign: "right" }}>{(parseFloat(item.basePrice || item.price) * item.qty).toFixed(2)}</span>
                                     </div>
                                     {remark && (
                                         <div style={{ fontSize: 10, color: "#555", paddingLeft: 8, marginBottom: 2 }}>
@@ -328,8 +355,8 @@ export default function TableQuickPrintModal({
                                         <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                                             <td >{item.dg09_name}</td>
                                             <td>{item.qty}</td>
-                                            <td>₹{Number(item.price).toFixed(2)}</td>
-                                            <td>₹{(item.price * item.qty).toFixed(2)}</td>
+                                            <td>₹{Number(item.basePrice || item.price).toFixed(2)}</td>
+                                            <td>₹{(parseFloat(item.basePrice || item.price) * item.qty).toFixed(2)}</td>
                                         </tr>
                                         {remarks && (
                                             <tr key={`r-${i}`}>
@@ -354,6 +381,9 @@ export default function TableQuickPrintModal({
                     {chargeBreakdown.map((c, i) => (
                         <TotalRow key={i} label={c.name} value={`₹${c.amount.toFixed(2)}`} muted />
                     ))}
+                    {totalDiscount > 0 && (
+                        <TotalRow label="Discount" value={`-₹${totalDiscount.toFixed(2)}`} muted />
+                    )}
                     {roundOff !== 0 && (
                         <TotalRow label="Round Off" value={`${roundOff >= 0 ? "+" : ""}${roundOff}`} muted />
                     )}
