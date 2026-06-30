@@ -4246,7 +4246,7 @@ width: 100% !important;
 
 .cart-cols {
     display: grid;
-    grid-template-columns: 1fr 30px 56px 56px 35px 10px;
+    grid-template-columns: 1fr 65px 56px 56px 35px 10px;
     gap: 0;
     padding: 8px 15px;
     border-bottom: 1px solid #DBEAFE;
@@ -4290,7 +4290,7 @@ width: 100% !important;
 
 .cart-row {
     display: grid;
-    grid-template-columns: 1fr 30px 50px 61px 22px 10px;
+    grid-template-columns: 1fr 65px 50px 61px 22px 10px;
     gap: 0;
     padding: 9px 0;
     border-bottom: 1px solid #eff6ff;
