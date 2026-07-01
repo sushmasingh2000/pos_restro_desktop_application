@@ -299,15 +299,17 @@ function buildBillContent(p, billData) {
   const gstin = billData.gstin || "";
   const PAD = "  ";
 
+  const shopName = "Chai Bolo Chai";
+  const shopLine2 = "Aliganj Franchise Outlet";
+  const shopLine3 = "LIC No. - 30260625125105516";
   p.raw(Buffer.from([0x1B, 0x6C, 0x04]));
-  p.style("B").text(name.trim().padStart(Math.floor((48 + name.trim().length) / 2))).style("NORMAL");
-  p.text(address.trim().padStart(Math.floor((48 + address.trim().length) / 2)));
+  p.style("B").text(shopName.padStart(Math.floor((48 + shopName.length) / 2))).style("NORMAL");
+  p.text(shopLine2.padStart(Math.floor((48 + shopLine2.length) / 2)));
+  p.text(shopLine3.padStart(Math.floor((48 + shopLine3.length) / 2)));
   p.drawLine();
 
-  const gstLine = `GSTIN - ${gstin}`;
   const invLine = `INVOICE NO. - ${billData.uniqueOrderId}`;
   const tblLine = `TABLE NO. - ${billData.table_no || "Takeaway"}`;
-  p.text(gstLine.padStart(Math.floor((48 + gstLine.length) / 2)));
   p.text(invLine.padStart(Math.floor((48 + invLine.length) / 2)));
   p.text(tblLine.padStart(Math.floor((48 + tblLine.length) / 2)));
   p.drawLine();

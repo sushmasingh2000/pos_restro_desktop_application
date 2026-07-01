@@ -182,16 +182,16 @@ export default function TableQuickPrintModal({
                         {/* Header */}
                         <div style={{ textAlign: "center", marginBottom: 6 }}>
                             <div style={{ fontWeight: "bold", fontSize: 15, letterSpacing: 1 }}>
-                                {branch.branch_name || "Restaurant"}
+                                Chai Bolo Chai
                             </div>
-                            <div style={{ fontSize: 11 }}>{branch.address || ""}</div>
+                            <div style={{ fontSize: 11 }}>Aliganj Franchise Outlet</div>
+                            <div style={{ fontSize: 11 }}>LIC No. - 30260625125105516</div>
                         </div>
 
                         <QDivider />
 
-                        {/* GSTIN + Invoice + Table */}
+                        {/* Invoice + Table */}
                         <div style={{ textAlign: "center", fontSize: 11, marginBottom: 2 }}>
-                            {branch.gst_no && <div>GSTIN &nbsp;&nbsp; {branch.gst_no}</div>}
                             <div>INVOICE NO. &nbsp;&nbsp; {uniqueOrderId || orderId}</div>
                             <div>TABLE NO. &nbsp;&nbsp; {tableId ? tableNameMap[tableId] || tableId : "Takeaway"}</div>
                         </div>

@@ -81,15 +81,15 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
           {/* Header */}
           <div style={{ textAlign: "center", marginBottom: 6 }}>
             <div style={{ fontWeight: "bold", fontSize: 15, letterSpacing: 1 }}>
-              {restaurant_name}
+              Chai Bolo Chai
             </div>
-            <div style={{ fontSize: 11 }}>{restaurant_address}</div>
+            <div style={{ fontSize: 11 }}>Aliganj Franchise Outlet</div>
+            <div style={{ fontSize: 11 }}>LIC No. - 30260625125105516</div>
           </div>
 
           <Divider />
 
           <div style={{ textAlign: "center", fontSize: 11, marginBottom: 2 }}>
-            <div>GSTIN &nbsp;&nbsp; {gstin}</div>
             <div>INVOICE NO. &nbsp;&nbsp; {uniqueOrderId }</div>
             <div>TABLE NO. &nbsp;&nbsp; {table_no || "Takeaway"}</div>
           </div>
