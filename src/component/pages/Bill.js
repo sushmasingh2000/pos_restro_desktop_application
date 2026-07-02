@@ -65,8 +65,15 @@ export default function BillPage() {
   ]);
 
   const selectedMode = paymentSplits[0]?.mode || "";
-  const isLending = selectedMode?.toLowerCase() === "lending";
+  const isLending = paymentSplits.some(p => p.mode?.toLowerCase() === "lending");
   const isAdvance = selectedMode?.toLowerCase() === "advance";
+  const isSplitLending = isLending && paymentSplits.length > 1;
+  const lendingSplitAmt = isSplitLending
+    ? parseFloat(paymentSplits.find(p => p.mode?.toLowerCase() === "lending")?.amount || 0)
+    : 0;
+  const nonLendingPaid = isSplitLending
+    ? paymentSplits.filter(p => p.mode?.toLowerCase() !== "lending").reduce((s, p) => s + parseFloat(p.amount || 0), 0)
+    : 0;
   const [givenAmount, setGivenAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -322,7 +329,7 @@ export default function BillPage() {
       ? Math.max(0, givenAmt - afterWalletTotal)
       : 0;
   const lendingRemaining = isLending
-    ? Math.max(0, afterWalletTotal - givenAmt)
+    ? (isSplitLending ? lendingSplitAmt : Math.max(0, afterWalletTotal - givenAmt))
     : 0;
 
   // ── Active offers ─────────────────────────────────
@@ -447,7 +454,7 @@ export default function BillPage() {
       paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
       payment_splits: paymentSplits,
 
-      paid_amount: isLending ? givenAmt : isAdvance ? maxWalletUse : grandTotal,
+      paid_amount: isLending ? (isSplitLending ? nonLendingPaid : givenAmt) : isAdvance ? maxWalletUse : grandTotal,
 
       remaining_amount: isLending
         ? lendingRemaining
@@ -517,7 +524,11 @@ export default function BillPage() {
         if (billRes?.data?.offline) {
           const offlinePrintData = {
             ...billRes.data.printData,
+            business_name: branch.business_name || "",
             restaurant_name: branch.branch_name || "Restaurant",
+            outlet_name: branch.outlet_name || "",
+            lic_no: branch.lic_no || "",
+            bill_title: branch.bill_title || "",
             restaurant_address: branch.address || "",
             gstin: branch.gst_no || "",
             captain_name: branch.captain_name || "",
@@ -570,7 +581,7 @@ export default function BillPage() {
             customer_phone: customer.phone,
             customer_address: customer.address,
             discount: discountAmount,
-            paid_amount: isLending ? givenAmt : isAdvance ? maxWalletUse : grandTotal,
+            paid_amount: isLending ? (isSplitLending ? nonLendingPaid : givenAmt) : isAdvance ? maxWalletUse : grandTotal,
             remaining_amount: isLending ? lendingRemaining : isAdvance ? advanceRemaining : 0,
             wallet_used: useWallet && !isAdvance ? maxWalletUse : 0,
             advance_used: isAdvance ? maxWalletUse : 0,
@@ -580,7 +591,11 @@ export default function BillPage() {
 
       // ── ONLINE — normal bill data ─────────────
       const billData = {
+        business_name: branch.business_name || "",
         restaurant_name: branch.branch_name || "Restaurant",
+        outlet_name: branch.outlet_name || "",
+        lic_no: branch.lic_no || "",
+        bill_title: branch.bill_title || "",
         restaurant_address: branch.address || "",
         gstin: branch.gst_no || "",
         captain_name: branch.captain_name || "",
@@ -601,7 +616,7 @@ export default function BillPage() {
         total_amount: grandTotal.toFixed(2),
         paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
         payment_splits: paymentSplits,
-        paid_amount: isLending ? givenAmt.toFixed(2) : isAdvance ? maxWalletUse.toFixed(2) : grandTotal.toFixed(2),
+        paid_amount: isLending ? (isSplitLending ? nonLendingPaid.toFixed(2) : givenAmt.toFixed(2)) : isAdvance ? maxWalletUse.toFixed(2) : grandTotal.toFixed(2),
         remaining_amount: isLending ? lendingRemaining.toFixed(2) : isAdvance ? advanceRemaining.toFixed(2) : 0,
         is_lending: isLending,
         is_advance: isAdvance,
@@ -668,7 +683,7 @@ export default function BillPage() {
             customer_phone: customer.phone,
             customer_address: customer.address,
             discount: discountAmount,
-            paid_amount: isLending ? givenAmt : isAdvance ? maxWalletUse : grandTotal,
+            paid_amount: isLending ? (isSplitLending ? nonLendingPaid : givenAmt) : isAdvance ? maxWalletUse : grandTotal,
             remaining_amount: isLending ? lendingRemaining : isAdvance ? advanceRemaining : 0,
             wallet_used: useWallet && !isAdvance ? maxWalletUse : 0,
             advance_used: isAdvance ? maxWalletUse : 0,
@@ -706,16 +721,16 @@ export default function BillPage() {
     setLoading(false);
   };
 
-  const allModes =
-    paymentModes.length > 0
-      ? paymentModes.map((m) => ({ id: m.dg041_mode_id, name: m.dg041_name }))
-      : [
-        { id: "cash", name: "Cash" },
-        { id: "upi", name: "UPI" },
-        { id: "card", name: "Card" },
-        { id: "lending", name: "Lending" },
-        { id: "advance", name: "Advance" },
-      ];
+  const _dbModes = paymentModes.length > 0
+    ? paymentModes.map((m) => ({ id: m.dg041_mode_id, name: m.dg041_name }))
+    : [{ id: "cash", name: "Cash" }, { id: "upi", name: "UPI" }, { id: "card", name: "Card" }];
+  const _hasLending = _dbModes.some(m => m.name?.toLowerCase() === "lending");
+  const _hasAdvance = _dbModes.some(m => m.name?.toLowerCase() === "advance");
+  const allModes = [
+    ..._dbModes,
+    ...(!_hasLending ? [{ id: "lending", name: "Lending" }] : []),
+    ...(!_hasAdvance ? [{ id: "advance", name: "Advance" }] : []),
+  ];
 
   return (
     <div
@@ -893,10 +908,14 @@ export default function BillPage() {
         isOpen={showPreview}
         loading={loading}
         billData={{
+          business_name: branch.business_name || "",
           restaurant_name: branch.branch_name || "Restaurant",
+          outlet_name: branch.outlet_name || "",
+          lic_no: branch.lic_no || "",
+          bill_title: branch.bill_title || "",
           restaurant_address: branch.address || "",
           gstin: branch.gst_no || "",
-          uniqueOrderId: billUniqueOrderId || uniqueOrderId || orderId,  // ← यह भी fix karo
+          uniqueOrderId: billUniqueOrderId || uniqueOrderId || orderId,
           captain_name: branch.captain_name || "",
           customer_name: customer.name,
           customer_phone: customer.phone,

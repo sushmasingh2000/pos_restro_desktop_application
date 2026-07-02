@@ -4,21 +4,24 @@ import { useQuery } from "react-query";
 import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
 const TakeAway = () => {
+  const today = new Date().toISOString().split("T")[0];
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [exporting, setExporting] = useState(false);
   const limit = 10;
   const navigate = useNavigate();
 
   const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
+    startDate: today,
+    endDate: today,
     paymentMethod: "",
     paymentStatus: "",
   });
@@ -47,7 +50,8 @@ const TakeAway = () => {
       rawId: order.dg06_order_id,
       date: createdAt.toLocaleDateString(),
       time: createdAt.toLocaleTimeString(),
-      tableNo: order.dg06_table_id || "N/A",
+      tableNo: order.dg05_table_name || order.dg06_table_id || "N/A",
+      rawTableId: order.dg06_table_id,
       subTotal: Number(order.dg06_subtotal || 0),
       tax: Number(order.dg06_tax || 0),
       charge: Number(order.dg06_charges || 0),
@@ -83,8 +87,8 @@ const TakeAway = () => {
             : [],
         })),
         orderId: order.rawId,
-         uniqueOrderId: order.unique_order_id , 
-        tableId: order.tableNo,
+         uniqueOrderId: order.unique_order_id ,
+        tableId: order.rawTableId,
         orderType: order.type,
         tableNameMap: {},
         existingBillId: order.billId,
@@ -92,13 +96,51 @@ const TakeAway = () => {
     });
   };
 
+  const exportToExcel = async () => {
+    setExporting(true);
+    try {
+      const res = await apiConnectorPost(endpoint.order_branch_status_api, {
+        ...filters, page: 1, limit: 5000, orderType: "takeaway",
+      });
+      const all = res?.data?.result?.orders || [];
+      if (!all.length) return;
+      const rows = all.map((o, i) => {
+        const d = new Date(o.dg06_created_at);
+        return {
+          "S.No": i + 1, "Order ID": o.unique_order_id,
+          "Date": d.toLocaleDateString(), "Time": d.toLocaleTimeString(),
+          "SubTotal": Number(o.dg06_subtotal || 0),
+          "Discount": Number(o.dg06_discount || 0),
+          "Charge": Number(o.dg06_charges || 0),
+          "Tax": Number(o.dg06_tax || 0),
+          "Paid": Number(o.dg06_total_amount || 0),
+          "MOP": o.dg010_payment_method || "--",
+          "Status": o.dg06_status,
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "TakeAway");
+      const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const a = Object.assign(document.createElement("a"), {
+        href: URL.createObjectURL(new Blob([buf], { type: "application/octet-stream" })),
+        download: `TakeAway_${filters.startDate}_${filters.endDate}.xlsx`,
+      });
+      a.click();
+    } catch (e) { console.error("Export failed", e); }
+    finally { setExporting(false); }
+  };
+
   return (
     <div className="main_cards">
       <div className="cards_header flex items-center justify-between">
         <div>
-          <h3>TakeAway Orders</h3>  
+          <h3>TakeAway Orders</h3>
           <p>Track takeaway orders and pickups easily.</p>
         </div>
+        <button onClick={exportToExcel} className="main_btn" disabled={exporting} style={{ fontSize: 12, padding: "6px 14px" }}>
+          {exporting ? "Exporting..." : "⬇ Excel"}
+        </button>
       </div>
 
 
@@ -107,10 +149,11 @@ const TakeAway = () => {
         <Row>
            <Col md={3}>
               <div className="main_input">
-                <label>Date <span className="text-red-500">*</span></label>
+                <label>Start Date <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   className=""
+                  value={filters.startDate}
                   onChange={(e) =>
                     setFilters({ ...filters, startDate: e.target.value })
                   }
@@ -119,11 +162,11 @@ const TakeAway = () => {
             </Col>
             <Col md={3}>
               <div className="main_input">
-                  <label>Date <span className="text-red-500">*</span></label>
+                  <label>End Date <span className="text-red-500">*</span></label>
                   <input
                     type="date"
                     className=""
-
+                    value={filters.endDate}
                     onChange={(e) =>
                       setFilters({ ...filters, endDate: e.target.value })
                     }

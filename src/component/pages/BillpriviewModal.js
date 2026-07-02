@@ -4,7 +4,11 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
   if (!isOpen || !billData) return null;
 
   const {
+    business_name = "",
     restaurant_name = "",
+    outlet_name = "",
+    lic_no = "",
+    bill_title = "",
     restaurant_address = "",
     gstin = "",
     captain_name = "",
@@ -80,11 +84,12 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
         >
           {/* Header */}
           <div style={{ textAlign: "center", marginBottom: 6 }}>
-            <div style={{ fontWeight: "bold", fontSize: 15, letterSpacing: 1 }}>
-              Chai Bolo Chai
+            <div style={{ fontWeight: "bold", fontSize: 15, letterSpacing: 1, marginBottom: 5 }}>
+              {business_name || restaurant_name}
             </div>
-            <div style={{ fontSize: 11 }}>Aliganj Franchise Outlet</div>
-            <div style={{ fontSize: 11 }}>LIC No. - 30260625125105516</div>
+            {outlet_name && <div style={{ fontSize: 11 }}>{outlet_name}</div>}
+            {lic_no && <div style={{ fontSize: 11 }}>{bill_title || "LIC No."} - {lic_no}</div>}
+            {gstin && gstin !== "0" && <div style={{ fontSize: 11 }}>GSTIN: {gstin}</div>}
           </div>
 
           <Divider />

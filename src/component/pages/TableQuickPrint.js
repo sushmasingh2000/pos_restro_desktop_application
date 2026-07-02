@@ -89,7 +89,11 @@ export default function TableQuickPrintModal({
         setLoading(true);
         try {
             const billData = {
+                business_name: branch.business_name || "",
                 restaurant_name: branch.branch_name || "Restaurant",
+                outlet_name: branch.outlet_name || "",
+                lic_no: branch.lic_no || "",
+                bill_title: branch.bill_title || "",
                 restaurant_address: branch.address || "",
                 gstin: branch.gst_no || "",
                 captain_name: branch.captain_name || "",
@@ -182,10 +186,11 @@ export default function TableQuickPrintModal({
                         {/* Header */}
                         <div style={{ textAlign: "center", marginBottom: 6 }}>
                             <div style={{ fontWeight: "bold", fontSize: 15, letterSpacing: 1 }}>
-                                Chai Bolo Chai
+                                {branch.business_name || branch.branch_name || "Restaurant"}
                             </div>
-                            <div style={{ fontSize: 11 }}>Aliganj Franchise Outlet</div>
-                            <div style={{ fontSize: 11 }}>LIC No. - 30260625125105516</div>
+                            {branch.outlet_name && <div style={{ fontSize: 11 }}>{branch.outlet_name}</div>}
+                            {branch.lic_no && <div style={{ fontSize: 11 }}>{branch.bill_title} - {branch.lic_no}</div>}
+                            {branch.gst_no && <div style={{ fontSize: 11 }}>GSTIN: {branch.gst_no}</div>}
                         </div>
 
                         <QDivider />

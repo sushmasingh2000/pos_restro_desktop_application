@@ -655,9 +655,31 @@ const POS = () => {
           onClose={() => setShowCancelModal(false)}
           orderId={savedOrderId}
           onCancelled={() => {
-            setOrderItems([]);
-            setSavedOrderId(null);
-            navigate("/userdashboard");
+            const remaining = allOrders.filter((_, i) => i !== activeOrderIndex);
+            const wasSplit = allOrders[activeOrderIndex]?.isSplit;
+            if (wasSplit && remaining.length > 0) {
+              // Sirf split cancel hua — main order tab pe wapas jao
+              setAllOrders(remaining);
+              const main = remaining[0];
+              setOrderItems(main.items || []);
+              setSavedOrderId(main.orderId || null);
+              setExistingBillId(main.billId || null);
+              setExistingBillNo(main.billNo || null);
+              setCurrentOrderStatus(main.status || "");
+              setActiveOrderIndex(0);
+              setModifyMode(false);
+            } else {
+              // Main order cancel hua — baaki saare split bhi cancel karo
+              remaining.forEach(splitOrder => {
+                apiConnectorPost(endpoint.cancel_order_api, {
+                  orderId: splitOrder.orderId,
+                  reason: "Cancelled with main order",
+                }).catch(e => console.error("Split auto-cancel failed:", e));
+              });
+              setOrderItems([]);
+              setSavedOrderId(null);
+              navigate("/userdashboard");
+            }
           }}
         />
 

@@ -15,8 +15,8 @@ export default function BillPaymentSection({
 }) {
   return (
     <>
-      {/* Given / Return — Normal mode only */}
-      {!isReprint && !isAdvance && (
+      {/* Given / Return — Single split only */}
+      {!isReprint && !isAdvance && paymentSplits.length === 1 && (
         <div className="grid grid-cols-2 gap-3">
           <div className="main_input">
             <label>
@@ -119,9 +119,8 @@ export default function BillPaymentSection({
                     m.name?.toLowerCase() === "lending";
                   const isAdvanceBtn =
                     m.name?.toLowerCase() === "advance";
-                  // Lending/Advance sirf first split mein allowed
-                  if (!isFirst && (isLendingBtn || isAdvanceBtn))
-                    return null;
+                  // Advance sirf first split mein allowed; Lending second mein bhi allow
+                  if (!isFirst && isAdvanceBtn) return null;
                   return (
                     <button
                       key={m.id}
@@ -130,8 +129,14 @@ export default function BillPaymentSection({
                         updated[idx] = { ...updated[idx], mode: m.name };
                         // Agar sirf ek split hai to full amount auto-fill
                         if (paymentSplits.length === 1) {
-                          updated[idx].amount =
-                            afterWalletTotal.toFixed(2);
+                          updated[idx].amount = afterWalletTotal.toFixed(2);
+                        }
+                        // Agar Lending second split mein select kiya — remaining auto-fill
+                        if (m.name?.toLowerCase() === "lending" && !isFirst) {
+                          const otherPaid = paymentSplits
+                            .filter((_, i) => i !== idx)
+                            .reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+                          updated[idx].amount = Math.max(0, afterWalletTotal - otherPaid).toFixed(2);
                         }
                         setPaymentSplits(updated);
                         // Given Amount auto-fill (dono side dikhane ke liye)
@@ -223,8 +228,8 @@ export default function BillPaymentSection({
           const splitRemaining = parseFloat(
             (afterWalletTotal - totalSplitPaid).toFixed(2)
           );
-          const canAdd =
-            !isLending && !isAdvance && paymentSplits.length < 4;
+          const hasLendingSplit = paymentSplits.some(p => p.mode?.toLowerCase() === "lending");
+          const canAdd = !isAdvance && !hasLendingSplit && paymentSplits.length < 4;
           return (
             <>
               {paymentSplits.length > 1 && (

@@ -51,6 +51,7 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
       if (res?.data?.success) {
         toast.success("Order cancelled!");
         client.refetchQueries("get_table");
+        client.removeQueries("getOrdersByTable");
         onCancelled?.();
         onClose();
       } else {

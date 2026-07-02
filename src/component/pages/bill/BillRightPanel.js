@@ -322,12 +322,7 @@ export default function BillRightPanel({
       </div>
 
       {/* Discount */}
-      <div
-        style={{
-          opacity: isReprint ? 0.4 : 1,
-          pointerEvents: isReprint ? "none" : "auto",
-        }}
-      >
+      <div>
         <div className="flex gap-4 mb-3">
           {["percent", "coupon"].map((m) => (
             <label

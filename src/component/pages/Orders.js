@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
 import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
 
 const FeedbackModal = ({ order, onClose, onSuccess }) => {
   const [rating, setRating] = useState(0);
@@ -96,18 +97,20 @@ const FeedbackModal = ({ order, onClose, onSuccess }) => {
 };
 
 const Orders = () => {
+  const today = new Date().toISOString().split("T")[0];
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [feedbackOrder, setFeedbackOrder] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const limit = 8;
 
   const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
+    startDate: today,
+    endDate: today,
     paymentMethod: "",
     paymentStatus: "",
     orderType: ""
@@ -132,7 +135,8 @@ const Orders = () => {
       rawId: order.dg06_order_id,
       date: createdAt.toLocaleDateString(),
       time: createdAt.toLocaleTimeString(),
-      tableNo: order.dg06_table_id || "N/A",
+      tableNo: order.dg05_table_name || order.dg06_table_id || "N/A",
+      rawTableId: order.dg06_table_id,
       subTotal: Number(order.dg06_subtotal || 0),
       tax: Number(order.dg06_tax || 0),
       charge: Number(order.dg06_charges || 0),
@@ -180,7 +184,7 @@ const Orders = () => {
         deliveryCustomerPhone: order?.customerPhone || "",
         deliveryCustomerAddress: order?.customerAddress || "",
         orderId: order.rawId,
-        tableId: order.tableNo,
+        tableId: order.rawTableId,
         orderType: order.type,
         tableNameMap: {},
         existingBillId: order.billId,
@@ -191,6 +195,42 @@ const Orders = () => {
   };
 
 
+  const exportToExcel = async () => {
+    setExporting(true);
+    try {
+      const res = await apiConnectorPost(endpoint.order_branch_status_api, {
+        ...filters, page: 1, limit: 5000,
+      });
+      const all = res?.data?.result?.orders || [];
+      if (!all.length) return;
+      const rows = all.map((o, i) => {
+        const d = new Date(o.dg06_created_at);
+        return {
+          "S.No": i + 1, "Order ID": o.unique_order_id,
+          "Date": d.toLocaleDateString(), "Time": d.toLocaleTimeString(),
+          "Type": o.dg06_order_type, "Table No": o.dg05_table_name || o.dg06_table_id || "N/A",
+          "SubTotal": Number(o.dg06_subtotal || 0),
+          "Discount": Number(o.dg06_discount || 0),
+          "Charge": Number(o.dg06_charges || 0),
+          "Tax": Number(o.dg06_tax || 0),
+          "Paid": Number(o.dg06_total_amount || 0),
+          "MOP": o.dg010_payment_method || "--",
+          "Status": o.dg06_status,
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Orders");
+      const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const a = Object.assign(document.createElement("a"), {
+        href: URL.createObjectURL(new Blob([buf], { type: "application/octet-stream" })),
+        download: `Orders_${filters.startDate}_${filters.endDate}.xlsx`,
+      });
+      a.click();
+    } catch (e) { console.error("Export failed", e); }
+    finally { setExporting(false); }
+  };
+
   return (
     <div className="main_cards">
       <div className="cards_header flex items-center justify-between">
@@ -198,8 +238,11 @@ const Orders = () => {
           <h3>All Orders</h3>
           <p>Manage & track all orders</p>
         </div>
-        {/* Search */}
-        <div className="flex justify-end">
+        <div className="flex items-center gap-3">
+          <button onClick={exportToExcel} className="main_btn" disabled={exporting} style={{ fontSize: 12, padding: "6px 14px" }}>
+            {exporting ? "Exporting..." : "⬇ Excel"}
+          </button>
+          {/* Search */}
           <div className="date-row main_input">
             <span className="date-label">Search:</span>
             <input value={search} onChange={e => setSearch(e.target.value)}
@@ -216,6 +259,7 @@ const Orders = () => {
               <input
                 type="date"
                 className=""
+                value={filters.startDate}
                 onChange={(e) =>
                   setFilters({ ...filters, startDate: e.target.value })
                 }
@@ -226,6 +270,7 @@ const Orders = () => {
             <div className="main_input">
               <input
                 type="date"
+                value={filters.endDate}
                 onChange={(e) =>
                   setFilters({ ...filters, endDate: e.target.value })
                 }

@@ -115,7 +115,7 @@ function createWindow() {
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, "build/index.html"));
   } else {
-    mainWindow.loadURL("http://localhost:3000");
+    mainWindow.loadURL("http://localhost:3001");
   }
 
   setTimeout(() => {
@@ -294,18 +294,18 @@ Write-Host "Done"
 // ✅ Bill print content builder 
 function buildBillContent(p, billData) {
   p.raw(Buffer.from([0x1D, 0x4C, 0x08, 0x00]));
-  const name = billData.restaurant_name || "";
-  const address = billData.restaurant_address || "";
-  const gstin = billData.gstin || "";
   const PAD = "  ";
+  const businessName = billData.business_name || billData.restaurant_name || "";
+  const outletName   = billData.outlet_name || "";
+  const licNo        = billData.lic_no || "";
+  const billTitle    = billData.bill_title || "";
+  const gstin        = billData.gstin || "";
 
-  const shopName = "Chai Bolo Chai";
-  const shopLine2 = "Aliganj Franchise Outlet";
-  const shopLine3 = "LIC No. - 30260625125105516";
   p.raw(Buffer.from([0x1B, 0x6C, 0x04]));
-  p.style("B").text(shopName.padStart(Math.floor((48 + shopName.length) / 2))).style("NORMAL");
-  p.text(shopLine2.padStart(Math.floor((48 + shopLine2.length) / 2)));
-  p.text(shopLine3.padStart(Math.floor((48 + shopLine3.length) / 2)));
+  p.style("B").text(businessName.padStart(Math.floor((48 + businessName.length) / 2))).style("NORMAL");
+  if (outletName) { p.text(outletName.padStart(Math.floor((48 + outletName.length) / 2))); }
+  if (licNo)      { const ln = `${billTitle} - ${licNo}`; p.text(ln.padStart(Math.floor((48 + ln.length) / 2))); }
+  if (gstin)      { const gl = `GSTIN - ${gstin}`;   p.text(gl.padStart(Math.floor((48 + gl.length) / 2))); }
   p.drawLine();
 
   const invLine = `INVOICE NO. - ${billData.uniqueOrderId}`;
