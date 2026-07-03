@@ -26,8 +26,8 @@ export default function BillItemsTable({ orderItems }) {
                   <tr key={i} className="border-t border-white/5">
                     <td>{item.dg09_name}</td>
                     <td>{item.qty}</td>
-                    <td>₹{Number(item.basePrice || item.price).toFixed(2)}</td>
-                    <td>₹{((item.basePrice || item.price) * item.qty).toFixed(2)}</td>
+                    <td>₹{Number(item.price || item.basePrice).toFixed(2)}</td>
+                    <td>₹{((item.price || item.basePrice) * item.qty).toFixed(2)}</td>
                   </tr>
                   {remarks && (
                     <tr

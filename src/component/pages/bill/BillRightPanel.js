@@ -38,54 +38,50 @@ export default function BillRightPanel({
   return (
     <div className="w-96 p-5 pt-0 space-y-4 flex-shrink-0">
       {/* Customer Search */}
-      {!isReprint && (
-        <div className="main_input">
-          <label>
-             Search Customer
-            {/*Advance ke liye mandatory indicator */}
-            {isAdvance && (
-              <span className="text-red-400 ml-1">
-                * (Advance is Required)
-              </span>
-            )}
-          </label>
-          <input
-            value={customerSearch}
-            onChange={(e) => setCustomerSearch(e.target.value)}
-            placeholder="Search by name or phone"
-            className={`${3} ${isAdvance && !selectedCustomerId ? "" : ""
-              }`}
-          />
-          {customerList.length > 0 && (
-            <div className="bg-white/10 border border-white/20 rounded-xl mt-2 max-h-40 overflow-y-auto">
-              {customerList.map((c) => (
-                <div
-                  key={c.id}
-                  onClick={() => {
-                    setSelectedCustomerId(c.id);
-                    setCustomer({
-                      name: c.name,
-                      phone: c.phone,
-                      address: c.address || "",
-                      tax_id: c.tax_id || "",
-                      dob: c.dob || "",
-                      anniversary: c.anniversary || "",
-                    });
-                    setCustomerSearch(c.name);
-                    setCustomerList([]);
-                  }}
-                  className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
-                >
-                  {c.name} - {c.phone}
-                </div>
-              ))}
-            </div>
+      <div className="main_input">
+        <label>
+           Search Customer
+          {isAdvance && (
+            <span className="text-red-400 ml-1">
+              * (Advance is Required)
+            </span>
           )}
-        </div>
-      )}
+        </label>
+        <input
+          value={customerSearch}
+          onChange={(e) => setCustomerSearch(e.target.value)}
+          placeholder="Search by name or phone"
+          className={`${3} ${isAdvance && !selectedCustomerId ? "" : ""}`}
+        />
+        {customerList.length > 0 && (
+          <div className="bg-white/10 border border-white/20 rounded-xl mt-2 max-h-40 overflow-y-auto">
+            {customerList.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => {
+                  setSelectedCustomerId(c.id);
+                  setCustomer({
+                    name: c.name,
+                    phone: c.phone,
+                    address: c.address || "",
+                    tax_id: c.tax_id || "",
+                    dob: c.dob || "",
+                    anniversary: c.anniversary || "",
+                  });
+                  setCustomerSearch(c.name);
+                  setCustomerList([]);
+                }}
+                className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
+              >
+                {c.name} - {c.phone}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Wallet section */}
-      {selectedCustomerId && !isReprint && (
+      {selectedCustomerId && (
         <div
           className="rounded-xl p-3"
           style={{
@@ -248,7 +244,6 @@ export default function BillRightPanel({
               ? "border-red-400/50"
               : ""
               }`}
-            disabled={isReprint}
           />
         </div>
         <div className="main_input">
@@ -269,7 +264,6 @@ export default function BillRightPanel({
               ? "border-red-400/50"
               : ""
               }`}
-            disabled={isReprint}
           />
         </div>
         <div className="main_input">
@@ -280,7 +274,6 @@ export default function BillRightPanel({
             }
             placeholder="Customer Address"
             className={inp}
-            disabled={isReprint}
           />
         </div>
         <div className="main_input">
@@ -291,7 +284,6 @@ export default function BillRightPanel({
             }
             placeholder="Customer Tax ID"
             className={inp}
-            disabled={isReprint}
           />
         </div>
       </div>
@@ -305,7 +297,6 @@ export default function BillRightPanel({
             onChange={(e) =>
               setCustomer((p) => ({ ...p, dob: e.target.value }))
             }
-            disabled={isReprint}
           />
         </div>
         <div className="main_input">
@@ -316,7 +307,6 @@ export default function BillRightPanel({
             onChange={(e) =>
               setCustomer((p) => ({ ...p, anniversary: e.target.value }))
             }
-            disabled={isReprint}
           />
         </div>
       </div>

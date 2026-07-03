@@ -194,7 +194,7 @@ export default function BillPage() {
         }
         if (bill.payment_splits?.length > 0) {
           setPaymentSplits(bill.payment_splits);
-        } else if (bill.paymentMethod) {
+        } else if (bill.paymentMethod && bill.paymentMethod !== "Pending") {
           setPaymentSplits([
             {
               mode: bill.paymentMethod,

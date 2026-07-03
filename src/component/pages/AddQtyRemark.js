@@ -44,7 +44,7 @@ const AddQtyRemarkModal = ({ isOpen, onClose, item, orderItems, onUpdate }) => {
       .join(", ");
 
     const updated = orderItems.map((i) =>
-      i.id === item.id
+      i.id === item.id && i.dg09_name === item.dg09_name
         ? {
             ...i,
             qty: Math.max(1, qty),

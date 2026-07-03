@@ -208,18 +208,30 @@ const POS = () => {
     if (!clickReady.current) return;
     try {
       const res = await apiConnectorGet(endpoint.item_options_pos_api + item.dg09_menu_id);
-      console.log("FULL RESPONSE:", res);        // ← add karo
-      console.log("RESULT:", res?.data?.result);
       const groups = res?.data?.result || [];
 
-      if (groups.length > 0) {
-        // Options hain → modal dikhao
-        setOptionItem({ ...item, optionGroups: groups });
-        setShowOptionsModal(true);
-      } else {
-        // Options nahi → seedha add karo
+      if (groups.length === 0) {
         addItemDirectly(item, 0);
+        return;
       }
+
+      // Agar har group mein sirf 1 enabled option hai → auto-select, modal mat dikhao
+      const allSingleOption = groups.every(g => (g.options || []).length === 1);
+      if (allSingleOption) {
+        const autoSelections = {};
+        let extraPrice = 0;
+        groups.forEach(g => {
+          const opt = g.options[0];
+          autoSelections[g.dg030_group_id] = [opt];
+          extraPrice += parseFloat(opt.dg029_amount || 0);
+        });
+        addItemDirectly(item, extraPrice, autoSelections);
+        return;
+      }
+
+      // Multiple options → modal dikhao
+      setOptionItem({ ...item, optionGroups: groups });
+      setShowOptionsModal(true);
     } catch (err) {
       addItemDirectly(item, 0);
     }
@@ -243,10 +255,10 @@ const POS = () => {
 
     // Functional update so rapid double-clicks never see stale state
     setOrderItems((prev) => {
-      const existing = prev.find((i) => i.id === item.dg09_menu_id);
+      const existing = prev.find((i) => i.id === item.dg09_menu_id && i.dg09_name === displayName);
       if (existing) {
         return prev.map((i) =>
-          i.id === item.dg09_menu_id ? { ...i, qty: i.qty + 1 } : i
+          i.id === item.dg09_menu_id && i.dg09_name === displayName ? { ...i, qty: i.qty + 1 } : i
         );
       }
       return [...prev, {
@@ -284,16 +296,16 @@ const POS = () => {
   // };
 
   const totalAmount = parseFloat(
-    orderItems.reduce((acc, item) => acc + (item.basePrice || item.price) * item.qty, 0).toFixed(2)
+    orderItems.reduce((acc, item) => acc + (item.price || item.basePrice) * item.qty, 0).toFixed(2)
   );
 
 
-  const updateQty = (id, qty) => {
+  const updateQty = (id, name, qty) => {
     if (qty < 1) return;
-    setOrderItems(orderItems.map((i) => (i.id === id ? { ...i, qty } : i)));
+    setOrderItems(orderItems.map((i) => (i.id === id && i.dg09_name === name ? { ...i, qty } : i)));
   };
 
-  const removeItem = (id) => setOrderItems(orderItems.filter((i) => i.id !== id));
+  const removeItem = (id, name) => setOrderItems(orderItems.filter((i) => !(i.id === id && i.dg09_name === name)));
 
   const getOrderTypeEnum = () => {
     if (type === "dine-in") return "dine_in";
@@ -563,21 +575,21 @@ const POS = () => {
                   {modifyMode ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <button
-                        onClick={() => updateQty(item.id, item.qty - 1)}
+                        onClick={() => updateQty(item.id, item.dg09_name, item.qty - 1)}
                         style={{ width: 18, height: 18, borderRadius: 4, background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171", fontWeight: 700, fontSize: 13, lineHeight: 1, cursor: "pointer", padding: 0 }}
                       >−</button>
                       <span style={{ minWidth: 16, textAlign: "center", fontWeight: 600, fontSize: 12 }}>{item.qty}</span>
                       <button
-                        onClick={() => updateQty(item.id, item.qty + 1)}
+                        onClick={() => updateQty(item.id, item.dg09_name, item.qty + 1)}
                         style={{ width: 18, height: 18, borderRadius: 4, background: "rgba(34,197,94,0.2)", border: "1px solid rgba(34,197,94,0.4)", color: "#4ade80", fontWeight: 700, fontSize: 13, lineHeight: 1, cursor: "pointer", padding: 0 }}
                       >+</button>
                     </div>
                   ) : item.qty}
                 </div>
-                <div className="cart-price">₹{(item.basePrice || item.price).toFixed(2)}</div>
-                <div className="cart-total">₹{((item.basePrice || item.price) * item.qty).toFixed(2)}</div>
+                <div className="cart-price">₹{(item.price || item.basePrice).toFixed(2)}</div>
+                <div className="cart-total">₹{((item.price || item.basePrice) * item.qty).toFixed(2)}</div>
                 <div className="edite_inf"><Edit onClick={() => { setSelectedItem(item); setShowQtyModal(true); }} /></div>
-                <div className="cart-del"><button onClick={() => removeItem(item.id)} >✕</button></div>
+                <div className="cart-del"><button onClick={() => removeItem(item.id, item.dg09_name)} >✕</button></div>
               </div>
             ))}
           </div>
