@@ -185,7 +185,7 @@ export default function BillPaymentSection({
                 <div className="main_input">
                   <input
                     type="number"
-                    value={split.amount}
+                    value={paymentSplits.length === 1 ? afterWalletTotal.toFixed(2) : split.amount}
                     onChange={(e) => {
                       const updated = [...paymentSplits];
                       updated[idx].amount = e.target.value;

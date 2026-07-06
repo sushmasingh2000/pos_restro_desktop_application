@@ -93,11 +93,26 @@ export default function BillPage() {
 
   const navigate = useNavigate();
 
+  // Single payment ke liye amount auto-normalize (empty amount fix)
+  const getFinalSplits = () => {
+    if (!isLending && !isAdvance && paymentSplits.length === 1) {
+      return [{ mode: paymentSplits[0].mode, amount: afterWalletTotal.toFixed(2) }];
+    }
+    return paymentSplits;
+  };
+
   // ── Sirf Close Table ke liye validation ──
   const validateForClose = () => {
     if (!paymentSplits[0]?.mode?.trim()) {
       toast.error("Select payment method!");
       return false;
+    }
+    if (!isLending && !isAdvance && paymentSplits.length === 1) {
+      const paidAmt = parseFloat(paymentSplits[0].amount || 0);
+      if (paidAmt > afterWalletTotal + 0.5) {
+        toast.error(`Payment ₹${paidAmt.toFixed(2)} bill total ₹${afterWalletTotal.toFixed(2)} se zyada nahi ho sakta!`);
+        return false;
+      }
     }
     if (!isLending && !isAdvance && paymentSplits.length > 1) {
       const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
@@ -452,7 +467,7 @@ export default function BillPage() {
       customer_id: selectedCustomerId,
 
       paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
-      payment_splits: paymentSplits,
+      payment_splits: getFinalSplits(),
 
       paid_amount: isLending ? (isSplitLending ? nonLendingPaid : givenAmt) : isAdvance ? maxWalletUse : grandTotal,
 
@@ -576,7 +591,7 @@ export default function BillPage() {
           `${endpoint.update_bill_details_api}/${savedBillId}`,
           {
             paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
-            payment_splits: paymentSplits,
+            payment_splits: getFinalSplits(),
             customer_name: customer.name,
             customer_phone: customer.phone,
             customer_address: customer.address,
@@ -615,7 +630,7 @@ export default function BillPage() {
         advance_used: isAdvance ? maxWalletUse.toFixed(2) : 0,
         total_amount: grandTotal.toFixed(2),
         paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
-        payment_splits: paymentSplits,
+        payment_splits: getFinalSplits(),
         paid_amount: isLending ? (isSplitLending ? nonLendingPaid.toFixed(2) : givenAmt.toFixed(2)) : isAdvance ? maxWalletUse.toFixed(2) : grandTotal.toFixed(2),
         remaining_amount: isLending ? lendingRemaining.toFixed(2) : isAdvance ? advanceRemaining.toFixed(2) : 0,
         is_lending: isLending,
@@ -678,7 +693,7 @@ export default function BillPage() {
           `${endpoint.update_bill_details_api}/${savedBillId}`,
           {
             paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
-            payment_splits: paymentSplits,
+            payment_splits: getFinalSplits(),
             customer_name: customer.name,
             customer_phone: customer.phone,
             customer_address: customer.address,
@@ -936,7 +951,7 @@ export default function BillPage() {
           discount: discountAmount.toFixed(2),
           total_amount: grandTotal.toFixed(2),
           round_off: roundOff,
-          payment_splits: paymentSplits,
+          payment_splits: getFinalSplits(),
           paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
           wallet_used: useWallet || isAdvance ? maxWalletUse.toFixed(2) : 0,
           advance_used: isAdvance ? maxWalletUse.toFixed(2) : 0,

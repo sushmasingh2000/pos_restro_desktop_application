@@ -1,8 +1,8 @@
 {
   "name": "restro-panel",
-  "version": "1.0.26",
+  "version": "1.0.28",
   "description": "Restaurant management desktop panel",
-  "author": "Your Name",
+  "author": "Sushma Singh",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
