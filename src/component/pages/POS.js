@@ -97,8 +97,14 @@ const POS = () => {
 
   const filteredItems = React.useMemo(() => {
     if (!itemsData || itemsData.length === 0) return [];
+    // search karte waqt category select ho ya na ho, pura menu search ho
+    if (searchTerm.trim() !== "") {
+      return itemsData.filter((item) =>
+        item.dg09_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
     let items = itemsData;
-    // category filter
+    // category filter — sirf tab lagega jab search khali ho
     if (selectedCategory !== "All") {
       const category = categories.find(
         (cat) => cat.dg08_category_name === selectedCategory
@@ -108,11 +114,6 @@ const POS = () => {
           (item) => item.dg09_category_id === category.dg08_category_id
         );
       }
-    }
-    if (searchTerm.trim() !== "") {
-      items = items.filter((item) =>
-        item.dg09_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
     }
     return items;
   }, [selectedCategory, itemsData, categories, searchTerm]);

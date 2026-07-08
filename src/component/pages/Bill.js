@@ -37,6 +37,7 @@ export default function BillPage() {
   const [currentStatus, setCurrentStatus] = useState(orderStatus);
   const [statusLoading, setStatusLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   // ── Top pe state add karo ──
   const [billUniqueOrderId, setBillUniqueOrderId] = useState(uniqueOrderId || null);
   const [customer, setCustomer] = useState({
@@ -592,6 +593,7 @@ export default function BillPage() {
           {
             paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
             payment_splits: getFinalSplits(),
+            customer_id: selectedCustomerId,
             customer_name: customer.name,
             customer_phone: customer.phone,
             customer_address: customer.address,
@@ -668,9 +670,16 @@ export default function BillPage() {
     setLoading(false);
   };
 
+  const openCloseConfirm = () => {
+    if (loading) return;
+    if (!validateForClose()) return;
+    setShowCloseConfirm(true);
+  };
+
   const handleCloseTable = async () => {
     if (loading) return;
     if (!validateForClose()) return;
+    setShowCloseConfirm(false);
     setLoading(true);
 
     try {
@@ -694,6 +703,7 @@ export default function BillPage() {
           {
             paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
             payment_splits: getFinalSplits(),
+            customer_id: selectedCustomerId,
             customer_name: customer.name,
             customer_phone: customer.phone,
             customer_address: customer.address,
@@ -884,7 +894,7 @@ export default function BillPage() {
             currentStatus !== "completed" &&
             (orderType !== "delivery" || currentStatus === "out_for_delivery") && (
               <button
-                onClick={handleCloseTable}
+                onClick={openCloseConfirm}
                 disabled={loading}
                 className="update_btn disabled:opacity-50"
                 style={{
@@ -969,6 +979,87 @@ export default function BillPage() {
         }}
         onClose={() => setShowPreview(false)}
       />
+
+      {/* ── Close Table confirm ── */}
+      {showCloseConfirm && (
+        <div
+          onClick={() => setShowCloseConfirm(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: 24,
+              padding: "36px 32px 28px",
+              width: 320,
+              textAlign: "center",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.25), 0 0 0 1px rgba(239,68,68,0.2)",
+            }}
+          >
+            <div style={{
+              width: 80, height: 80, borderRadius: "50%",
+              background: "rgba(239,68,68,0.1)",
+              border: "3px solid #F94E34",
+              margin: "0 auto 20px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 38,
+              boxShadow: "0 0 0 6px rgba(239,68,68,0.08)",
+            }}>
+              🔒
+            </div>
+
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#1e293b", marginBottom: 8 }}>
+              Are you sure?
+            </div>
+
+            <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6, marginBottom: 28 }}>
+              Close this table with{" "}
+              <span style={{
+                fontWeight: 700, color: "#F94E34",
+                background: "rgba(239,68,68,0.1)",
+                padding: "2px 8px", borderRadius: 6,
+              }}>
+                {paymentSplits.map((p) => p.mode).join(" + ")}
+              </span>
+              {" "}— ₹{afterWalletTotal.toFixed(2)}?
+            </div>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={() => setShowCloseConfirm(false)}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: 12,
+                  fontSize: 14, fontWeight: 700,
+                  background: "#f1f5f9", border: "1px solid #e2e8f0",
+                  color: "#64748b", cursor: "pointer",
+                }}
+              >
+                ✕ Cancel
+              </button>
+              <button
+                onClick={handleCloseTable}
+                disabled={loading}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: 12,
+                  fontSize: 14, fontWeight: 700,
+                  background: "linear-gradient(135deg, #F94E34, rgba(239,68,68,0.75))",
+                  border: "none", color: "#fff", cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(239,68,68,0.4)",
+                  opacity: loading ? 0.6 : 1,
+                }}
+              >
+                {loading ? "Processing..." : "✓ Yes, Close"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

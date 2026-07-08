@@ -1888,6 +1888,15 @@ button.acive_tab {
     font-size: 11px;
     color: #4b4b4b;
     margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+.table_card .table_order_amount {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ef4444;
+    margin-top: 0;
     margin-bottom: 35px;
 }
 

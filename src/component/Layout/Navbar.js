@@ -15,6 +15,7 @@ const Navbar = ({ toggleSidebar }) => {
   const [prevCount, setPrevCount] = useState(null);
   const audioRef = useRef(null);
   const subDropRef = useRef(null);
+  const notifDropRef = useRef(null);
 
   const showBell = type !== "business_owner" && type !== "master_admin";
 
@@ -46,6 +47,9 @@ const Navbar = ({ toggleSidebar }) => {
     const handler = (e) => {
       if (subDropRef.current && !subDropRef.current.contains(e.target)) {
         setShowSubDropdown(false);
+      }
+      if (notifDropRef.current && !notifDropRef.current.contains(e.target)) {
+        setShowDropdown(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -234,7 +238,7 @@ const Navbar = ({ toggleSidebar }) => {
         )}
 
         {/* Notification Bell — only for branch_admin / staff */}
-        {showBell && <div className="relative">
+        {showBell && <div className="relative" ref={notifDropRef}>
           <button
             className="notification_btn"
             onClick={() => setShowDropdown(!showDropdown)}

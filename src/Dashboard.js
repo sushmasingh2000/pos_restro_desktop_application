@@ -682,6 +682,11 @@ const Dashboard = () => {
               {table.dg05_status === "Busy" && table.dg05_busy_since && (
                 <BusyTimer busySince={table.dg05_busy_since} />
               )}
+              {table.dg05_status === "Busy" && (
+                <p className="table_order_amount">
+                  ₹{Number(table.dg05_order_amount || 0).toLocaleString("en-IN")}
+                </p>
+              )}
               {/* 🖨 Print icon — sirf Busy tables pe, bottom-left */}
               {table.dg05_status === "Busy" && (
                 <div className="card-actions">
