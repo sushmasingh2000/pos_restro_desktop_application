@@ -46,6 +46,7 @@ export default function Sidebar() {
         <SidebarLink to="/cancelled-order" icon={<PeopleAlt fontSize="small" />} label="Cancelled Orders" />
         <SidebarLink to="/kitchen-order" icon={<LiveTvIcon fontSize="small" />} label="Kitchen Orders" />
         <SidebarLink to="/feedback" icon={<AssessmentIcon fontSize="small" />} label="Feedback" />
+        <SidebarLink to="/support-tickets" icon={<AssessmentIcon fontSize="small" />} label="Support Tickets" />
 
       </ul>
 

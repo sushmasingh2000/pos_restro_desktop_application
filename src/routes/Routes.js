@@ -20,6 +20,7 @@ import ExpenseManagementReport from "../component/pages/expense/Expense";
 import OnlineDeliveryOrder from "../component/pages/OnlineDeliveryOrder";
 import QROrder from "../component/pages/QROrder";
 import FeedbackPage from "../component/pages/FeedbackPage";
+import MyTickets from "../component/pages/MyTickets";
 
 
 export const routes = [
@@ -183,6 +184,14 @@ export const routes = [
     element: (
       <MainLayout>
         <FeedbackPage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/support-tickets",
+    element: (
+      <MainLayout>
+        <MyTickets />
       </MainLayout>
     ),
   },
