@@ -4,6 +4,7 @@ import { useQuery } from "react-query";
 import { useState, useEffect, useRef } from "react";
 import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
+import useOnlineStatus from "../../hooks/useOnlineStatus";
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Navbar = ({ toggleSidebar }) => {
   const notifDropRef = useRef(null);
 
   const showBell = type !== "business_owner" && type !== "master_admin";
+  const isOnline = useOnlineStatus();
 
   // ── Branch name ──
   const { data: branchData } = useQuery(
@@ -81,11 +83,16 @@ const Navbar = ({ toggleSidebar }) => {
     if (notifCount > prevCount) {
       audioRef.current?.play().catch(() => { });
 
-      if (Notification.permission === "granted") {
-        new Notification("🔔 New Order!", {
-          body: `${notifCount - prevCount} New Order Pending`,
-          icon: "/logo.png",
-        });
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        try {
+          new Notification("🔔 New Order!", {
+            body: `${notifCount - prevCount} New Order Pending`,
+            icon: "/logo.png",
+          });
+        } catch {
+          // Mobile browsers (Android Chrome) don't allow direct `new Notification()` —
+          // silently skip instead of crashing the whole app.
+        }
       }
     }
 
@@ -123,6 +130,23 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
 
       <div className="flex items-center gap-md-3 gap-2">
+
+        {/* Online/Offline Indicator */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 5,
+          background: isOnline ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+          border: `1px solid ${isOnline ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.35)"}`,
+          borderRadius: 8, padding: "4px 10px",
+          fontSize: 12, color: isOnline ? "#10b981" : "#ef4444", fontWeight: 700,
+          whiteSpace: "nowrap",
+        }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: "50%",
+            background: isOnline ? "#10b981" : "#ef4444",
+            display: "inline-block",
+          }} />
+          {isOnline ? "Online" : "Offline"}
+        </div>
 
         {/* Branch Name Badge */}
         {branchName && (

@@ -10,6 +10,7 @@ const CancelOrder = () => {
     const today = new Date().toISOString().split("T")[0];
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
+    const [reasonModal, setReasonModal] = useState(null);
     const [page, setPage] = useState(1);
     const [exporting, setExporting] = useState(false);
     const limit = 8;
@@ -50,6 +51,7 @@ const CancelOrder = () => {
             totalAmount: Number(order.dg06_total_amount || 0),
             status: order.dg06_status,
             type: order.dg06_order_type,
+            cancelReason: order.dg06_cancel_reason || "No reason given",
             items: order.items || [],
         };
     });
@@ -171,7 +173,10 @@ const CancelOrder = () => {
                                     .map((order, index) => (
                                         <tr
                                             key={order.orderId}
+                                            onClick={() => setReasonModal(order)}
                                             className="border-b border-white/5 hover:bg-white/5 transition text-center"
+                                            style={{ cursor: "pointer" }}
+                                            title="Click to view cancel reason"
                                         >
                                             <td>{(page - 1) * limit + index + 1}</td>
                                             <td>
@@ -240,6 +245,70 @@ const CancelOrder = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ── Cancel Reason Modal ── */}
+            {reasonModal && (
+                <div
+                    onClick={() => setReasonModal(null)}
+                    style={{
+                        position: "fixed", inset: 0, zIndex: 9999,
+                        background: "rgba(0,0,0,0.55)",
+                        backdropFilter: "blur(6px)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: "#fff",
+                            borderRadius: 20,
+                            padding: "28px 26px",
+                            width: 340,
+                            boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                            <div style={{
+                                width: 42, height: 42, borderRadius: "50%",
+                                background: "rgba(239,68,68,0.1)", border: "2px solid #ef4444",
+                                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
+                            }}>
+                                🚫
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: "#1e293b" }}>
+                                    Order #{reasonModal.orderId}
+                                </div>
+                                <div style={{ fontSize: 12, color: "#94a3b8" }}>
+                                    {reasonModal.date} • {reasonModal.time}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ fontSize: 12, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+                            Cancel Reason
+                        </div>
+                        <div style={{
+                            fontSize: 14, color: "#334155", background: "#fef2f2",
+                            border: "1px solid #fecaca", borderRadius: 10, padding: "10px 12px",
+                        }}>
+                            {reasonModal.cancelReason}
+                        </div>
+
+                        <button
+                            onClick={() => setReasonModal(null)}
+                            style={{
+                                marginTop: 18, width: "100%", padding: "10px",
+                                borderRadius: 10, border: "1px solid #e2e8f0",
+                                background: "#f1f5f9", color: "#64748b",
+                                fontSize: 13, fontWeight: 600, cursor: "pointer",
+                            }}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
