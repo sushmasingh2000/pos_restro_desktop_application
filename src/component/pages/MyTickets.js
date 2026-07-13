@@ -38,7 +38,7 @@ const MyTickets = () => {
 
   const handleRaise = async () => {
     if (!subject.trim() || !message.trim()) {
-      toast.error("Subject aur message dono likho");
+      toast.error("Please enter both subject and message");
       return;
     }
     setSubmitting(true);
@@ -88,7 +88,7 @@ const MyTickets = () => {
         <div className="cards_header flex items-center justify-between">
           <div>
             <h3>Support Tickets</h3>
-            <p>Koi bhi problem ho, yahan se ticket raise karo — support team reply karegi.</p>
+            <p>Have an issue? Raise a ticket here and our support team will get back to you.</p>
           </div>
           <button className="main_btn" onClick={() => setShowRaise(true)}>
             + Raise Ticket
@@ -112,7 +112,7 @@ const MyTickets = () => {
                 {isLoading ? (
                   <tr><td colSpan="6" className="text-center p-6">Loading...</td></tr>
                 ) : tickets.length === 0 ? (
-                  <tr><td colSpan="6" className="text-center p-6 text-white/60">Koi ticket nahi hai</td></tr>
+                  <tr><td colSpan="6" className="text-center p-6 text-white/60">No tickets yet</td></tr>
                 ) : (
                   tickets.map((t) => {
                     const st = statusColors[t.dg048_status] || statusColors.open;
@@ -160,7 +160,7 @@ const MyTickets = () => {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Apni problem detail mein likho..."
+              placeholder="Describe your issue in detail..."
               rows={5}
               style={{ ...inputStyle, resize: "vertical" }}
             />
@@ -230,7 +230,7 @@ const MyTickets = () => {
                   type="text"
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Reply likho..."
+                  placeholder="Type a reply..."
                   style={{ ...inputStyle, flex: 1 }}
                   onKeyDown={(e) => e.key === "Enter" && handleReply()}
                 />

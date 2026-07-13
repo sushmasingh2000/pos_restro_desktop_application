@@ -32,7 +32,6 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* ✅ Root pe token check */}
         <Route
           path="/"
           element={
