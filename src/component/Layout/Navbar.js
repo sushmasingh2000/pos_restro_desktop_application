@@ -2,7 +2,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
 import { useState, useEffect, useRef } from "react";
-import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
+import { apiConnectorPost, apiConnectorGet, triggerLocalCacheNow } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import useAppMode from "../../hooks/useAppMode";
 
@@ -14,12 +14,20 @@ const Navbar = ({ toggleSidebar }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSubDropdown, setShowSubDropdown] = useState(false);
   const [prevCount, setPrevCount] = useState(null);
+  const [switchingOffline, setSwitchingOffline] = useState(false);
   const audioRef = useRef(null);
   const subDropRef = useRef(null);
   const notifDropRef = useRef(null);
 
   const showBell = type !== "business_owner" && type !== "master_admin";
   const { appMode, rawOnline, startOfflineMode, goOnlineMode } = useAppMode();
+
+  const handleStartOffline = async () => {
+    setSwitchingOffline(true);
+    await triggerLocalCacheNow(); // best-effort fresh sync before switching
+    setSwitchingOffline(false);
+    startOfflineMode();
+  };
 
   // ── Branch name ──
   const { data: branchData } = useQuery(
@@ -116,14 +124,16 @@ const Navbar = ({ toggleSidebar }) => {
       }}>
         <span>⚠️ Internet connection lost — start offline mode to keep working?</span>
         <button
-          onClick={startOfflineMode}
+          onClick={handleStartOffline}
+          disabled={switchingOffline}
           style={{
             background: "#f59e0b", color: "#fff", border: "none",
             borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700,
-            cursor: "pointer",
+            cursor: switchingOffline ? "not-allowed" : "pointer",
+            opacity: switchingOffline ? 0.7 : 1,
           }}
         >
-          Start Offline Order
+          {switchingOffline ? "Syncing..." : "Start Offline Order"}
         </button>
       </div>
     )}

@@ -24,11 +24,28 @@ export const cacheLoginLocally = (endpoint, reqBody) => {
   axios.post(localEndpoint, reqBody, { timeout: 8000 }).catch(() => {});
 };
 
+// Har baar "Start Offline Order" dabane se pehle local backend ko fresh
+// cache-pull karne ko kehte hain (live se latest active orders/items/bills/
+// menu/tables khinch kar SQLite mein bhar deta hai) — isliye ye hamesha
+// LOCAL_DOMAIN pe seedha jaata hai, appMode se independent.
+export const triggerLocalCacheNow = async () => {
+  try {
+    await axios.post(`${LOCAL_DOMAIN}/api/v1/cache-now`, {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      timeout: 15000,
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
 export const apiConnectorGet = async (endpoint, params = {}) => {
   try {
     const response = await axios.get(getActiveEndpoint(endpoint), {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "x-force-offline": getAppMode() === "offline" ? "true" : "false",
       },
       params: params,
     });
@@ -48,6 +65,7 @@ export const apiConnectorPost = async (endpoint, reqBody) => {
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "x-force-offline": getAppMode() === "offline" ? "true" : "false",
         },
       }
     );
