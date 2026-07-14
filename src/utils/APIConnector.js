@@ -1,18 +1,27 @@
 import axios from "axios";
 import { frontend } from "../domain";
+import { getAppMode } from "./appMode";
 
 const LIVE_DOMAIN = 'https://cbc.ferryinfotech.in';
 const LOCAL_DOMAIN = 'http://localhost:9047';
 
+// Routing now follows the manually-set app mode (staff switches it explicitly
+// via the banner/button), not the raw navigator.onLine signal — avoids silent
+// switching when the network flickers.
 const getActiveEndpoint = (endpoint) => {
-  // Login always through local backend so credentials get cached for offline use
-  if (endpoint.includes('/api/v1/login')) {
-    return endpoint.replace(LIVE_DOMAIN, LOCAL_DOMAIN);
-  }
-  if (!navigator.onLine) {
+  if (getAppMode() === "offline") {
     return endpoint.replace(LIVE_DOMAIN, LOCAL_DOMAIN);
   }
   return endpoint;
+};
+
+// After an online login, tell the local backend in the background so it can
+// build its offline cache (menu/tables/customers/offline_users). Fire-and-forget —
+// nothing waits on this, so login isn't blocked even if the local backend is down.
+export const cacheLoginLocally = (endpoint, reqBody) => {
+  if (getAppMode() !== "online" || !endpoint.includes('/api/v1/login')) return;
+  const localEndpoint = endpoint.replace(LIVE_DOMAIN, LOCAL_DOMAIN);
+  axios.post(localEndpoint, reqBody, { timeout: 8000 }).catch(() => {});
 };
 
 export const apiConnectorGet = async (endpoint, params = {}) => {

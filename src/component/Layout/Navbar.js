@@ -4,7 +4,7 @@ import { useQuery } from "react-query";
 import { useState, useEffect, useRef } from "react";
 import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
-import useOnlineStatus from "../../hooks/useOnlineStatus";
+import useAppMode from "../../hooks/useAppMode";
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const Navbar = ({ toggleSidebar }) => {
   const notifDropRef = useRef(null);
 
   const showBell = type !== "business_owner" && type !== "master_admin";
-  const isOnline = useOnlineStatus();
+  const { appMode, rawOnline, startOfflineMode, goOnlineMode } = useAppMode();
 
   // ── Branch name ──
   const { data: branchData } = useQuery(
@@ -106,6 +106,47 @@ const Navbar = ({ toggleSidebar }) => {
   }, []);
 
   return (
+    <>
+    {rawOnline === false && appMode === "online" && (
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+        background: "#fef3c7", borderBottom: "1px solid #f59e0b",
+        padding: "8px 16px", fontSize: 13, color: "#92400e", fontWeight: 600,
+        flexWrap: "wrap", textAlign: "center",
+      }}>
+        <span>⚠️ Internet connection lost — start offline mode to keep working?</span>
+        <button
+          onClick={startOfflineMode}
+          style={{
+            background: "#f59e0b", color: "#fff", border: "none",
+            borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Start Offline Order
+        </button>
+      </div>
+    )}
+    {rawOnline === true && appMode === "offline" && (
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+        background: "#dcfce7", borderBottom: "1px solid #22c55e",
+        padding: "8px 16px", fontSize: 13, color: "#166534", fontWeight: 600,
+        flexWrap: "wrap", textAlign: "center",
+      }}>
+        <span>✅ Internet is back — switch back to online mode?</span>
+        <button
+          onClick={goOnlineMode}
+          style={{
+            background: "#22c55e", color: "#fff", border: "none",
+            borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Go Online
+        </button>
+      </div>
+    )}
     <nav className="flex items-center justify-between">
       <audio ref={audioRef} src="/notification.wav" preload="auto" />
 
@@ -131,21 +172,21 @@ const Navbar = ({ toggleSidebar }) => {
 
       <div className="flex items-center gap-md-3 gap-2">
 
-        {/* Online/Offline Indicator */}
+        {/* Online/Offline Mode Indicator (manual — reflects app mode, not raw network signal) */}
         <div style={{
           display: "flex", alignItems: "center", gap: 5,
-          background: isOnline ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
-          border: `1px solid ${isOnline ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.35)"}`,
+          background: appMode === "online" ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+          border: `1px solid ${appMode === "online" ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.35)"}`,
           borderRadius: 8, padding: "4px 10px",
-          fontSize: 12, color: isOnline ? "#10b981" : "#ef4444", fontWeight: 700,
+          fontSize: 12, color: appMode === "online" ? "#10b981" : "#ef4444", fontWeight: 700,
           whiteSpace: "nowrap",
         }}>
           <span style={{
             width: 7, height: 7, borderRadius: "50%",
-            background: isOnline ? "#10b981" : "#ef4444",
+            background: appMode === "online" ? "#10b981" : "#ef4444",
             display: "inline-block",
           }} />
-          {isOnline ? "Online" : "Offline"}
+          {appMode === "online" ? "Online" : "Offline"}
         </div>
 
         {/* Branch Name Badge */}
@@ -369,6 +410,7 @@ const Navbar = ({ toggleSidebar }) => {
         </div>
       </div>
     </nav>
+    </>
   );
 };
 

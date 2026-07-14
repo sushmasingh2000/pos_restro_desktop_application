@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { endpoint } from "../utils/APIRoutes";
-import { apiConnectorPost } from "../utils/APIConnector";
+import { apiConnectorPost, cacheLoginLocally } from "../utils/APIConnector";
 import toast from "react-hot-toast";
 import { FaUserAlt, FaLock, FaEye, FaEyeSlash, FaUserShield, FaUserCog } from "react-icons/fa";
 import Row from 'react-bootstrap/Row';
@@ -52,6 +52,7 @@ const Login = ({ role }) => {
       localStorage.setItem("user_name", user?.name || "");
       localStorage.setItem("user_email", user?.email || "");
       localStorage.setItem("loginTime", Date.now().toString());
+      cacheLoginLocally(endpoint.login_api, { email: username.trim(), password });
       toast.success("Login successful");
       navigate("/userdashboard");
 
