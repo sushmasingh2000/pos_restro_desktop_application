@@ -890,7 +890,7 @@ export default function BillPage() {
           Cancel
         </button>
         <div className="flex justify-end gap-3" style={{ width: "50%" }}>
-          {(savedBillId || orderType === "dine_in") &&
+          {isReprint &&
             currentStatus !== "completed" &&
             (orderType !== "delivery" || currentStatus === "out_for_delivery") && (
               <button

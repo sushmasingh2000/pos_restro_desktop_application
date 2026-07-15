@@ -18,6 +18,7 @@ export const endpoint = {
 
   // get_sales_summary: `${domain}/api/v1/monthly-dashboard`,
   item_options_pos_api: `${domain}/api/v1/item-options-pos/`,
+  active_offers_api: `${domain}/api/v1/offer/active-offers`,
 
   update_bill_details_api: `${domain}/api/v1/update-bill`,
   get_bill_by_id_api: `${domain}/api/v1/get-bill`,

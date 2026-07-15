@@ -95,6 +95,29 @@ const POS = () => {
   const categories = data?.data?.result?.categories || [];
   const itemsData = data?.data?.result?.menus || [];
 
+  // ── Active item-specific offers (e.g. "Cappuccino @ ₹79 today") ──
+  // Automatic — no coupon code needed. Backend already filters by
+  // day/date/time and business+branch, so whatever comes back here is
+  // valid right now for this outlet.
+  const { data: offersData } = useQuery(
+    ["activeOffers"],
+    () => apiConnectorGet(endpoint.active_offers_api),
+    { refetchOnWindowFocus: false, retry: false, staleTime: 5 * 60 * 1000 }
+  );
+  const offerByMenuId = React.useMemo(() => {
+    const offers = offersData?.data?.result || [];
+    const map = {};
+    offers.forEach((o) => {
+      if (o.dg037_offer_type === "ItemPrice" && o.dg037_menu_id) {
+        map[o.dg037_menu_id] = {
+          price: parseFloat(o.dg037_offer_price || 0),
+          name: o.dg037_offer_name,
+        };
+      }
+    });
+    return map;
+  }, [offersData]);
+
   const filteredItems = React.useMemo(() => {
     if (!itemsData || itemsData.length === 0) return [];
     // search karte waqt category select ho ya na ho, pura menu search ho
@@ -239,9 +262,16 @@ const POS = () => {
   };
 
   const addItemDirectly = (item, extraPrice, selections) => {
-    const basePrice = item.dg09_tax_group_id
-      ? parseFloat(item.dg09_amount_after_tax)
-      : parseFloat(item.dg09_price);
+    // Agar aaj is item pe koi automatic "Item Special Price" offer active hai
+    // (jaise "Cappuccino @ ₹79"), to wahi final price use karo — regular
+    // price/tax calculation ko bypass karke, kyunki offer price already
+    // customer ke liye final price hoti hai.
+    const offer = offerByMenuId[item.dg09_menu_id];
+    const basePrice = offer
+      ? offer.price
+      : item.dg09_tax_group_id
+        ? parseFloat(item.dg09_amount_after_tax)
+        : parseFloat(item.dg09_price);
     const finalPrice = basePrice + extraPrice;
 
     const optionLabel = selections
@@ -251,8 +281,8 @@ const POS = () => {
       : "";
 
     const displayName = optionLabel
-      ? `${item.dg09_name} (${optionLabel})`
-      : item.dg09_name;
+      ? `${item.dg09_name} (${optionLabel})${offer ? " 🔥" : ""}`
+      : offer ? `${item.dg09_name} 🔥` : item.dg09_name;
 
     // Functional update so rapid double-clicks never see stale state
     setOrderItems((prev) => {
@@ -267,8 +297,8 @@ const POS = () => {
         qty: 1,
         id: item.dg09_menu_id,
         dg09_name: displayName,
-        tax_group_id: item.dg09_tax_group_id || null,
-        basePrice: parseFloat(item.dg09_price),
+        tax_group_id: offer ? null : (item.dg09_tax_group_id || null),
+        basePrice: offer ? offer.price : parseFloat(item.dg09_price),
         price: finalPrice,
       }];
     });
@@ -497,22 +527,49 @@ const POS = () => {
               />
             </div>
           </div>
-          {filteredItems.map((item) => (
-            <div
-              key={item.dg09_menu_id}
-              onClick={() => addToOrder(item)}
-              className="main_card main_card_2"
-            >
+          {filteredItems.map((item) => {
+            const offer = offerByMenuId[item.dg09_menu_id];
+            return (
+              <div
+                key={item.dg09_menu_id}
+                onClick={() => addToOrder(item)}
+                className="main_card main_card_2"
+                style={offer ? { position: "relative", border: "1.5px solid #f59e0b" } : undefined}
+              >
+                {offer && (
+                  <span
+                    title={offer.name}
+                    style={{
+                      position: "absolute", top: -8, right: -8,
+                      background: "#f59e0b", color: "#fff",
+                      fontSize: 10, fontWeight: 700,
+                      padding: "2px 7px", borderRadius: 20,
+                      boxShadow: "0 2px 6px rgba(245,158,11,0.5)",
+                    }}
+                  >
+                    🔥 OFFER
+                  </span>
+                )}
 
-              {/* <img
-                src={domain + item.dg09_image_url}
-                alt={item.dg09_image_url}
-                className="w-full h-16 object-cover rounded"
-              /> */}
-              <h6>{item.dg09_name}</h6>
-              <h3>₹{item.dg09_price}</h3>
-            </div>
-          ))}
+                {/* <img
+                  src={domain + item.dg09_image_url}
+                  alt={item.dg09_image_url}
+                  className="w-full h-16 object-cover rounded"
+                /> */}
+                <h6>{item.dg09_name}</h6>
+                {offer ? (
+                  <h3>
+                    <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.75em", marginRight: 6 }}>
+                      ₹{item.dg09_price}
+                    </span>
+                    ₹{offer.price}
+                  </h3>
+                ) : (
+                  <h3>₹{item.dg09_price}</h3>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* RIGHT — BILL PANEL */}
