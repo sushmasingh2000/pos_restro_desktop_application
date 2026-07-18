@@ -196,6 +196,12 @@ export default function BillPage() {
         });
         if (bill.paid_amount && parseFloat(bill.paid_amount) > 0)
           setGivenAmount(String(bill.paid_amount));
+        else if (bill.paymentMethod?.toLowerCase() === "lending")
+          // Lending bill jiska abhi tak kuch paid hi nahi hua (paid_amount 0) —
+          // "Given Amount" ko poore total se pre-fill mat karo, warna staff
+          // bina dhyan diye save/close kar de to poora bill galti se "paid"
+          // ho jaata hai jabki customer ne ek rupaya bhi nahi diya.
+          setGivenAmount("0");
         else if (bill.total_amount && parseFloat(bill.total_amount) > 0)
           setGivenAmount(parseFloat(bill.total_amount).toFixed(2));
         const discAmt = parseFloat(bill.discount || 0);
@@ -349,12 +355,44 @@ export default function BillPage() {
     : 0;
 
   // ── Active offers ─────────────────────────────────
+  // "ItemPrice" offers (jaise "Cappuccino @ Rs79") POS pe item add karte
+  // waqt hi automatic lag chuke hote hain — inhe yahan coupon ki tarah
+  // dobara "apply" karne dena double-discount kar deta (item pe already
+  // offer price hai, phir coupon se ek aur discount kat jaata). Isliye
+  // is list se hamesha hata do. Query hamesha chalao (sirf coupon tab
+  // khulne par nahi) — offer-item detection (neeche) ko bhi in data ki
+  // zaroorat hai, chahe staff "Discount" tab hi dekh raha ho.
   const { data: offersData } = useQuery(
     ["active_offers_bill"],
     () => apiConnectorGet(endpoint.get_active_offers_api),
-    { enabled: discountMode === "coupon", staleTime: 5 * 60 * 1000, retry: false }
+    { staleTime: 5 * 60 * 1000, retry: false }
   );
-  const activeOffers = offersData?.data?.result || [];
+  const allActiveOffers = offersData?.data?.result || [];
+  const activeOffers = allActiveOffers.filter((o) => o.dg037_offer_type !== "ItemPrice");
+  const itemPriceMenuIds = new Set(
+    allActiveOffers
+      .filter((o) => o.dg037_offer_type === "ItemPrice" && o.dg037_menu_id)
+      .map((o) => String(o.dg037_menu_id))
+  );
+
+  // ── Offer-priced items already in the cart ─────────
+  // Agar cart mein koi item pehle se offer-price ke saath hai, to us order
+  // pe coupon bilkul nahi lagne dena (double-discount ka risk) — discount
+  // sirf tab allow karo jab cart mein koi non-offer item bhi ho.
+  //
+  // "isOfferItem" flag sirf usी POS session mein turant-add-kiye items pe
+  // milta hai — agar staff table dobara khole (order backend se reload
+  // hua), ye flag nahi hota. Isliye menu_id ko live active offers se bhi
+  // match karo, chahe item kahin se bhi aaya ho (naya add ho ya pehle se
+  // saved order se load hua ho).
+  const hasOfferItem = orderItems.some((i) => {
+    if (i.isOfferItem) return true;
+    const menuId = i.id ?? i.dg09_menu_id ?? i.dg07_menu_id ?? i.menu_id;
+    return menuId != null && itemPriceMenuIds.has(String(menuId));
+  });
+  const hasNonOfferItem = orderItems.some((i) => !i.isOfferItem);
+  const couponBlocked = hasOfferItem;
+  const discountBlocked = hasOfferItem && !hasNonOfferItem;
 
   // ── Coupon apply ──────────────────────────────────
   const applyCoupon = async (code) => {
@@ -555,7 +593,7 @@ export default function BillPage() {
             tax_breakdown: taxBreakdown,
             charge_breakdown: chargeBreakdown,
             items: orderItems.map((i) => {
-              const itemRate = parseFloat(i.basePrice || i.price);
+              const itemRate = parseFloat(i.price ?? i.basePrice);
               return {
                 name: i.dg09_name,
                 qty: i.qty,
@@ -869,6 +907,8 @@ export default function BillPage() {
           activeOffers={activeOffers}
           applyCoupon={applyCoupon}
           applyOfferDirect={applyOfferDirect}
+          couponBlocked={couponBlocked}
+          discountBlocked={discountBlocked}
         />
       </div>
 
@@ -950,8 +990,12 @@ export default function BillPage() {
           items: orderItems.map((i) => ({
             name: i.dg09_name,
             qty: i.qty,
-            rate: Number(i.basePrice || i.price).toFixed(2),
-            total: ((i.basePrice || i.price) * i.qty).toFixed(2),
+            // basePrice addon/option surcharge (jaise "Large" size) ya offer
+            // discount include nahi karta — bill ki Rate/Amt hamesha asli
+            // final per-unit price (price) se dikhao, warna line ka Rate x Qty
+            // Sub Total se match hi nahi karta.
+            rate: Number(i.price ?? i.basePrice).toFixed(2),
+            total: ((i.price ?? i.basePrice) * i.qty).toFixed(2),
             remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),
           })),
           subtotal: subTotal.toFixed(2),

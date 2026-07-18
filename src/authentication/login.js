@@ -8,17 +8,23 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import loginImg from '../assets/images/login/login-cover.svg';
 
+const REMEMBER_KEY = "remembered_email";
+const REMEMBER_PWD_KEY = "remembered_pwd";
+const encodePwd = (s) => btoa(unescape(encodeURIComponent(s || "")));
+const decodePwd = (s) => { try { return decodeURIComponent(escape(atob(s || ""))); } catch { return ""; } };
+
 const Login = ({ role }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState(() => localStorage.getItem(REMEMBER_KEY) || "");
+  const [password, setPassword] = useState(() => decodePwd(localStorage.getItem(REMEMBER_PWD_KEY)));
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem(REMEMBER_KEY));
   const navigate = useNavigate();
 
   // ── Reset form on tab switch ──────────────────────
   const switchTab = (tab) => {
-    setUsername("");
-    setPassword("");
+    setUsername(localStorage.getItem(REMEMBER_KEY) || "");
+    setPassword(decodePwd(localStorage.getItem(REMEMBER_PWD_KEY)));
     setShowPassword(false);
   };
 
@@ -53,6 +59,16 @@ const Login = ({ role }) => {
       localStorage.setItem("user_email", user?.email || "");
       localStorage.setItem("loginTime", Date.now().toString());
       cacheLoginLocally(endpoint.login_api, { email: username.trim(), password });
+
+      // "Remember me" — email + password dono save karte hain.
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, username.trim());
+        localStorage.setItem(REMEMBER_PWD_KEY, encodePwd(password));
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+        localStorage.removeItem(REMEMBER_PWD_KEY);
+      }
+
       toast.success("Login successful");
       navigate("/userdashboard");
 
@@ -174,7 +190,12 @@ const Login = ({ role }) => {
 
                   <div class="row-between">
                     <label class="remember">
-                      <input type="checkbox" id="remember" /> Remember me
+                      <input
+                        type="checkbox"
+                        id="remember"
+                        checked={rememberMe}
+                        onChange={e => setRememberMe(e.target.checked)}
+                      /> Remember me
                     </label>
                     <button class="forgot" type="button">Forgot password?</button>
                   </div>

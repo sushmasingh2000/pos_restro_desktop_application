@@ -1,7 +1,7 @@
 {
   "name": "restro-panel",
-  "version": "1.0.30",
-  "description": "Restaurant management desktop panel",
+  "version": "1.0.31",
+  "description": "POS software for restaurant management and billing system",
   "author": "Sushma Singh",
   "private": true,
   "dependencies": {

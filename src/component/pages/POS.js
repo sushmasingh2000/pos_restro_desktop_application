@@ -280,9 +280,12 @@ const POS = () => {
         .join(", ")
       : "";
 
+    // Text tag, emoji nahi — thermal printer par emoji print nahi hota
+    // (khaali box ya garbage aata hai), isliye order/bill mein plain text
+    // "(OFFER)" use karo, sirf POS screen ke badge mein emoji chalega.
     const displayName = optionLabel
-      ? `${item.dg09_name} (${optionLabel})${offer ? " 🔥" : ""}`
-      : offer ? `${item.dg09_name} 🔥` : item.dg09_name;
+      ? `${item.dg09_name} (${optionLabel})${offer ? " (OFFER)" : ""}`
+      : offer ? `${item.dg09_name} (OFFER)` : item.dg09_name;
 
     // Functional update so rapid double-clicks never see stale state
     setOrderItems((prev) => {
@@ -300,6 +303,7 @@ const POS = () => {
         tax_group_id: offer ? null : (item.dg09_tax_group_id || null),
         basePrice: offer ? offer.price : parseFloat(item.dg09_price),
         price: finalPrice,
+        isOfferItem: !!offer,
       }];
     });
   };

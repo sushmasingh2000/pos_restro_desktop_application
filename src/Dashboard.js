@@ -342,6 +342,18 @@ const Dashboard = () => {
       ),
     },
     {
+      label: "Today's Expense",
+      value: main.sales_records?.total_expense != null ? `₹${Number(main.sales_records.total_expense).toLocaleString("en-IN")}` : "—",
+      color: "#dc2626",
+      bg: "#FEF2F2",
+      border: "#FECACA",
+      icon: (
+        <svg width="22" height="22" fill="none" stroke="#dc2626" strokeWidth="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" /><path d="M15 9h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9m3-10v1m0 8v1" />
+        </svg>
+      ),
+    },
+    {
       label: "Lending Amount",
       value: main.lending_amount != null ? `₹${Number(main.lending_amount).toLocaleString("en-IN")}` : "—",
       color: "#d97706",
@@ -353,18 +365,19 @@ const Dashboard = () => {
         </svg>
       ),
     },
-    {
-      label: "Avg. Rating",
-      value: main.customer_feedback > 0 ? `${Number(main.customer_feedback).toFixed(1)} ★` : "—",
-      color: "#7c3aed",
-      bg: "#F5F3FF",
-      border: "#DDD6FE",
-      icon: (
-        <svg width="22" height="22" fill="none" stroke="#7c3aed" strokeWidth="2" viewBox="0 0 24 24">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ),
-    },
+    // {
+    //   label: "Avg. Rating",
+    //   value: main.customer_feedback > 0 ? `${Number(main.customer_feedback).toFixed(1)} ★` : "—",
+    //   color: "#7c3aed",
+    //   bg: "#F5F3FF",
+    //   border: "#DDD6FE",
+    //   icon: (
+    //     <svg width="22" height="22" fill="none" stroke="#7c3aed" strokeWidth="2" viewBox="0 0 24 24">
+    //       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    //     </svg>
+    //   ),
+    // },
+    
   ];
   const [qrModal, setQrModal] = useState(null);
   const [allQrModal, setAllQrModal] = useState(false);

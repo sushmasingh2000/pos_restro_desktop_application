@@ -32,6 +32,8 @@ export default function BillRightPanel({
   activeOffers,
   applyCoupon,
   applyOfferDirect,
+  couponBlocked,
+  discountBlocked,
 }) {
   const inp = "";
 
@@ -314,32 +316,47 @@ export default function BillRightPanel({
       {/* Discount */}
       <div>
         <div className="flex gap-4 mb-3">
-          {["percent", "coupon"].map((m) => (
-            <label
-              key={m}
-              className="flex items-center gap-2 cursor-pointer text-sm"
-            >
-              <div
-                onClick={() => setDiscountMode(m)}
-                className="w-4 h-4 rounded-full border-2 flex items-center justify-center cursor-pointer"
-                style={{
-                  borderColor:
-                    discountMode === m
-                      ? "#a78bfa"
-                      : "rgba(255,255,255,0.3)",
-                }}
+          {["percent", "coupon"].map((m) => {
+            const blocked = m === "coupon" ? couponBlocked : discountBlocked;
+            return (
+              <label
+                key={m}
+                className="flex items-center gap-2 text-sm"
+                style={{ cursor: blocked ? "not-allowed" : "pointer" }}
               >
-                {discountMode === m && (
-                  <div className="w-2 h-2 rounded-full bg-purple-400" />
-                )}
-              </div>
-              <span className="text-dark capitalize">
-                {m === "percent" ? "Discount" : "Coupon"}
-              </span>
-            </label>
-          ))}
+                <div
+                  onClick={() => !blocked && setDiscountMode(m)}
+                  className="w-4 h-4 rounded-full border-2 flex items-center justify-center"
+                  style={{
+                    cursor: blocked ? "not-allowed" : "pointer",
+                    borderColor: blocked
+                      ? "#cbd5e1"
+                      : discountMode === m
+                        ? "#a78bfa"
+                        : "#94a3b8",
+                  }}
+                >
+                  {discountMode === m && !blocked && (
+                    <div className="w-2 h-2 rounded-full bg-purple-400" />
+                  )}
+                </div>
+                <span
+                  className={blocked ? "capitalize" : "text-dark capitalize"}
+                  style={blocked ? { color: "#94a3b8", textDecoration: "line-through" } : undefined}
+                >
+                  {m === "percent" ? "Discount" : "Coupon"}
+                </span>
+              </label>
+            );
+          })}
         </div>
-        {discountMode === "percent" ? (
+        {couponBlocked && (
+          <p style={{ fontSize: 11, color: "#f59e0b", marginBottom: 10 }}>
+            ⚠️ This order already has an offer-priced item — coupon can't be applied
+            {discountBlocked ? "; add a non-offer item to enable discount." : "."}
+          </p>
+        )}
+        {discountMode === "percent" && !discountBlocked ? (
           <div className="grid grid-cols-2 gap-2">
             <div className="main_input">
               <label>Discount %</label>
@@ -357,7 +374,7 @@ export default function BillRightPanel({
               </div>
             </div>
           </div>
-        ) : (
+        ) : discountMode === "coupon" && !couponBlocked ? (
           <div>
             {/* Active offer cards */}
             {activeOffers.length > 0 && (
@@ -427,7 +444,7 @@ export default function BillRightPanel({
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
