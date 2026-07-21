@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { apiConnectorGet, apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
+import { domain } from "../../domain";
 import toast from "react-hot-toast";
+
+const isImageFile = (url) => /\.(png|jpe?g|gif|webp)$/i.test(url || "");
 
 const statusColors = {
   open: { bg: "#f59e0b22", color: "#f59e0b", label: "Open" },
@@ -15,10 +18,12 @@ const MyTickets = () => {
   const [showRaise, setShowRaise] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [attachment, setAttachment] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [activeTicketId, setActiveTicketId] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [replyAttachment, setReplyAttachment] = useState(null);
   const [replying, setReplying] = useState(false);
 
   const { data, isLoading } = useQuery(
@@ -43,12 +48,17 @@ const MyTickets = () => {
     }
     setSubmitting(true);
     try {
-      const res = await apiConnectorPost(endpoint.ticket_create_api, { subject, message });
+      const formData = new FormData();
+      formData.append("subject", subject);
+      formData.append("message", message);
+      if (attachment) formData.append("attachment", attachment);
+      const res = await apiConnectorPost(endpoint.ticket_create_api, formData);
       if (res?.data?.success) {
         toast.success("Ticket raised!");
         setShowRaise(false);
         setSubject("");
         setMessage("");
+        setAttachment(null);
         queryClient.invalidateQueries(["my_tickets"]);
       } else {
         toast.error(res?.data?.message || "Failed to raise ticket");
@@ -60,15 +70,17 @@ const MyTickets = () => {
   };
 
   const handleReply = async () => {
-    if (!replyText.trim()) return;
+    if (!replyText.trim() && !replyAttachment) return;
     setReplying(true);
     try {
-      const res = await apiConnectorPost(endpoint.ticket_reply_api, {
-        ticketId: activeTicketId,
-        message: replyText,
-      });
+      const formData = new FormData();
+      formData.append("ticketId", activeTicketId);
+      formData.append("message", replyText);
+      if (replyAttachment) formData.append("attachment", replyAttachment);
+      const res = await apiConnectorPost(endpoint.ticket_reply_api, formData);
       if (res?.data?.success) {
         setReplyText("");
+        setReplyAttachment(null);
         queryClient.invalidateQueries(["ticket_thread", activeTicketId]);
         queryClient.invalidateQueries(["my_tickets"]);
       } else {
@@ -164,8 +176,18 @@ const MyTickets = () => {
               rows={5}
               style={{ ...inputStyle, resize: "vertical" }}
             />
+            <label style={labelStyle}>Attachment (optional)</label>
+            <input
+              type="file"
+              accept="image/*,.pdf"
+              onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+              style={inputStyle}
+            />
+            {attachment && (
+              <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{attachment.name}</div>
+            )}
             <div className="flex justify-end gap-2 mt-3">
-              <button className="cancel_btn" onClick={() => setShowRaise(false)}>Cancel</button>
+              <button className="cancel_btn" onClick={() => { setShowRaise(false); setAttachment(null); }}>Cancel</button>
               <button className="main_btn" disabled={submitting} onClick={handleRaise}>
                 {submitting ? "Submitting..." : "Submit Ticket"}
               </button>
@@ -182,7 +204,7 @@ const MyTickets = () => {
               <h3 style={{ margin: 0 }}>
                 {ticket ? `#${ticket.dg048_ticket_id} — ${ticket.dg048_subject}` : "Loading..."}
               </h3>
-              <button onClick={() => { setActiveTicketId(null); setReplyText(""); }} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer" }}>✕</button>
+              <button onClick={() => { setActiveTicketId(null); setReplyText(""); setReplyAttachment(null); }} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer" }}>✕</button>
             </div>
 
             {ticket && (
@@ -215,7 +237,29 @@ const MyTickets = () => {
                         <div style={{ fontSize: 11, fontWeight: 700, color: isMaster ? "#2563eb" : "#374151", marginBottom: 2 }}>
                           {m.dg049_sender_name}
                         </div>
-                        <div style={{ fontSize: 13, color: "#111827", whiteSpace: "pre-wrap" }}>{m.dg049_message}</div>
+                        {m.dg049_message && (
+                          <div style={{ fontSize: 13, color: "#111827", whiteSpace: "pre-wrap" }}>{m.dg049_message}</div>
+                        )}
+                        {m.dg049_attachment_url && (
+                          isImageFile(m.dg049_attachment_url) ? (
+                            <a href={`${domain}${m.dg049_attachment_url}`} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={`${domain}${m.dg049_attachment_url}`}
+                                alt="attachment"
+                                style={{ maxWidth: 180, maxHeight: 180, borderRadius: 8, marginTop: 6, display: "block" }}
+                              />
+                            </a>
+                          ) : (
+                            <a
+                              href={`${domain}${m.dg049_attachment_url}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ fontSize: 12, color: "#2563eb", marginTop: 6, display: "inline-block" }}
+                            >
+                              📎 View attachment
+                            </a>
+                          )
+                        )}
                         <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>{fmtDate(m.dg049_created_at)}</div>
                       </div>
                     </div>
@@ -225,18 +269,31 @@ const MyTickets = () => {
             </div>
 
             {ticket?.dg048_status !== "closed" && (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Type a reply..."
-                  style={{ ...inputStyle, flex: 1 }}
-                  onKeyDown={(e) => e.key === "Enter" && handleReply()}
-                />
-                <button className="main_btn" disabled={replying} onClick={handleReply}>
-                  {replying ? "..." : "Send"}
-                </button>
+              <div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Type a reply..."
+                    style={{ ...inputStyle, flex: 1 }}
+                    onKeyDown={(e) => e.key === "Enter" && handleReply()}
+                  />
+                  <button className="main_btn" disabled={replying} onClick={handleReply}>
+                    {replying ? "..." : "Send"}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2" style={{ marginTop: 6 }}>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setReplyAttachment(e.target.files?.[0] || null)}
+                    style={{ fontSize: 12 }}
+                  />
+                  {replyAttachment && (
+                    <span style={{ fontSize: 12, color: "#6b7280" }}>{replyAttachment.name}</span>
+                  )}
+                </div>
               </div>
             )}
           </div>

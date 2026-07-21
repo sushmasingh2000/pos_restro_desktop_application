@@ -106,6 +106,8 @@ const SalesSummary = () => {
     { title: "Monthly Revenue", value: `₹${summary.monthlyRevenue || 0}`, icon: "<i class=\"ri-money-dollar-circle-line\"></i>" },
     { title: "Monthly Expense", value: `₹${summary.monthlyExpense || 0}`, icon: "<i class=\"ri-bank-line\"></i>" },
     { title: "Monthly Lending Amount", value: `₹${summary.monthlyLentAmount || 0}`, icon: "<i class=\"ri-bank-line\"></i>" },
+    { title: "Monthly Due Collected", value: `₹${summary.monthlyDueCollected || 0}${summary.monthlyDueCollectedCount ? ` (${summary.monthlyDueCollectedCount})` : ""}`, icon: "<i class=\"ri-hand-coin-line\"></i>" },
+    { title: "Today's Due Collected", value: `₹${summary.todayDueCollected || 0}${summary.todayDueCollectedCount ? ` (${summary.todayDueCollectedCount})` : ""}`, icon: "<i class=\"ri-hand-coin-line\"></i>" },
     // { title: "Net Profit", value: `₹${Number(summary.netProfit)?.toFixed(2) || 0}`, icon: "<i class=\"ri-feedback-line\"></i>" },
   ];
 

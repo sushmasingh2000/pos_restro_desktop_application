@@ -26,6 +26,15 @@ const LendingOrders = () => {
   );
   const allLending = data?.data?.result || [];
 
+  // ── Today's due-collection (across all customers) ─────────────
+  const { data: todaySummaryData } = useQuery(
+    ["dashboard_summary_today"],
+    () => apiConnectorGet(endpoint.dashboard_summary_api),
+    { refetchOnWindowFocus: false }
+  );
+  const todayCollected = todaySummaryData?.data?.data?.todayDueCollected || 0;
+  const todayCollectedCount = todaySummaryData?.data?.data?.todayDueCollectedCount || 0;
+
   // ── Fetch detail for selected customer ───────────────────────
   const { data: detailData, isLoading: detailLoading } = useQuery(
     ["lending_detail", selectedCustomer?.customer_name, selectedCustomer?.customer_phone],
@@ -63,6 +72,7 @@ const LendingOrders = () => {
           setCollectAmount("");
           setCollectPaymentMode("cash");
           queryClient.invalidateQueries(["lending_all"]);
+          queryClient.invalidateQueries(["dashboard_summary_today"]);
           queryClient.invalidateQueries([
             "lending_detail",
             selectedCustomer?.customer_name,
@@ -188,6 +198,25 @@ const LendingOrders = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* ── Today's due-collection summary ── */}
+      <div
+        className="mx-3 mb-3 flex items-center gap-3"
+        style={{
+          background: "rgba(16,185,129,0.08)",
+          border: "1px solid rgba(52,211,153,0.25)",
+          borderRadius: 12,
+          padding: "10px 16px",
+        }}
+      >
+        <span style={{ fontSize: 20 }}>💰</span>
+        <span style={{ fontSize: 13, color: "#e2e8f0" }}>
+          <b style={{ color: "#6ee7b7" }}>Today's Collection: ₹{todayCollected}</b>
+          {todayCollectedCount > 0 && (
+            <span style={{ color: "#94a3b8" }}> — from {todayCollectedCount} customer{todayCollectedCount > 1 ? "s" : ""}</span>
+          )}
+        </span>
       </div>
 
 
