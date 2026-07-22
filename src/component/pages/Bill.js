@@ -368,12 +368,24 @@ export default function BillPage() {
     { staleTime: 5 * 60 * 1000, retry: false }
   );
   const allActiveOffers = offersData?.data?.result || [];
-  const activeOffers = allActiveOffers.filter((o) => o.dg037_offer_type !== "ItemPrice");
-  const itemPriceMenuIds = new Set(
-    allActiveOffers
-      .filter((o) => o.dg037_offer_type === "ItemPrice" && o.dg037_menu_id)
-      .map((o) => String(o.dg037_menu_id))
+  const AUTO_ITEM_TYPES = ["ItemPrice", "ItemFlatDiscount", "ItemPercentDiscount"];
+  const AUTO_CATEGORY_TYPES = ["CategoryDiscount", "CategoryPercentDiscount", "CategoryFixedPrice"];
+  const AUTO_OFFER_TYPES = [...AUTO_ITEM_TYPES, ...AUTO_CATEGORY_TYPES];
+  const activeOffers = allActiveOffers.filter(
+    (o) => !AUTO_OFFER_TYPES.includes(o.dg037_offer_type)
   );
+  // Auto item/category offers (fixed price, flat ₹ off, or % off) auto-apply
+  // just like ItemPrice — union all of them into one menu_id set for offer
+  // detection.
+  const itemPriceMenuIds = new Set([
+    ...allActiveOffers
+      .filter((o) => AUTO_ITEM_TYPES.includes(o.dg037_offer_type) && o.dg037_menu_id)
+      .map((o) => String(o.dg037_menu_id)),
+    ...allActiveOffers
+      .filter((o) => AUTO_CATEGORY_TYPES.includes(o.dg037_offer_type))
+      .flatMap((o) => o.menu_ids || [])
+      .map((id) => String(id)),
+  ]);
 
   // ── Offer-priced items already in the cart ─────────
   // Agar cart mein koi item pehle se offer-price ke saath hai, to us order
@@ -385,12 +397,13 @@ export default function BillPage() {
   // hua), ye flag nahi hota. Isliye menu_id ko live active offers se bhi
   // match karo, chahe item kahin se bhi aaya ho (naya add ho ya pehle se
   // saved order se load hua ho).
-  const hasOfferItem = orderItems.some((i) => {
+  const isItemOffered = (i) => {
     if (i.isOfferItem) return true;
     const menuId = i.id ?? i.dg09_menu_id ?? i.dg07_menu_id ?? i.menu_id;
     return menuId != null && itemPriceMenuIds.has(String(menuId));
-  });
-  const hasNonOfferItem = orderItems.some((i) => !i.isOfferItem);
+  };
+  const hasOfferItem = orderItems.some(isItemOffered);
+  const hasNonOfferItem = orderItems.some((i) => !isItemOffered(i));
   const couponBlocked = hasOfferItem;
   const discountBlocked = hasOfferItem && !hasNonOfferItem;
 

@@ -107,16 +107,57 @@ const POS = () => {
   const offerByMenuId = React.useMemo(() => {
     const offers = offersData?.data?.result || [];
     const map = {};
+    const categoryOffers = [];
+    const ownPrice = (menuId) => {
+      const item = itemsData.find((m) => m.dg09_menu_id === menuId);
+      if (!item) return null;
+      return item.dg09_tax_group_id
+        ? parseFloat(item.dg09_amount_after_tax)
+        : parseFloat(item.dg09_price);
+    };
     offers.forEach((o) => {
+      if (!o.dg037_menu_id && !o.dg037_category_id) return;
+      const amount = parseFloat(o.dg037_offer_price || 0);
+      const pct = parseFloat(o.dg037_offer_price_pct || 0);
       if (o.dg037_offer_type === "ItemPrice" && o.dg037_menu_id) {
-        map[o.dg037_menu_id] = {
-          price: parseFloat(o.dg037_offer_price || 0),
+        map[o.dg037_menu_id] = { price: amount, name: o.dg037_offer_name };
+      } else if (o.dg037_offer_type === "ItemFlatDiscount" && o.dg037_menu_id) {
+        const base = ownPrice(o.dg037_menu_id);
+        if (base != null) map[o.dg037_menu_id] = { price: Math.max(base - amount, 0), name: o.dg037_offer_name };
+      } else if (o.dg037_offer_type === "ItemPercentDiscount" && o.dg037_menu_id) {
+        const base = ownPrice(o.dg037_menu_id);
+        if (base != null) map[o.dg037_menu_id] = { price: Math.max(base * (1 - pct / 100), 0), name: o.dg037_offer_name };
+      } else if (
+        ["CategoryDiscount", "CategoryPercentDiscount", "CategoryFixedPrice"].includes(o.dg037_offer_type) &&
+        o.dg037_category_id
+      ) {
+        categoryOffers.push({
+          mode: o.dg037_offer_type,
+          amount, pct,
           name: o.dg037_offer_name,
-        };
+          menuIds: o.menu_ids || [],
+        });
       }
     });
+    // Category-wide offers — apply to every item in the category (skip
+    // items that already have a more specific item-level offer).
+    categoryOffers.forEach((co) => {
+      co.menuIds.forEach((menuId) => {
+        if (map[menuId]) return;
+        if (co.mode === "CategoryFixedPrice") {
+          map[menuId] = { price: co.amount, name: co.name };
+          return;
+        }
+        const base = ownPrice(menuId);
+        if (base == null) return;
+        const price = co.mode === "CategoryPercentDiscount"
+          ? base * (1 - co.pct / 100)
+          : base - co.amount;
+        map[menuId] = { price: Math.max(price, 0), name: co.name };
+      });
+    });
     return map;
-  }, [offersData]);
+  }, [offersData, itemsData]);
 
   const filteredItems = React.useMemo(() => {
     if (!itemsData || itemsData.length === 0) return [];
