@@ -160,7 +160,15 @@ async function fetchPrinters(token) {
     log("Online printer fetch failed:", err.message, "— trying local cache...");
 
     try {
-      const localDB = require("../backend/config/localdatabase");
+      // Same dev/packaged split used for spawning the backend itself
+      // (see startBackend) — a plain relative require resolves fine in
+      // dev (backend/ sits next to panel/) but breaks once main.js is
+      // bundled inside app.asar, where "../backend" no longer points at
+      // resources/backend.
+      const localDbPath = app.isPackaged
+        ? path.join(process.resourcesPath, "backend", "config", "localdatabase")
+        : path.join(__dirname, "..", "backend", "config", "localdatabase");
+      const localDB = require(localDbPath);
       const [[row]] = await localDB.query(
         "SELECT data FROM offline_printer_config LIMIT 1"
       );

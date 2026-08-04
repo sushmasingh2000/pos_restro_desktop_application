@@ -53,6 +53,22 @@ const KitchenScreen = () => {
         }
     };
 
+    const deleteKOT = async (kotId) => {
+        if (!window.confirm(`Delete KOT #${kotId}? This cannot be undone.`)) return;
+        try {
+            const res = await apiConnectorPost(endpoint.delete_kitchen_kot_api, { kotId });
+            if (res?.data?.success) {
+                toast.success("KOT deleted");
+                refetch();
+            } else {
+                toast.error(res?.data?.message || "Delete failed");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Delete failed");
+        }
+    };
+
    return (
   <div className="main_cards">
     <div className="cards_header flex items-center justify-between">
@@ -81,6 +97,13 @@ const KitchenScreen = () => {
             <div className="flex gap-2 justify-end items-center">
               <div className="table_id">Order #{order.orderId}</div>
               <div class="elapsed-tag">⏱ 38 min ago</div>
+              <button
+                className="delete_btn"
+                title="Delete KOT"
+                onClick={() => deleteKOT(order.kotId)}
+              >
+                🗑
+              </button>
             </div>
           </div>
           <div className="kitchen_body px-3 pb-3">

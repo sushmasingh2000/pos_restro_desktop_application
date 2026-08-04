@@ -2954,6 +2954,24 @@ button.dones_btn {
     white-space: nowrap;
 }
 
+button.delete_btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    background: #ef444414;
+    color: #ef4444;
+    border: 1px solid #ef444433;
+    cursor: pointer;
+    transition: all .15s;
+}
+
+button.delete_btn:hover {
+    background: #ef444426;
+}
+
 .kitchen_footer {
     background: #fff;
     border-top: 1px solid #c7dcff;

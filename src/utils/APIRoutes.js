@@ -13,6 +13,7 @@ export const endpoint = {
   order_by_type: `${domain}/api/v1/order-by-type`,
   get_kitchen_kot_api: `${domain}/api/v1/kot/get-kitchen-kot`,
   update_kitchen_kot_api: `${domain}/api/v1/kot/update-kitchen-kot`,
+  delete_kitchen_kot_api: `${domain}/api/v1/kot/delete-kot`,
   generate_bill_api: `${domain}/api/v1/print-bill`,
   printer_bill_api: `${domain}/api/v1/thermal-print-bill`,
 
