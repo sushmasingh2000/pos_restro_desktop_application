@@ -299,8 +299,8 @@ Write-Host "Done"
 
 
 
-// ✅ Bill print content builder 
-function buildBillContent(p, billData) {
+// ✅ Bill print content builder — USB printers (original/legacy format, unchanged)
+function buildBillContentUsb(p, billData) {
   p.raw(Buffer.from([0x1D, 0x4C, 0x08, 0x00]));
   const PAD = "  ";
   const businessName = billData.business_name || billData.restaurant_name || "";
@@ -421,6 +421,196 @@ function buildBillContent(p, billData) {
   p.drawLine();
   const powered = "powered by FerryRestro v1.0.1";
   p.align("CT").text(powered);
+
+  // ✅ Dynamic UPI QR — only when this branch has an actual UPI ID
+  // configured (Master Panel > Branches). No config = no QR block at all.
+  if (billData.upi_id) {
+    const upiId = billData.upi_id;
+    const payeeName = encodeURIComponent(billData.upi_payee_name || businessName || "Restaurant");
+    const qrData = `upi://pay?pa=${upiId}&pn=${payeeName}&cu=INR`;
+
+    p.text("");
+    p.align("CT").text("Scan & Pay via UPI");
+    p.raw(qrCodeBuffer(qrData, 6));
+    p.align("CT").text(`UPI ID: ${upiId}`);
+    p.drawLine();
+  }
+}
+
+// ✅ Helper — raw ESC/POS QR code generator (no external image lib needed)
+// Model 2 QR, size aur error-correction adjustable
+function qrCodeBuffer(data, size = 6) {
+  const buffers = [];
+
+  // Select Model 2
+  buffers.push(Buffer.from([0x1D, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00]));
+
+  // Module size (1–16)
+  buffers.push(Buffer.from([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, size]));
+
+  // Error correction level: 48=L 49=M 50=Q 51=H
+  buffers.push(Buffer.from([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 49]));
+
+  // Store QR data
+  const dataBuffer = Buffer.from(data, "utf8");
+  const len = dataBuffer.length + 3;
+  const pL = len % 256;
+  const pH = Math.floor(len / 256);
+  buffers.push(
+    Buffer.concat([
+      Buffer.from([0x1D, 0x28, 0x6B, pL, pH, 0x31, 0x50, 0x30]),
+      dataBuffer,
+    ])
+  );
+
+  // Print QR
+  buffers.push(Buffer.from([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30]));
+
+  return Buffer.concat(buffers);
+}
+
+// ✅ Bill print content builder — NETWORK (IP) printers (new format: order id,
+// table, captain, customer block, taxable amt/discount/tax/sub-total breakdown)
+function buildBillContentNetwork(p, billData) {
+  const PAD = "  ";
+  const businessName = billData.business_name || billData.restaurant_name || "";
+  const outletName   = billData.outlet_name || "";
+  const licNo        = billData.lic_no || "";
+  const billTitle    = billData.bill_title || "";
+  const gstin        = billData.gstin || "";
+
+  p.style("B").text(businessName.padStart(Math.floor((48 + businessName.length) / 2))).style("NORMAL");
+  if (outletName) { p.text(outletName.padStart(Math.floor((48 + outletName.length) / 2))); }
+  if (licNo)      { const ln = `${billTitle} - ${licNo}`; p.text(ln.padStart(Math.floor((48 + ln.length) / 2))); }
+  if (gstin)      { const gl = `GSTIN : ${gstin}`;   p.text(gl.padStart(Math.floor((48 + gl.length) / 2))); }
+  p.drawLine();
+
+  // ── ORDER / TABLE / CAPTAIN / CUSTOMER / DATE ─────────
+  p.align("LT");
+  const orderIdVal = billData.uniqueOrderId || billData.billNo || billData.orderId || "—";
+  p.text(`${PAD}Order Id.:        ${orderIdVal}`);
+  p.text(`${PAD}Table No.:        ${billData.table_no || "Takeaway"}`);
+  p.text(`${PAD}Captain Name:     ${billData.captain_name || "—"}`);
+
+  if (billData.customer_name?.trim()) {
+    p.text(`${PAD}Customer Name:    ${billData.customer_name.trim()}`);
+  }
+  if (billData.customer_phone?.trim()) {
+    p.text(`${PAD}Customer Mob:     ${billData.customer_phone.trim()}`);
+  }
+  if (billData.customer_address?.trim() && billData.customer_address.trim() !== "Not Available") {
+    p.text(`${PAD}Customer Address: ${billData.customer_address.trim()}`);
+  }
+
+  p.text(`${PAD}Date :            ${billData.date_time}`);
+  p.drawLine();
+
+  // ── ITEMS ──────────────────────────────────────────────
+  p.align("LT").style("B");
+  p.text(`${PAD}Name             Qty  Rate   Amt`);
+  p.style("NORMAL").drawLine();
+
+  billData.items.forEach((item) => {
+    const fullName = item.name || "";
+    const qty = String(item.qty).padStart(3);
+    const rate = Number(item.price || item.rate || 0).toFixed(2).padStart(6);
+    const total = Number(item.total || 0).toFixed(2).padStart(7);
+    const firstName = fullName.substring(0, 16).padEnd(16);
+    p.text(`${PAD}${firstName} ${qty} ${rate} ${total}`);
+    if (fullName.length > 16) p.text(`${PAD}  ${fullName.substring(16)}`);
+    if (item.remark) p.text(`${PAD}  Note: ${item.remark}`);
+  });
+
+  p.drawLine();
+
+  // ── TAXABLE AMT / DISCOUNT / TAX / SUB TOTAL / ROUND OFF ──
+  p.align("LT");
+  const taxableLabel = `${PAD}Total Taxable Amt:`;
+  const taxableVal = Number(billData.subtotal || 0).toFixed(2);
+  p.text(`${taxableLabel.padEnd(28)}${taxableVal.padStart(10)}`);
+
+  const discLabel = `${PAD}Discount:`;
+  const discVal = Number(billData.discount || 0).toFixed(2);
+  p.text(`${discLabel.padEnd(28)}${discVal.padStart(10)}`);
+
+  if (billData.tax_breakdown?.length > 0) {
+    const rank = (name) => {
+      const n = (name || "").toUpperCase();
+      if (n.includes("CGST")) return 0;
+      if (n.includes("SGST")) return 1;
+      return 2;
+    };
+    [...billData.tax_breakdown]
+      .sort((a, b) => rank(a.name) - rank(b.name))
+      .forEach((t) => {
+        const label = `${PAD}${t.name} (${t.pct}%):`;
+        const amount = Number(t.amount).toFixed(2);
+        p.text(`${label.padEnd(28)}${amount.padStart(10)}`);
+      });
+  }
+
+  if (billData.charge_breakdown?.length > 0) {
+    billData.charge_breakdown.forEach((c) => {
+      const label = `${PAD}${c.name}:`;
+      const amount = Number(c.amount).toFixed(2);
+      p.text(`${label.padEnd(28)}${amount.padStart(10)}`);
+    });
+  }
+
+  p.drawLine();
+
+  const roundOff = Number(billData.round_off || 0);
+  const preRoundTotal = Number(billData.total_amount || 0) - roundOff;
+  p.text(`${`${PAD}Sub Total:`.padEnd(28)}${preRoundTotal.toFixed(2).padStart(10)}`);
+  const roundOffStr = (roundOff >= 0 ? "+" : "") + roundOff.toFixed(2);
+  p.text(`${`${PAD}Round Off:`.padEnd(28)}${roundOffStr.padStart(10)}`);
+
+  if (billData.payment_splits?.length > 0) {
+    billData.payment_splits.forEach((s) => {
+      if (s.mode && s.amount) {
+        const modeLabel = `${PAD}${String(s.mode)}`;
+        const modeAmt = `: ${String(s.amount)}`;
+        p.text(`${modeLabel.padEnd(28)}${modeAmt.padStart(10)}`);
+      }
+    });
+  }
+
+  if (parseFloat(billData.wallet_used || 0) > 0)
+    p.text(`${"      Wallet Applied :".padEnd(28)}${("-" + billData.wallet_used).padStart(10)}`);
+
+  if (parseFloat(billData.advance_used || 0) > 0)
+    p.text(`${"      Advance Applied :".padEnd(28)}${("-" + billData.advance_used).padStart(10)}`);
+
+  if (billData.is_lending && parseFloat(billData.remaining_amount || 0) > 0) {
+    p.drawLine();
+    p.align("CT").style("B").text(`DUE: Rs.${billData.remaining_amount}`).style("NORMAL");
+  }
+
+  p.style("B").text("=".repeat(48)).style("NORMAL");
+  const gt = `Grand TOTAL (INR): ${Number(billData.total_amount || 0).toFixed(2)}`;
+  p.style("B").text(gt.padStart(Math.floor((48 + gt.length) / 2))).style("NORMAL");
+  p.style("B").text("=".repeat(48)).style("NORMAL");
+  const ty = "Thank You..";
+  const va = "Visit Again!!!";
+  p.text(ty.padStart(Math.floor((48 + ty.length) / 2)));
+  p.text(va.padStart(Math.floor((48 + va.length) / 2)));
+  p.drawLine();
+  const powered = "powered by FerryRestro v1.0.1";
+  p.align("CT").text(powered);
+
+  // ✅ Dynamic UPI QR — only when this branch has an actual UPI ID
+  // configured (Master Panel > Branches). No config = no QR block at all.
+  if (billData.upi_id) {
+    const upiId = billData.upi_id;
+    const payeeName = encodeURIComponent(billData.upi_payee_name || businessName || "Restaurant");
+    const qrData = `upi://pay?pa=${upiId}&pn=${payeeName}&cu=INR`;
+
+    p.text("");
+    p.align("CT").text("Scan & Pay via UPI");
+    p.raw(qrCodeBuffer(qrData, 6));
+    p.align("CT").text(`UPI ID: ${upiId}`);
+    p.drawLine();
+  }
 }
 
 // ✅ KOT print content builder
@@ -480,7 +670,14 @@ ipcMain.handle("print-bill", async (event, { billData, token }) => {
     const errors = [];
     for (const printer of billPrinters) {
       try {
-        await printOnPrinter(printer, (p) => buildBillContent(p, billData));
+        // USB = purana/legacy format (jo pehle se sahi chal raha tha, chhua
+        // nahi). Network (IP) printers naya format use karte hain — dono
+        // types ek hi function share nahi karte, isliye ek fix doosre ko
+        // kabhi todhta nahi.
+        const buildContent = printer.printer_type === "network"
+          ? (p) => buildBillContentNetwork(p, billData)
+          : (p) => buildBillContentUsb(p, billData);
+        await printOnPrinter(printer, buildContent);
         log(`Bill printed successfully on ${printer.printer_value}`);
       } catch (err) {
         log(`FAILED on ${printer.printer_value}:`, err.message);

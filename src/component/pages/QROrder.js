@@ -41,7 +41,7 @@ function OrderDetailModal({ order, onConfirm, onCancel, onClose, showActions }) 
             </div>
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
               {new Date(order.dg06_created_at).toLocaleString()} · QR Scan
-              {order.dg06_table_id && ` · Table ${order.dg06_table_id}`}
+              {order.dg06_table_id && ` · ${order.dg05_table_name || `Table ${order.dg06_table_id}`}`}
             </div>
           </div>
           <button
@@ -261,7 +261,7 @@ export default function QROrder() {
                     >
                       <td>{order.unique_order_id}</td>
                       <td style={{ fontSize: 12, color: "#94a3b8" }}>
-                        {order.dg06_table_id ? `Table ${order.dg06_table_id}` : "—"}
+                        {order.dg06_table_id ? (order.dg05_table_name || `Table ${order.dg06_table_id}`) : "—"}
                       </td>
                       <td>
                         <span style={{

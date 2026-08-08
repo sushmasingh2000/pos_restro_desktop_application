@@ -380,7 +380,7 @@ const Navbar = ({ toggleSidebar }) => {
                       <div className="np-order-meta">
                         <i class="ri-timer-2-line"></i>
                         {order.dg06_order_type === "dine_in"
-                          ? `Table ${order.dg06_table_id}`
+                          ? order.dg05_table_name || `Table ${order.dg06_table_id}`
                           : order.dg06_order_type}
                         {" • "}₹{order.dg06_total_amount}
                       </div>

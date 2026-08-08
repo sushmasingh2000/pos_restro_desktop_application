@@ -474,9 +474,9 @@ export default function CustomerReport() {
               <Section label="📅 Due summary">
                 <StatGrid>
                   <Stat label="Due times"     value={fmtN(ls.totalUdharTimes)} />
-                  <Stat label="Total Due"     value={fmt(ls.totalUdharAmount)}  color="#d97706" />
+                  <Stat label="Total Billed"  value={fmt(ls.totalUdharAmount)}  color="#d97706" />
                   <Stat label="Due paid"      value={fmt(ls.totalUdharPaid)}    color="#059669" />
-                  <Stat label="Pending amount"  value={fmt(ls.totalUdharPending)} color="#dc2626" />
+                  <Stat label="Total Due"     value={fmt(ls.totalUdharPending)} color="#dc2626" />
                   <Stat label="Settled entries" value={fmtN(ls.settledCount)}     color="#059669" />
                   <Stat label="Pending entries" value={fmtN(ls.pendingCount)}     color="#dc2626" />
                 </StatGrid>
