@@ -194,14 +194,17 @@ export default function BillPage() {
           dob: bill.customer_dob || "",
           anniversary: bill.customer_anniversary || "",
         });
-        if (bill.paid_amount && parseFloat(bill.paid_amount) > 0)
-          setGivenAmount(String(bill.paid_amount));
-        else if (bill.paymentMethod?.toLowerCase() === "lending")
-          // Lending bill jiska abhi tak kuch paid hi nahi hua (paid_amount 0) —
-          // "Given Amount" ko poore total se pre-fill mat karo, warna staff
-          // bina dhyan diye save/close kar de to poora bill galti se "paid"
-          // ho jaata hai jabki customer ne ek rupaya bhi nahi diya.
+        if (bill.paymentMethod?.toLowerCase() === "lending")
+          // Lending bill — chahe purana paid_amount kuch bhi ho (jaise bill
+          // pehle "Pending" method se poora paid ban gaya tha aur ab staff
+          // usse Lending me badal raha hai), "Given Amount" hamesha 0 se
+          // start karo. Warna purana paid_amount carry-forward ho jaata
+          // hai, remaining hamesha ₹0 dikhta reh jaata hai, aur bill
+          // "Lending" label ke saath bhi silently fully-paid save ho jaati
+          // hai jabki customer ne kuch nahi diya.
           setGivenAmount("0");
+        else if (bill.paid_amount && parseFloat(bill.paid_amount) > 0)
+          setGivenAmount(String(bill.paid_amount));
         else if (bill.total_amount && parseFloat(bill.total_amount) > 0)
           setGivenAmount(parseFloat(bill.total_amount).toFixed(2));
         const discAmt = parseFloat(bill.discount || 0);
@@ -998,6 +1001,8 @@ export default function BillPage() {
           bill_title: branch.bill_title || "",
           restaurant_address: branch.address || "",
           gstin: branch.gst_no || "",
+          upi_id: branch.upi_id || "",
+          upi_payee_name: branch.upi_payee_name || "",
           uniqueOrderId: billUniqueOrderId || uniqueOrderId || orderId,
           captain_name: branch.captain_name || "",
           customer_name: customer.name,

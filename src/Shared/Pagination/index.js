@@ -9,15 +9,14 @@ const CustomPagination = ({ data, setPage }) => {
       onChange={(event, value) => setPage(value)}
       color=""
       sx={{
-        '& .MuiPaginationItem-root': { color: 'white', borderColor: 'yellow' },
+        '& .MuiPaginationItem-root': { color: '#333', borderColor: '#ccc' },
         '& .Mui-selected': {
           color: 'white',
-          borderColor: 'white',
-          bgcolor: '#dba207',
+          borderColor: '#dba207',
+          bgcolor: '#dba207 !important',
         },
-        '& .MuiPaginationItem-previousNext': { color: 'white' },
+        '& .MuiPaginationItem-previousNext': { color: '#333' },
       }}
-      className="!text-white"
     />
   );
 };

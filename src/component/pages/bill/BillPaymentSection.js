@@ -147,6 +147,8 @@ export default function BillPaymentSection({
                           modeLower !== "advance"
                         ) {
                           setGivenAmount(afterWalletTotal.toFixed(2));
+                        } else if (paymentSplits.length === 1 && modeLower === "lending") {
+                          setGivenAmount("0");
                         }
                       }}
                       className="payment_method_btn"

@@ -1,6 +1,24 @@
-
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 
 export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose, loading }) {
+  const [qrDataUrl, setQrDataUrl] = useState("");
+
+  const upiId = billData?.upi_id || "";
+  const upiPayeeName = billData?.upi_payee_name || billData?.business_name || billData?.restaurant_name || "Restaurant";
+  const upiAmount = Number(billData?.total_amount || 0).toFixed(2);
+
+  useEffect(() => {
+    if (!upiId) {
+      setQrDataUrl("");
+      return;
+    }
+    const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiPayeeName)}&am=${upiAmount}&cu=INR`;
+    QRCode.toDataURL(upiUrl, { margin: 1, width: 140 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(""));
+  }, [upiId, upiPayeeName, upiAmount]);
+
   if (!isOpen || !billData) return null;
 
   const {
@@ -233,6 +251,18 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
           <div style={{ textAlign: "center", fontWeight: "bold", fontSize: 12 }}>
             Visit Again!!!
           </div>
+
+          {/* UPI QR — only when this branch has an actual UPI ID configured */}
+          {upiId && qrDataUrl && (
+            <>
+              <Divider />
+              <div style={{ textAlign: "center", fontSize: 11, marginBottom: 4 }}>Scan & Pay via UPI</div>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <img src={qrDataUrl} alt="UPI QR" width={140} height={140} />
+              </div>
+              <div style={{ textAlign: "center", fontSize: 10, marginTop: 4 }}>UPI ID: {upiId}</div>
+            </>
+          )}
 
           {/* Torn paper bottom */}
           <div style={{ height: 12 }} />

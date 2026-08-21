@@ -115,7 +115,7 @@ function createWindow() {
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, "build/index.html"));
   } else {
-    mainWindow.loadURL("http://localhost:3000");
+    mainWindow.loadURL("http://localhost:3001");
   }
 
   setTimeout(() => {
@@ -427,7 +427,8 @@ function buildBillContentUsb(p, billData) {
   if (billData.upi_id) {
     const upiId = billData.upi_id;
     const payeeName = encodeURIComponent(billData.upi_payee_name || businessName || "Restaurant");
-    const qrData = `upi://pay?pa=${upiId}&pn=${payeeName}&cu=INR`;
+    const upiAmount = Number(billData.total_amount || 0).toFixed(2);
+    const qrData = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${upiAmount}&cu=INR`;
 
     p.text("");
     p.align("CT").text("Scan & Pay via UPI");
@@ -603,7 +604,8 @@ function buildBillContentNetwork(p, billData) {
   if (billData.upi_id) {
     const upiId = billData.upi_id;
     const payeeName = encodeURIComponent(billData.upi_payee_name || businessName || "Restaurant");
-    const qrData = `upi://pay?pa=${upiId}&pn=${payeeName}&cu=INR`;
+    const upiAmount = Number(billData.total_amount || 0).toFixed(2);
+    const qrData = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${upiAmount}&cu=INR`;
 
     p.text("");
     p.align("CT").text("Scan & Pay via UPI");

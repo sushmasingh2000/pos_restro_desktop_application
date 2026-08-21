@@ -2053,6 +2053,16 @@ button.next_btn {
     color: #fff;
 }
 
+.page_num_inactive {
+    padding: 5px 10px;
+    background: #eff5ff;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-color);
+    border: 1px solid #c7dcff;
+}
+
 .pagination_number {
     font-size: 13px;
     color: #5f5f5f;
