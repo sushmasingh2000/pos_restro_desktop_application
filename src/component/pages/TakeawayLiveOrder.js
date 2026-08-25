@@ -4,6 +4,7 @@ import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import toast from "react-hot-toast";
 import { useQueryClient } from "react-query";
+import { useNavigate } from "react-router-dom";
 
 const tabs = ["PLACED", "IN PROGRESS", "COMPLETED", "CANCELLED"];
 
@@ -31,8 +32,8 @@ function OrderDetailModal({ order, onConfirm, onCancel, onClose, showActions }) 
       >
         {/* Header */}
         <div style={{
-          padding: "14px 20px", background: "#f0f9ff",
-          borderBottom: "1px solid #bae6fd",
+          padding: "14px 20px", background: "#eff6ff",
+          borderBottom: "1px solid #bfdbfe",
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           <div>
@@ -40,8 +41,7 @@ function OrderDetailModal({ order, onConfirm, onCancel, onClose, showActions }) 
               Order #{order.unique_order_id}
             </div>
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-              {new Date(order.dg06_created_at).toLocaleString()} · QR Scan
-              {order.dg06_table_id && ` · ${order.dg05_table_name || `Table ${order.dg06_table_id}`}`}
+              {new Date(order.dg06_created_at).toLocaleString()} · Takeaway
             </div>
           </div>
           <button
@@ -51,16 +51,22 @@ function OrderDetailModal({ order, onConfirm, onCancel, onClose, showActions }) 
         </div>
 
         {/* Customer info */}
-        {order.dg06_customer_name && (
-          <div style={{ padding: "10px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-            <div style={{ fontSize: 13, color: "#1e293b", fontWeight: 600 }}>
-              👤 {order.dg06_customer_name}
-              {order.dg06_customer_phone && (
-                <span style={{ fontWeight: 400, color: "#64748b" }}> · 📞 {order.dg06_customer_phone}</span>
-              )}
-            </div>
+        <div style={{ padding: "10px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+          <div style={{ fontSize: 13, color: "#1e293b", fontWeight: 600 }}>
+            🧑‍🍳 {order.dg06_customer_name || "Staff Order"}
+            {order.dg06_customer_phone && (
+              <span style={{ fontWeight: 400, color: "#64748b" }}> · 📞 {order.dg06_customer_phone}</span>
+            )}
           </div>
-        )}
+          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+            Placed by staff at counter
+          </div>
+          {order.dg06_pickup_note && (
+            <div style={{ fontSize: 12, color: "#2563eb", marginTop: 4 }}>
+              🥡 {order.dg06_pickup_note}
+            </div>
+          )}
+        </div>
 
         {/* Items */}
         <div style={{ padding: "14px 20px", maxHeight: 300, overflowY: "auto" }}>
@@ -126,12 +132,13 @@ function OrderDetailModal({ order, onConfirm, onCancel, onClose, showActions }) 
   );
 }
 
-export default function QROrder() {
+export default function TakeawayLiveOrder() {
   const [activeTab, setActiveTab] = useState("PLACED");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const client = useQueryClient();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
@@ -146,9 +153,8 @@ export default function QROrder() {
       setOrders(
         (res?.data?.result || []).filter(
           (order) =>
-            order.dg06_customer_session !== null &&
-            order.dg06_customer_session !== "" &&
-            order.dg06_order_type === "dine_in"
+            order.dg06_order_type === "takeaway" &&
+            (order.dg06_customer_session === null || order.dg06_customer_session === "")
         )
       );
     } catch (err) {
@@ -184,9 +190,12 @@ export default function QROrder() {
     }
   };
 
+  // Customer (QR) orders wait at "customer_placed" for staff Accept.
+  // Staff-placed orders (from POS) are created already-confirmed as "pending",
+  // so they belong in IN PROGRESS straightaway, not PLACED.
   const filteredOrders = orders.filter((order) => {
     if (activeTab === "PLACED") return order.dg06_status === "customer_placed";
-    if (activeTab === "IN PROGRESS") return order.dg06_status === "preparing";
+    if (activeTab === "IN PROGRESS") return order.dg06_status === "pending" || order.dg06_status === "preparing";
     if (activeTab === "COMPLETED") return order.dg06_status === "completed";
     if (activeTab === "CANCELLED") return order.dg06_status === "cancelled";
     return false;
@@ -198,19 +207,26 @@ export default function QROrder() {
       <div className="main_cards mt-3">
         <div className="chart_header">
           <div className="chart_heading">
-            <h4><span className="live-dot"></span> Table QR Scan Orders</h4>
-            <p>Orders placed by customers scanning the table QR code</p>
+            <h4><span className="live-dot"></span> Takeaway Orders</h4>
+            <p>Orders placed by staff at the counter</p>
           </div>
-          <div className="flex main_tanses">
+          <div className="flex main_tanses" style={{ alignItems: "center", gap: 12 }}>
+            <button
+              onClick={() => navigate("/pos/take-away")}
+              className="main_btn"
+              style={{ padding: "8px 16px", fontSize: 13, fontWeight: 700 }}
+            >
+              + New Takeaway Order
+            </button>
             <div className="flex gap-2 live_filters">
               {tabs.map((tab) => {
-                const statusMap = {
-                  "PLACED": "customer_placed",
-                  "IN PROGRESS": "preparing",
-                  "COMPLETED": "completed",
-                  "CANCELLED": "cancelled",
-                };
-                const count = orders.filter((o) => o.dg06_status === statusMap[tab]).length;
+                const count = orders.filter((o) => {
+                  if (tab === "PLACED") return o.dg06_status === "customer_placed";
+                  if (tab === "IN PROGRESS") return o.dg06_status === "pending" || o.dg06_status === "preparing";
+                  if (tab === "COMPLETED") return o.dg06_status === "completed";
+                  if (tab === "CANCELLED") return o.dg06_status === "cancelled";
+                  return false;
+                }).length;
                 return (
                   <button
                     key={tab}
@@ -243,7 +259,7 @@ export default function QROrder() {
               <thead>
                 <tr>
                   <th>Order Id</th>
-                  <th>Table</th>
+                  <th>Customer</th>
                   <th>Items</th>
                   <th>Amount</th>
                   <th>Time</th>
@@ -264,7 +280,7 @@ export default function QROrder() {
                     >
                       <td>{order.unique_order_id}</td>
                       <td style={{ fontSize: 12, color: "#94a3b8" }}>
-                        {order.dg06_table_id ? (order.dg05_table_name || `Table ${order.dg06_table_id}`) : "—"}
+                        {order.dg06_customer_name || "—"}
                       </td>
                       <td>
                         <span style={{

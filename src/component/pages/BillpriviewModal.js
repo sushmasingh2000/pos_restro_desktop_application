@@ -268,7 +268,7 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
           <div style={{ height: 12 }} />
           {/* Powered by */}
           <div style={{ textAlign: "center", fontSize: 12, color: "#aaa", marginTop: 6 }}>
-            powered by FerryRestro v1.0.1
+            powered by FerryInfotech v1.0.1
           </div>
         </div>
 

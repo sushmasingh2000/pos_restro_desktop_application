@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { apiConnectorGet, apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
@@ -48,6 +49,9 @@ const CustomerLedger = () => {
 
   const [phone, setPhone] = useState("");
   const [searchPhone, setSearchPhone] = useState("");
+  const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
+  const [customerDropdownRect, setCustomerDropdownRect] = useState(null);
+  const phoneInputRef = useRef(null);
 
   // Register modal
   const [registerModal, setRegisterModal] = useState(false);
@@ -64,13 +68,24 @@ const CustomerLedger = () => {
   const [topupRemark, setTopupRemark] = useState("");
   const [searchQ, setSearchQ] = useState("");
 
-  // All customers
+  // All customers — fetched once (up to 50), then filtered client-side as
+  // the user types. Wiring a fresh backend request to every keystroke caused
+  // a race where a fast typist would briefly see a stale, partially-filtered
+  // list (whichever request happened to resolve last) instead of the correct
+  // match set.
   const { data: allData } = useQuery(
-    ["all_customers", searchQ],
-    () => apiConnectorGet(`${endpoint.customer_search_api}?q=${searchQ}`),
+    ["all_customers"],
+    () => apiConnectorGet(`${endpoint.customer_search_api}?q=`),
     { refetchOnWindowFocus: false }
   );
   const allCustomers = allData?.data?.result || [];
+  const filteredCustomers = phone.trim()
+    ? allCustomers.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(phone.toLowerCase()) ||
+          c.phone?.includes(phone)
+      )
+    : allCustomers;
 
   const { data, isLoading, isFetching } = useQuery(
     ["customer_ledger", searchPhone],
@@ -185,19 +200,71 @@ const CustomerLedger = () => {
       {/* ── Search Bar ── */}
       <div className="m-3">
         <div className="brand_boxs flex items-end gap-4 ">
-          <div className="main_input mt-0">
+          <div className="main_input mt-0" style={{ position: "relative" }}>
             <label>Customer Phone Number <span className="text-red-500">*</span></label>
-            <select
+            <input
+              ref={phoneInputRef}
               value={phone}
-              onChange={(e) => { setPhone(e.target.value); setSearchPhone(e.target.value); }}
-            >
-              <option value="" >Select Customer</option>
-              {allCustomers.map((c) => (
-                <option key={c.id} value={c.phone}>
-                  {c.name} ({c.phone})
-                </option>
-              ))}
-            </select>
+              placeholder="Type name or phone number..."
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setCustomerDropdownOpen(true);
+                if (phoneInputRef.current) {
+                  setCustomerDropdownRect(phoneInputRef.current.getBoundingClientRect());
+                }
+              }}
+              onFocus={() => {
+                setCustomerDropdownOpen(true);
+                if (phoneInputRef.current) {
+                  setCustomerDropdownRect(phoneInputRef.current.getBoundingClientRect());
+                }
+              }}
+              onBlur={() => setTimeout(() => setCustomerDropdownOpen(false), 150)}
+            />
+            {/* .main_cards (the outer card wrapper) sets overflow:hidden to
+                keep its rounded corners clean — that clips a normal
+                absolutely-positioned dropdown to the card's current height,
+                which is short before any search runs. Portal it to <body>
+                with fixed positioning so it escapes that clipping. */}
+            {customerDropdownOpen && filteredCustomers.length > 0 && customerDropdownRect &&
+              createPortal(
+                <div
+                  style={{
+                    position: "fixed",
+                    top: customerDropdownRect.bottom + 4,
+                    left: customerDropdownRect.left,
+                    width: customerDropdownRect.width,
+                    zIndex: 9999,
+                    maxHeight: 220,
+                    overflowY: "auto",
+                    background: "#fff",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 10,
+                    boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
+                  }}
+                >
+                  {filteredCustomers.map((c) => (
+                    <div
+                      key={c.id}
+                      onMouseDown={() => {
+                        setPhone(c.phone);
+                        setCustomerDropdownOpen(false);
+                      }}
+                      style={{
+                        padding: "8px 12px",
+                        fontSize: 13,
+                        color: "#1e293b",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      {c.name} ({c.phone})
+                    </div>
+                  ))}
+                </div>,
+                document.body
+              )}
           </div>
           <button
             onClick={handleSearch}
@@ -227,7 +294,7 @@ const CustomerLedger = () => {
                     <button
                       onClick={() => setTopupModal(true)}
                       className="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
-                      style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(52,211,153,0.3)", color: "#6ee7b7" }}>
+                      style={{ background: "#10b981", border: "1px solid #059669", color: "#fff" }}>
                       + Add to Wallet
                     </button>
                   </div>
@@ -303,9 +370,9 @@ const CustomerLedger = () => {
                           <button
                             className="px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex-shrink-0"
                             style={{
-                              background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2))",
-                              border: "1px solid rgba(52,211,153,0.35)",
-                              color: "#6ee7b7",
+                              background: "linear-gradient(135deg, #10b981, #059669)",
+                              border: "1px solid #059669",
+                              color: "#fff",
                             }}
                           >
                             💰 Due
@@ -336,11 +403,11 @@ const CustomerLedger = () => {
                           tx.dg043_type === "credit"
                             ? {
                               background: "rgba(16,185,129,0.15)",
-                              color: "#6ee7b7",
+                              color: "#059669",
                             }
                             : {
                               background: "rgba(239,68,68,0.15)",
-                              color: "#fca5a5",
+                              color: "#dc2626",
                             }
                         }
                       >
@@ -394,8 +461,8 @@ const CustomerLedger = () => {
                         style={{
                           color:
                             tx.dg043_type === "credit"
-                              ? "#6ee7b7"
-                              : "#fca5a5",
+                              ? "#059669"
+                              : "#dc2626",
                         }}>
                         {tx.dg043_type === "credit" ? "+" : "-"}₹
                         {parseFloat(tx.dg043_amount).toFixed(2)}

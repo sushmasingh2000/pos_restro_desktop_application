@@ -16,16 +16,20 @@ export default function PendingOrder() {
   const tabs = [
     "ALL SECTIONS",
     "DINE IN",
-    "QR ORDER",
+    "TAKE AWAY",
     "DOOR DELIVERY",
+    "TABLE QR",
+    "QR ORDER",
     // "PARK ITEMS",
   ];
 
   const getApiParams = (tab) => {
     const base = { page, limit, status: ["pending"] };
     if (tab === "ALL SECTIONS") return base;
-    if (tab === "QR ORDER") return { ...base, qrOnly: true };
+    if (tab === "TABLE QR") return { ...base, qrOnly: true };
+    if (tab === "QR ORDER") return { ...base, takeawayQrOnly: true };
     if (tab === "DINE IN") return { ...base, orderType: "dine_in" };
+    if (tab === "TAKE AWAY") return { ...base, orderType: "takeaway" };
     if (tab === "DOOR DELIVERY") return { ...base, orderType: "delivery" };
     // if (tab === "PARK ITEMS")    return { ...base, orderType: "park-items" };
     return base;
@@ -43,17 +47,21 @@ export default function PendingOrder() {
   const countQueries = useQueries([
     { queryKey: ["pending-count", "all"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"] }), refetchInterval: 30000 },
     { queryKey: ["pending-count", "dine_in"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "dine_in" }), refetchInterval: 30000 },
-    { queryKey: ["pending-count", "qr"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], qrOnly: true }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "takeaway"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "takeaway" }), refetchInterval: 30000 },
     { queryKey: ["pending-count", "delivery"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "delivery" }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "table_qr"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], qrOnly: true }), refetchInterval: 30000 },
+    { queryKey: ["pending-count", "qr_order"], queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], takeawayQrOnly: true }), refetchInterval: 30000 },
     // { queryKey: ["pending-count", "park"],     queryFn: () => apiConnectorPost(endpoint.order_branch_status_api, { page: 1, limit: 1, status: ["pending"], orderType: "park-items" }), refetchInterval: 30000 },
   ]);
 
   const tabCounts = {
     "ALL SECTIONS": countQueries[0]?.data?.data?.result?.pagination?.total || 0,
     "DINE IN": countQueries[1]?.data?.data?.result?.pagination?.total || 0,
-    "QR ORDER": countQueries[2]?.data?.data?.result?.pagination?.total || 0,
+    "TAKE AWAY": countQueries[2]?.data?.data?.result?.pagination?.total || 0,
     "DOOR DELIVERY": countQueries[3]?.data?.data?.result?.pagination?.total || 0,
-    // "PARK ITEMS":    countQueries[4]?.data?.data?.result?.pagination?.total || 0,
+    "TABLE QR": countQueries[4]?.data?.data?.result?.pagination?.total || 0,
+    "QR ORDER": countQueries[5]?.data?.data?.result?.pagination?.total || 0,
+    // "PARK ITEMS":    countQueries[6]?.data?.data?.result?.pagination?.total || 0,
   };
 
   // FORMAT ORDERS
@@ -114,6 +122,7 @@ export default function PendingOrder() {
         orderId: order.rawId,
         tableId: order.rawTableId,
         orderType: order.type,
+        tableNameMap: order.rawTableId ? { [order.rawTableId]: order.tableNo } : {},
         existingBillId: order.billId,
         deliveryCustomerName: order?.customerName || "",
         deliveryCustomerPhone: order?.customerPhone || "",
@@ -149,9 +158,11 @@ export default function PendingOrder() {
                       <span style={{
                         background: tab === "ALL SECTIONS" ? "#6366f1"
                           : tab === "DINE IN" ? "#f59e0b"
-                            : tab === "QR ORDER" ? "#8b5cf6"
+                            : tab === "TAKE AWAY" ? "#2563eb"
                               : tab === "DOOR DELIVERY" ? "#ef4444"
-                                : "#10b981",
+                                : tab === "TABLE QR" ? "#8b5cf6"
+                                  : tab === "QR ORDER" ? "#0891b2"
+                                    : "#10b981",
                         color: "#fff", borderRadius: "50%",
                         fontSize: 10, padding: "1px 5px", marginLeft: 6,
                       }}>

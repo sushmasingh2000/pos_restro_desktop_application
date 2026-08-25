@@ -10,6 +10,7 @@ import BillBreakdown from "./bill/BillBreakdown";
 import BillPaymentSection from "./bill/BillPaymentSection";
 import BillRightPanel from "./bill/BillRightPanel";
 import BillDeliverySection from "./bill/BillDeliverySection";
+import CancelOrderModal from "./Cancel";
 
 export default function BillPage() {
   const location = useLocation();
@@ -38,6 +39,7 @@ export default function BillPage() {
   const [statusLoading, setStatusLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [showCancelOrderModal, setShowCancelOrderModal] = useState(false);
   // ── Top pe state add karo ──
   const [billUniqueOrderId, setBillUniqueOrderId] = useState(uniqueOrderId || null);
   const [customer, setCustomer] = useState({
@@ -83,6 +85,10 @@ export default function BillPage() {
   const [savedBillNo, setSavedBillNo] = useState(null);
   const isReprint = !!savedBillId;
   const [reprintRemainingDue, setReprintRemainingDue] = useState(0);
+  const [billCreatedAt, setBillCreatedAt] = useState(null);
+  const billDateTime = isReprint && billCreatedAt
+    ? new Date(billCreatedAt).toLocaleString("en-IN")
+    : new Date().toLocaleString("en-IN");
 
   const { data: branchData } = useQuery(
     ["branch_profile"],
@@ -185,6 +191,7 @@ export default function BillPage() {
         const bill = res?.data?.result;
         if (!bill) return;
         setBillUniqueOrderId(bill.uniqueOrderId || null); // ← पहली line में add karo
+        if (bill.createdAt) setBillCreatedAt(bill.createdAt);
 
         setCustomer({
           name: bill.customer_name || "",
@@ -194,19 +201,10 @@ export default function BillPage() {
           dob: bill.customer_dob || "",
           anniversary: bill.customer_anniversary || "",
         });
-        if (bill.paymentMethod?.toLowerCase() === "lending")
-          // Lending bill — chahe purana paid_amount kuch bhi ho (jaise bill
-          // pehle "Pending" method se poora paid ban gaya tha aur ab staff
-          // usse Lending me badal raha hai), "Given Amount" hamesha 0 se
-          // start karo. Warna purana paid_amount carry-forward ho jaata
-          // hai, remaining hamesha ₹0 dikhta reh jaata hai, aur bill
-          // "Lending" label ke saath bhi silently fully-paid save ho jaati
-          // hai jabki customer ne kuch nahi diya.
-          setGivenAmount("0");
-        else if (bill.paid_amount && parseFloat(bill.paid_amount) > 0)
-          setGivenAmount(String(bill.paid_amount));
-        else if (bill.total_amount && parseFloat(bill.total_amount) > 0)
-          setGivenAmount(parseFloat(bill.total_amount).toFixed(2));
+        // Given Amount hamesha khaali start hota hai — staff jo bhi amount
+        // customer se actually mila hai wahi khud type karega, purana
+        // paid_amount/total_amount se auto-fill nahi hota.
+        setGivenAmount("");
         const discAmt = parseFloat(bill.discount || 0);
         const sub = parseFloat(bill.subtotal || 0);
         if (discAmt > 0 && sub > 0) {
@@ -607,7 +605,7 @@ export default function BillPage() {
             uniqueOrderId: billUniqueOrderId || uniqueOrderId || orderId,
             billNo: billRes.data.billNo,
             table_no: tableId ? tableNameMap[tableId] || tableId : null,
-            date_time: new Date().toLocaleString("en-IN"),
+            date_time: billDateTime,
             tax_breakdown: taxBreakdown,
             charge_breakdown: chargeBreakdown,
             items: orderItems.map((i) => {
@@ -947,9 +945,20 @@ export default function BillPage() {
       />
 
       <div className="flex justify-between gap-3 modal_footer px-3 py-3">
-        <button onClick={() => navigate(-1)} className="cancel_btn">
-          Cancel
-        </button>
+        <div className="flex gap-3">
+          <button onClick={() => navigate(-1)} className="cancel_btn">
+            Cancel
+          </button>
+          {!isReprint && currentStatus !== "completed" && (
+            <button
+              onClick={() => setShowCancelOrderModal(true)}
+              className="cancel_btn"
+              style={{ background: "rgba(220,38,38,0.2)", border: "1px solid rgba(248,113,113,0.4)", color: "#f87171" }}
+            >
+              🚫 Cancel Order
+            </button>
+          )}
+        </div>
         <div className="flex justify-end gap-3" style={{ width: "50%" }}>
           {isReprint &&
             currentStatus !== "completed" &&
@@ -1045,6 +1054,13 @@ export default function BillPage() {
           handlePrintBill();
         }}
         onClose={() => setShowPreview(false)}
+      />
+
+      <CancelOrderModal
+        isOpen={showCancelOrderModal}
+        onClose={() => setShowCancelOrderModal(false)}
+        orderId={orderId}
+        onCancelled={() => navigate(-1)}
       />
 
       {/* ── Close Table confirm ── */}

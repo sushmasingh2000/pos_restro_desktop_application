@@ -99,6 +99,7 @@ const FeedbackModal = ({ order, onClose, onSuccess }) => {
 const Orders = () => {
   const today = new Date().toISOString().split("T")[0];
   const [search, setSearch] = useState("");
+  const handleSearchChange = (val) => { setSearch(val); setPage(1); };
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -117,10 +118,11 @@ const Orders = () => {
   });
 
   const { data, isLoading } = useQuery(
-    ["orders", filters, page],
+    ["orders", filters, page, search],
     () =>
       apiConnectorPost(endpoint.order_branch_status_api, {
         ...filters,
+        search,
         page,
         limit,
       })
@@ -186,7 +188,7 @@ const Orders = () => {
         orderId: order.rawId,
         tableId: order.rawTableId,
         orderType: order.type,
-        tableNameMap: {},
+        tableNameMap: order.rawTableId ? { [order.rawTableId]: order.tableNo } : {},
         existingBillId: order.billId,
         orderStatus: order?.status || "",
         uniqueOrderId: order.orderId,
@@ -245,7 +247,7 @@ const Orders = () => {
           {/* Search */}
           <div className="date-row main_input">
             <span className="date-label">Search:</span>
-            <input value={search} onChange={e => setSearch(e.target.value)}
+            <input value={search} onChange={e => handleSearchChange(e.target.value)}
               placeholder="Enter Order Id" />
           </div>
         </div>

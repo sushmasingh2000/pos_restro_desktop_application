@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { apiConnectorPost, apiConnectorGet, triggerLocalCacheNow } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import useAppMode from "../../hooks/useAppMode";
+import { frontend } from "../../domain";
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -36,6 +37,28 @@ const Navbar = ({ toggleSidebar }) => {
     { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
   );
   const branchName = branchData?.data?.result?.branch_name || "";
+  const deliveryToken = branchData?.data?.result?.delivery_token || null;
+  const deliveryLink = deliveryToken ? `${frontend}/delivery/${deliveryToken}` : null;
+  const [linkCopied, setLinkCopied] = useState(false);
+  const takeawayToken = branchData?.data?.result?.takeaway_token || null;
+  const takeawayLink = takeawayToken ? `${frontend}/takeaway/${takeawayToken}` : null;
+  const [takeawayLinkCopied, setTakeawayLinkCopied] = useState(false);
+
+  const copyDeliveryLink = () => {
+    if (!deliveryLink) return;
+    navigator.clipboard.writeText(deliveryLink).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  };
+
+  const copyTakeawayLink = () => {
+    if (!takeawayLink) return;
+    navigator.clipboard.writeText(takeawayLink).then(() => {
+      setTakeawayLinkCopied(true);
+      setTimeout(() => setTakeawayLinkCopied(false), 2000);
+    });
+  };
 
   // ── Subscription alert ──
   const { data: subData } = useQuery(
@@ -212,6 +235,46 @@ const Navbar = ({ toggleSidebar }) => {
             <i className="ri-store-2-line" style={{ fontSize: 13 }} />
             {branchName}
           </div>
+        )}
+
+        {/* Delivery Link Button */}
+        {deliveryLink && (
+          <button className="desktop_links"
+            onClick={copyDeliveryLink}
+            title={deliveryLink}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              background: linkCopied ? "rgba(16,185,129,0.15)" : "rgba(217,119,6,0.12)",
+              border: `1px solid ${linkCopied ? "rgba(16,185,129,0.4)" : "rgba(217,119,6,0.3)"}`,
+              borderRadius: 8, padding: "4px 10px",
+              fontSize: 12, color: linkCopied ? "#10b981" : "#f59e0b", fontWeight: 600,
+              cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit",
+              transition: "all 0.2s",
+            }}
+          >
+            <i className={linkCopied ? "ri-check-line" : "ri-share-line"} style={{ fontSize: 13 }} />
+            {linkCopied ? "Copied!" : "Delivery Link"}
+          </button>
+        )}
+
+        {/* Takeaway Link Button */}
+        {takeawayLink && (
+          <button className="desktop_links"
+            onClick={copyTakeawayLink}
+            title={takeawayLink}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              background: takeawayLinkCopied ? "rgba(16,185,129,0.15)" : "rgba(37,99,235,0.12)",
+              border: `1px solid ${takeawayLinkCopied ? "rgba(16,185,129,0.4)" : "rgba(37,99,235,0.3)"}`,
+              borderRadius: 8, padding: "4px 10px",
+              fontSize: 12, color: takeawayLinkCopied ? "#10b981" : "#2563eb", fontWeight: 600,
+              cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit",
+              transition: "all 0.2s",
+            }}
+          >
+            <i className={takeawayLinkCopied ? "ri-check-line" : "ri-takeaway-line"} style={{ fontSize: 13 }} />
+            {takeawayLinkCopied ? "Copied!" : "Takeaway Link"}
+          </button>
         )}
 
         {/* Subscription Alert */}

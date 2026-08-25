@@ -6,6 +6,7 @@ import { endpoint } from "../../utils/APIRoutes";
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import toast from "react-hot-toast";
+import LendingStatementModal from "./LendingStatementModal";
 
 const inp = "w-full px-3 py-2 rounded-xl text-sm text-white placeholder-white/30 bg-white/10 border border-white/20 focus:outline-none focus:border-purple-400/50 transition-all";
 
@@ -18,6 +19,9 @@ const LendingOrders = () => {
   const [collectPaymentMode, setCollectPaymentMode] = useState("cash");
   // ADD THIS STATE
   const [activeTab, setActiveTab] = useState("due");
+  const [showStatementPreview, setShowStatementPreview] = useState(false);
+  const [stmtStartDate, setStmtStartDate] = useState("");
+  const [stmtEndDate, setStmtEndDate] = useState("");
   // ── Fetch all lending customers ──────────────────────────────
   const { data, isLoading } = useQuery(
     ["lending_all"],
@@ -48,6 +52,16 @@ const LendingOrders = () => {
   );
   const lendingDetails = detailData?.data?.result || [];
 
+  // ── Date-range filter for the statement/order history (from-to) ──
+  const filteredLendingDetails = lendingDetails.filter((due) => {
+    if (!stmtStartDate && !stmtEndDate) return true;
+    const d = new Date(due.dg042_order_date || due.dg042_created_at);
+    const dStr = d.toISOString().split("T")[0];
+    if (stmtStartDate && dStr < stmtStartDate) return false;
+    if (stmtEndDate && dStr > stmtEndDate) return false;
+    return true;
+  });
+
   // selectedCustomer ke baad yeh query add karo
   const { data: paymentHistoryData } = useQuery(
     ["lending_payments", selectedCustomer?.customer_id],
@@ -60,6 +74,14 @@ const LendingOrders = () => {
     }
   );
   const allPayments = paymentHistoryData?.data?.result || [];
+
+  // ── Branch info for the statement header ─────────────────────
+  const { data: branchData } = useQuery(
+    ["branch_profile"],
+    () => apiConnectorGet(endpoint.branch_profile_api),
+    { refetchOnWindowFocus: false }
+  );
+  const branch = branchData?.data?.result || {};
 
   // ── Settle mutation ───────────────────────────────────────────
   const settleMutation = useMutation(
@@ -211,10 +233,10 @@ const LendingOrders = () => {
         }}
       >
         <span style={{ fontSize: 20 }}>💰</span>
-        <span style={{ fontSize: 13, color: "#e2e8f0" }}>
-          <b style={{ color: "#6ee7b7" }}>Today's Collection: ₹{todayCollected}</b>
+        <span style={{ fontSize: 13, color: "#065f46" }}>
+          <b style={{ color: "#047857" }}>Today's Collection: ₹{todayCollected}</b>
           {todayCollectedCount > 0 && (
-            <span style={{ color: "#94a3b8" }}> — from {todayCollectedCount} customer{todayCollectedCount > 1 ? "s" : ""}</span>
+            <span style={{ color: "#475569" }}> — from {todayCollectedCount} customer{todayCollectedCount > 1 ? "s" : ""}</span>
           )}
         </span>
       </div>
@@ -289,6 +311,19 @@ const LendingOrders = () => {
       {/* ════════════════════════════════════════════════════════ */}
       {selectedCustomer && (
         <>
+          <div className="mx-3 mt-3">
+            <button
+              onClick={() => setSelectedCustomer(null)}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "#a78bfa",
+              }}
+            >
+              ← Back to Lending Orders
+            </button>
+          </div>
           <div className="landing_boxes mx-3 mt-3">
             <Row className="landing_header border-0">
               <Col lg={4} md={4}>
@@ -322,17 +357,55 @@ const LendingOrders = () => {
             </Row>
           </div>
           <div className="history_box mt-3 mx-3 mb-3">
-            <div className="history_header flex justify-between items-center">
+            <div className="history_header flex justify-between items-center flex-wrap gap-2">
               <h6>Order History</h6>
-              <p>📅 All time</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={stmtStartDate}
+                  onChange={(e) => setStmtStartDate(e.target.value)}
+                  className="px-2 py-1 rounded-lg text-xs"
+                  style={{ background: "#fff", border: "1px solid #cbd5e1", color: "#1e293b" }}
+                />
+                <span style={{ color: "#94a3b8", fontSize: 12 }}>to</span>
+                <input
+                  type="date"
+                  value={stmtEndDate}
+                  onChange={(e) => setStmtEndDate(e.target.value)}
+                  className="px-2 py-1 rounded-lg text-xs"
+                  style={{ background: "#fff", border: "1px solid #cbd5e1", color: "#1e293b" }}
+                />
+                {(stmtStartDate || stmtEndDate) && (
+                  <button
+                    onClick={() => { setStmtStartDate(""); setStmtEndDate(""); }}
+                    className="text-xs"
+                    style={{ color: "#94a3b8" }}
+                  >
+                    ✕ Clear
+                  </button>
+                )}
+                {filteredLendingDetails.length > 0 && (
+                  <button
+                    onClick={() => setShowStatementPreview(true)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap"
+                    style={{
+                      background: "#7c3aed",
+                      border: "1px solid #7c3aed",
+                      color: "#fff",
+                    }}
+                  >
+                    🖨 Print Statement
+                  </button>
+                )}
+              </div>
             </div>
              {detailLoading ? (
               <div className="py-12 text-center text-dark">Loading orders...</div>
-            ) : lendingDetails.length === 0 ? (
+            ) : filteredLendingDetails.length === 0 ? (
               <div className="py-12 text-center text-dark">Koi order nahi mila</div>
             ) : (
               <div className="divide-y divide-white/5">
-                {lendingDetails.map((due) => {
+                {filteredLendingDetails.map((due) => {
 
                   // Is bill ki payments filter karo
                   const billPayments = allPayments.filter(
@@ -394,9 +467,9 @@ const LendingOrders = () => {
                                     })}
                                     className="px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex-shrink-0"
                                     style={{
-                                      background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2))",
-                                      border: "1px solid rgba(52,211,153,0.35)",
-                                      color: "#6ee7b7",
+                                      background: "linear-gradient(135deg, #10b981, #059669)",
+                                      border: "1px solid #059669",
+                                      color: "#fff",
                                     }}
                                   >
                                     💰 Collect ₹{parseFloat(due.dg042_remaining_amount).toFixed(0)}
@@ -573,6 +646,14 @@ const LendingOrders = () => {
           </div>
         </div>
       )}
+
+      <LendingStatementModal
+        isOpen={showStatementPreview}
+        onClose={() => setShowStatementPreview(false)}
+        customer={selectedCustomer}
+        lendingDetails={filteredLendingDetails}
+        branch={branch}
+      />
     </div>
   );
 };

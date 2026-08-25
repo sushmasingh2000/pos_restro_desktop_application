@@ -37,12 +37,12 @@ export default function Sidebar() {
         <SidebarLink to="/sales-summary" icon={<AssessmentIcon fontSize="small" />} label="Sales Summary" />
         <SidebarLink to="/payment-summary" icon={<Money fontSize="small" />} label="Payment Summary" />
         <SidebarLink to="/dine-in-order" icon={<LiveTvIcon fontSize="small" />} label="Dine In Orders" />
+        <SidebarLink to="/take-away-order" icon={<StoreIcon fontSize="small" />} label="Takeaway" />
         <SidebarLink to="/door-dilevery-order" icon={<StoreIcon fontSize="small" />} label="Door Delivery" />
         <SidebarLink to="/lending-order" icon={<PeopleAlt fontSize="small" />} label="Lending Orders" />
         <SidebarLink to="/customer-ledger" icon={<LiveTvIcon fontSize="small" />} label="Customer Wallet" />
         <SidebarLink to="/customer-report" icon={<LiveTvIcon fontSize="small" />} label="Customer Report" />
         <SidebarLink to="/expense-report" icon={<LiveTvIcon fontSize="small" />} label="Expense Report" />
-        {/* <SidebarLink to="/take-away-order" icon={<PeopleAlt fontSize="small" />} label="Take Away Orders" /> */}
         <SidebarLink to="/cancelled-order" icon={<PeopleAlt fontSize="small" />} label="Cancelled Orders" />
         <SidebarLink to="/kitchen-order" icon={<LiveTvIcon fontSize="small" />} label="Kitchen Orders" />
         <SidebarLink to="/feedback" icon={<AssessmentIcon fontSize="small" />} label="Feedback" />

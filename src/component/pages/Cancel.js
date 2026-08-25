@@ -23,7 +23,7 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
   const client = useQueryClient();
   const handleCancel = async () => {
     if (!reason.trim()) {
-      toast.error("Cancel reason select ya likho!");
+      toast.error("Cancel reason is required!");
       return;
     }
 

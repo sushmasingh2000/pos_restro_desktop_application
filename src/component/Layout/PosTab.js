@@ -42,7 +42,9 @@ const PosTab = () => {
   const [counts, setCounts] = useState({
     dineIn: 0,
     delivery: 0,
-    qr: 0,
+    tableQr: 0,
+    qrTakeaway: 0,
+    takeaway: 0,
     online: 0,
     pending: 0,
   });
@@ -53,10 +55,12 @@ const PosTab = () => {
       const res1 = await apiConnectorPost(endpoint.get_customer_placed_orders);
       const allPlaced = res1?.data?.result || [];
 
-      const qr = allPlaced.filter(
+      // Table QR = customer scanned the table QR (dine-in)
+      const tableQr = allPlaced.filter(
         (o) =>
           o.dg06_customer_session != null &&
           o.dg06_customer_session !== "" &&
+          o.dg06_order_type === "dine_in" &&
           o.dg06_status === "customer_placed"
       ).length;
 
@@ -73,6 +77,15 @@ const PosTab = () => {
           o.dg06_status === "customer_placed"
       ).length;
 
+      // QR Order = customer scanned a QR from anywhere for takeaway pickup
+      const qrTakeaway = allPlaced.filter(
+        (o) =>
+          o.dg06_order_type === "takeaway" &&
+          o.dg06_customer_session != null &&
+          o.dg06_customer_session !== "" &&
+          o.dg06_status === "customer_placed"
+      ).length;
+
       // Call 2: pending branch orders (Dine-in + Pending tab)
       const res2 = await apiConnectorPost(endpoint.order_branch_status_api, {
         status: ["pending"],
@@ -85,9 +98,14 @@ const PosTab = () => {
         (o) => o.dg06_order_type === "dine_in"
       ).length;
 
+      // Takeaway = orders staff placed at the counter
+      const takeaway = pendingOrders.filter(
+        (o) => o.dg06_order_type === "takeaway"
+      ).length;
+
       const pending = pendingTotal;
 
-      setCounts({ dineIn, delivery, qr, online, pending });
+      setCounts({ dineIn, delivery, tableQr, qrTakeaway, takeaway, online, pending });
     } catch { }
   }, []);
 
@@ -99,8 +117,10 @@ const PosTab = () => {
 
   const navItems = [
     { name: "DINE IN", path: "/userdashboard", count: counts.dineIn },
+    { name: "TAKE AWAY", path: "/pos/take-away", count: counts.takeaway },
     { name: "DOOR DELIVERY ORDERS", path: "/online-delivery-order", count: counts.delivery },
-    { name: "OR SCAN ORDERS", path: "/qr-order", count: counts.qr },
+    { name: "TABLE QR", path: "/qr-order", count: counts.tableQr },
+    { name: "QR ORDER", path: "/qr-takeaway-order", count: counts.qrTakeaway },
     { name: "ONLINE ORDERS", path: "/online-order", count: counts.online },
     { name: "PENDING ORDERS", path: "/pending-order", count: counts.pending },
   ];

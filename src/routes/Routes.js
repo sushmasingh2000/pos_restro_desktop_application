@@ -19,6 +19,8 @@ import TakeAway from "../component/pages/TakeAway";
 import ExpenseManagementReport from "../component/pages/expense/Expense";
 import OnlineDeliveryOrder from "../component/pages/OnlineDeliveryOrder";
 import QROrder from "../component/pages/QROrder";
+import TakeawayLiveOrder from "../component/pages/TakeawayLiveOrder";
+import QrTakeawayOrder from "../component/pages/QrTakeawayOrder";
 import FeedbackPage from "../component/pages/FeedbackPage";
 import MyTickets from "../component/pages/MyTickets";
 
@@ -111,6 +113,22 @@ export const routes = [
     element: (
       <MainLayout>
         <QROrder />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/takeaway-qr-order",
+    element: (
+      <MainLayout>
+        <TakeawayLiveOrder />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/qr-takeaway-order",
+    element: (
+      <MainLayout>
+        <QrTakeawayOrder />
       </MainLayout>
     ),
   },

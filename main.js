@@ -419,7 +419,7 @@ function buildBillContentUsb(p, billData) {
   p.text(ty.padStart(Math.floor((48 + ty.length) / 2)));
   p.text(va.padStart(Math.floor((48 + va.length) / 2)));
   p.drawLine();
-  const powered = "powered by FerryRestro v1.0.1";
+  const powered = "powered by FerryInfotech v1.0.1";
   p.align("CT").text(powered);
 
   // ✅ Dynamic UPI QR — only when this branch has an actual UPI ID
@@ -596,7 +596,7 @@ function buildBillContentNetwork(p, billData) {
   p.text(ty.padStart(Math.floor((48 + ty.length) / 2)));
   p.text(va.padStart(Math.floor((48 + va.length) / 2)));
   p.drawLine();
-  const powered = "powered by FerryRestro v1.0.1";
+  const powered = "powered by FerryInfotech v1.0.1";
   p.align("CT").text(powered);
 
   // ✅ Dynamic UPI QR — only when this branch has an actual UPI ID
@@ -721,6 +721,91 @@ ipcMain.handle("print-kot", async (event, { kotData, token }) => {
       : { success: true };
   } catch (err) {
     log("print-kot top-level error:", err.message);
+    return { success: false, message: err.message };
+  }
+});
+
+// ✅ Due Statement print content builder
+function buildStatementContent(p, statementData) {
+  const PAD = "  ";
+  const businessName = statementData.business_name || statementData.restaurant_name || "";
+  const outletName   = statementData.outlet_name || "";
+  const address      = statementData.address || "";
+  const gstin        = statementData.gstin || "";
+
+  p.style("B").text(businessName.padStart(Math.floor((48 + businessName.length) / 2))).style("NORMAL");
+  if (outletName) p.text(outletName.padStart(Math.floor((48 + outletName.length) / 2)));
+  if (address)    p.text(address.padStart(Math.floor((48 + address.length) / 2)));
+  if (gstin)      { const gl = `GSTIN: ${gstin}`; p.text(gl.padStart(Math.floor((48 + gl.length) / 2))); }
+  p.drawLine();
+
+  p.style("B").text("DUE STATEMENT".padStart(Math.floor((48 + 13) / 2))).style("NORMAL");
+  const gen = `Generated: ${statementData.generatedAt || new Date().toLocaleString("en-IN")}`;
+  p.text(gen.padStart(Math.floor((48 + gen.length) / 2)));
+  p.drawLine();
+
+  p.align("LT");
+  p.text(`${PAD}Customer : ${statementData.customer_name || ""}`);
+  if (statementData.customer_phone) p.text(`${PAD}Phone    : ${statementData.customer_phone}`);
+  p.drawLine();
+
+  p.style("B").text(`${PAD}DATE      ORDER ID          PAID    DUE`).style("NORMAL");
+  p.drawLine();
+
+  (statementData.bills || []).forEach((b) => {
+    const dateCol = String(b.date || "").padEnd(10).substring(0, 10);
+    const orderCol = String(b.orderId || "").padEnd(16).substring(0, 16);
+    const paidVal = Number(b.paid || 0);
+    const paidCol = (paidVal > 0 ? paidVal.toFixed(0) : "-").padStart(6);
+    const dueCol = Number(b.due || 0).toFixed(0).padStart(6);
+    p.text(`${PAD}${dateCol}${orderCol}${paidCol}${dueCol}`);
+    p.text("");
+    (b.items || []).forEach((it, idx) => {
+      const timeLabel = idx === 0 ? (b.time || "") : "";
+      const amt = Number(it.amount || 0).toFixed(0);
+      p.text(`${PAD}  ${timeLabel} ${it.name} x${it.qty} - ${amt}`);
+    });
+    p.drawLine();
+  });
+
+  p.align("LT");
+  p.style("B").text(`${`${PAD}Total Billed :`.padEnd(28)}${Number(statementData.totalBilled || 0).toFixed(2).padStart(10)}`).style("NORMAL");
+  p.style("B").text(`${`${PAD}Total Paid   :`.padEnd(28)}${Number(statementData.totalPaid || 0).toFixed(2).padStart(10)}`).style("NORMAL");
+  p.drawLine();
+
+  const td = `Total Due: Rs.${Number(statementData.totalDue || 0).toFixed(2)}`;
+  p.style("B").text(td.padStart(Math.floor((48 + td.length) / 2))).style("NORMAL");
+  p.drawLine();
+
+  p.align("CT").text("powered by FerryInfotech v1.0.1");
+}
+
+// ✅ IPC — DUE STATEMENT PRINT
+ipcMain.handle("print-statement", async (event, { statementData, token }) => {
+  log("print-statement IPC received, customer:", statementData?.customer_name);
+  try {
+    const printers = await fetchPrinters(token);
+    const billPrinters = printers.filter((p) => p.printer_tab === "BILL");
+    log("BILL printers found:", billPrinters.length, JSON.stringify(billPrinters));
+
+    if (billPrinters.length === 0)
+      return { success: false, message: "No BILL printer configured in backend!" };
+
+    const errors = [];
+    for (const printer of billPrinters) {
+      try {
+        await printOnPrinter(printer, (p) => buildStatementContent(p, statementData));
+        log(`Statement printed successfully on ${printer.printer_value}`);
+      } catch (err) {
+        log(`FAILED on ${printer.printer_value}:`, err.message);
+        errors.push(err.message);
+      }
+    }
+    return errors.length
+      ? { success: false, message: errors.join(" | ") }
+      : { success: true };
+  } catch (err) {
+    log("print-statement top-level error:", err.message);
     return { success: false, message: err.message };
   }
 });

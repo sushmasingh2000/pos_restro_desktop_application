@@ -15,48 +15,46 @@ export default function BillPaymentSection({
 }) {
   return (
     <>
-      {/* Given / Return — Single split only */}
-      {!isReprint && !isAdvance && paymentSplits.length === 1 && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="main_input">
-            <label>
-              {isLending ? "Amount Paid Now (optional)" : "Given Amount"}
-            </label>
-            <input
-              type="number"
-              value={givenAmount}
-              onChange={(e) => setGivenAmount(e.target.value)}
-              placeholder="0"
-            />
-          </div>
-          <div className="main_input" s>
-            <label>
-              {isLending ? "Remaining Credit" : "Return Amount"}
-            </label>
-            <div
-              className="px-3 py-2 rounded-xl text-sm font-bold text-center"
-              style={
-                isLending
-                  ? {
-                    background: "rgba(239,68,68,0.15)",
-                    border: "1px solid rgba(248,113,113,0.4)",
-                    color: "#fca5a5",
-                  }
-                  : {
-                    background: "rgba(16,185,129,0.15)",
-                    border: "1px solid rgba(52,211,153,0.3)",
-                    color: "#6ee7b7",
-                  }
-              }
-            >
-              ₹
-              {isLending
-                ? lendingRemaining.toFixed(2)
-                : returnAmt.toFixed(2)}
-            </div>
+      {/* Given / Return — always visible */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="main_input">
+          <label>
+            {isLending ? "Amount Paid Now (optional)" : "Given Amount"}
+          </label>
+          <input
+            type="number"
+            value={givenAmount}
+            onChange={(e) => setGivenAmount(e.target.value)}
+            placeholder="0"
+          />
+        </div>
+        <div className="main_input">
+          <label>
+            {isLending ? "Remaining Credit" : "Return Amount"}
+          </label>
+          <div
+            className="px-3 py-2 rounded-xl text-sm font-bold text-center"
+            style={
+              isLending
+                ? {
+                  background: "rgba(239,68,68,0.15)",
+                  border: "1px solid rgba(248,113,113,0.4)",
+                  color: "#fca5a5",
+                }
+                : {
+                  background: "rgba(16,185,129,0.15)",
+                  border: "1px solid rgba(52,211,153,0.3)",
+                  color: "#6ee7b7",
+                }
+            }
+          >
+            ₹
+            {isLending
+              ? lendingRemaining.toFixed(2)
+              : returnAmt.toFixed(2)}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Lending banner */}
       {isLending && !isReprint && (
@@ -139,17 +137,6 @@ export default function BillPaymentSection({
                           updated[idx].amount = Math.max(0, afterWalletTotal - otherPaid).toFixed(2);
                         }
                         setPaymentSplits(updated);
-                        // Given Amount auto-fill (dono side dikhane ke liye)
-                        const modeLower = m.name?.toLowerCase();
-                        if (
-                          paymentSplits.length === 1 &&
-                          modeLower !== "lending" &&
-                          modeLower !== "advance"
-                        ) {
-                          setGivenAmount(afterWalletTotal.toFixed(2));
-                        } else if (paymentSplits.length === 1 && modeLower === "lending") {
-                          setGivenAmount("0");
-                        }
                       }}
                       className="payment_method_btn"
                       style={

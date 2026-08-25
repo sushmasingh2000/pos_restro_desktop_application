@@ -15,6 +15,7 @@ import total_table from "./assets/images/dashbord/total-tables.png";
 import available from "./assets/images/dashbord/available.png";
 import busy from "./assets/images/dashbord/busy.png";
 import utilisationi from "./assets/images/dashbord/utilisation.png";
+import { frontend } from "./domain";
 
 
 function timeDifference(targetDateStr) {
@@ -613,6 +614,13 @@ const Dashboard = () => {
             <input type="text" placeholder="Search Table" />
           </div>
           {/* NEW BUTTON */}
+          {/* <button onClick={() => navigate("/pos/take-away")} className="scanner_btn" style={{ background: "#2563eb" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8v4l3 3" />
+            </svg>
+            New Takeaway
+          </button> */}
           <button onClick={() => setAllQrModal(true)} className="scanner_btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
               <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -772,6 +780,18 @@ const Dashboard = () => {
                   <p style={{ color: "white", fontSize: "12px", marginTop: "6px" }}>
                     {table.dg05_table_name}
                   </p>
+                  {table.dg05_qr_token && (
+                    <p
+                      style={{ color: "#93c5fd", fontSize: "10px", marginTop: "2px", cursor: "pointer", wordBreak: "break-all", maxWidth: 150 }}
+                      title="Click to copy"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${frontend}/menu/${table.dg05_qr_token}`);
+                        toast.success("Link copied");
+                      }}
+                    >
+                      {`${frontend}/menu/${table.dg05_qr_token}`}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

@@ -96,7 +96,7 @@ const DineIn = () => {
         uniqueOrderId: order.orderId,
         tableId: order.rawTableId,
         orderType: type,
-        tableNameMap: {},
+        tableNameMap: order.rawTableId ? { [order.rawTableId]: order.tableNo } : {},
         existingBillId: order.billId,
         orderStatus: order?.status || "",
       },

@@ -156,7 +156,7 @@ const KOTPrintSlip = ({ kotData, onClose }) => {
 
           {/* Powered by */}
           <div style={{ textAlign: "center", fontSize: 9, color: "#aaa", marginTop: 4 }}>
-            powered by FerryRestro v1.0.1
+            powered by FerryInfotech v1.0.1
           </div>
 
           <div style={{ height: 12 }} />
