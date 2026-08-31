@@ -20,6 +20,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
 
   // ================= PREFILL =================
   useEffect(() => {
+    if (!isOpen) return;
     if (editExpense) {
       setFormData({
         name: editExpense.dg022_name || "",
@@ -39,7 +40,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
         desc: ""
       });
     }
-  }, [editExpense]);
+  }, [editExpense, isOpen]);
 
   // ================= GET CATEGORY =================
   const { data } = useQuery(
