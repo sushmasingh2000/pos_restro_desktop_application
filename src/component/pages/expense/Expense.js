@@ -226,7 +226,7 @@ const ExpenseManagementReport = () => {
                     {/* ACTIONS */}
                     <td className="flex gap-2">
                       <div className="edite" onClick={() => { setEditExpense(exp);  setIsModalOpen(true); }} >✏️</div>
-                      <div className="delete" onClick={() => deleteMutation.mutate(exp.dg022_expense_id) } >🗑️</div>
+                      {/* <div className="delete" onClick={() => deleteMutation.mutate(exp.dg022_expense_id) } >🗑️</div> */}
                     </td>
                   </tr>
                 ))

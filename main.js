@@ -21,6 +21,7 @@ process.stderr.on('error', (err) => { if (err.code === 'EPIPE') return; });
 
 const escpos = require("escpos");
 escpos.Network = require("escpos-network");
+const QRCode = require("qrcode");
 
 let backendProcess;
 let mainWindow;
@@ -223,31 +224,54 @@ async function printOnPrinter(printer, buildContent) {
 
   }
   else {
-    return new Promise((resolve, reject) => {
-      const printerName = printer.printer_value;
-      const lines = [];
-      const BOLD = "\x1F"; // bold marker prefix
-      let _bold = false;
+    const printerName = printer.printer_value;
+    const lines = [];
+    const BOLD = "\x1F"; // bold marker prefix
+    const QR = "\x02"; // QR image marker prefix (followed by PNG file path)
+    let _bold = false;
 
-      const textBuilder = {
-        align: () => textBuilder,
-        style: (s) => { _bold = (s === "B"); return textBuilder; },
-        size: () => textBuilder,
-        raw: () => textBuilder,
-        drawLine: () => { lines.push("-".repeat(48)); return textBuilder; },
-        text: (t) => { lines.push((_bold ? BOLD : "") + (t || "")); return textBuilder; },
-        cut: () => { lines.push(""); lines.push(""); lines.push(""); return textBuilder; },
-        close: (cb) => { if (cb) cb(); },
-      };
+    const textBuilder = {
+      align: () => textBuilder,
+      style: (s) => { _bold = (s === "B"); return textBuilder; },
+      size: () => textBuilder,
+      raw: () => textBuilder,
+      drawLine: () => { lines.push("-".repeat(48)); return textBuilder; },
+      text: (t) => { lines.push((_bold ? BOLD : "") + (t || "")); return textBuilder; },
+      // Windows PrintDocument path can't render raw ESC/POS bytes (raw() is a
+      // no-op there), so QR must be rendered as an actual PNG and drawn as an
+      // image — pushed as a marker line, converted to a file below.
+      qrImage: (data) => { lines.push({ __qr: data }); return textBuilder; },
+      cut: () => { lines.push(""); lines.push(""); lines.push(""); return textBuilder; },
+      close: (cb) => { if (cb) cb(); },
+    };
 
-      try {
-        buildContent(textBuilder);
-      } catch (e) {
-        log("buildContent error:", e.message);
-        return reject(e);
+    try {
+      buildContent(textBuilder);
+    } catch (e) {
+      log("buildContent error:", e.message);
+      throw e;
+    }
+
+    // Render any queued QR markers to temp PNG files for the PS script to draw.
+    const qrFiles = [];
+    const textLines = [];
+    for (const item of lines) {
+      if (item && typeof item === "object" && item.__qr) {
+        const qrPath = path.join(os.tmpdir(), `qr_${Date.now()}_${qrFiles.length}.png`);
+        try {
+          await QRCode.toFile(qrPath, item.__qr, { margin: 1, width: 200 });
+          qrFiles.push(qrPath);
+          textLines.push(`${QR}${qrPath}`);
+        } catch (e) {
+          log("QR image generation failed:", e.message);
+        }
+      } else {
+        textLines.push(item);
       }
+    }
 
-      const textContent = lines.join("\n");
+    return new Promise((resolve, reject) => {
+      const textContent = textLines.join("\n");
       const txtFile = path.join(os.tmpdir(), `print_${Date.now()}.txt`);
       fs.writeFileSync(txtFile, textContent, 'utf8');
       log("Text file written:", txtFile);
@@ -266,12 +290,23 @@ $pd.Add_PrintPage({
   $y = [float]0
   $lh = $fontN.GetHeight($e.Graphics)
   foreach ($line in $lines) {
-    if ($line.Length -gt 0 -and [int][char]$line[0] -eq 31) {
+    if ($line.Length -gt 0 -and [int][char]$line[0] -eq 2) {
+      $imgPath = $line.Substring(1)
+      if (Test-Path $imgPath) {
+        $img = [System.Drawing.Image]::FromFile($imgPath)
+        $qw = 140
+        $qx = ($e.PageBounds.Width - $qw) / 2
+        $e.Graphics.DrawImage($img, [float]$qx, $y, $qw, $qw)
+        $img.Dispose()
+        $y += $qw + 6
+      }
+    } elseif ($line.Length -gt 0 -and [int][char]$line[0] -eq 31) {
       $e.Graphics.DrawString($line.Substring(1), $fontB, [System.Drawing.Brushes]::Black, [float]0, $y)
+      $y += $lh
     } else {
       $e.Graphics.DrawString($line, $fontN, [System.Drawing.Brushes]::Black, [float]0, $y)
+      $y += $lh
     }
-    $y += $lh
   }
 })
 $pd.Print()
@@ -285,6 +320,7 @@ Write-Host "Done"
       exec(`powershell -ExecutionPolicy Bypass -File "${psFile}"`, { timeout: 15000 }, (err, stdout, stderr) => {
         try { fs.unlinkSync(txtFile); } catch (e) { }
         try { fs.unlinkSync(psFile); } catch (e) { }
+        for (const qf of qrFiles) { try { fs.unlinkSync(qf); } catch (e) { } }
 
         if (err) {
           log("PrintDocument failed:", err.message, stderr);
@@ -432,7 +468,7 @@ function buildBillContentUsb(p, billData) {
 
     p.text("");
     p.align("CT").text("Scan & Pay via UPI");
-    p.raw(qrCodeBuffer(qrData, 6));
+    p.qrImage(qrData);
     p.align("CT").text(`UPI ID: ${upiId}`);
     p.drawLine();
   }
