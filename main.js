@@ -289,13 +289,15 @@ $pd.Add_PrintPage({
   param($sender, $e)
   $y = [float]0
   $lh = $fontN.GetHeight($e.Graphics)
+  $contentWidth = $e.Graphics.MeasureString(('-' * 48), $fontN).Width
   foreach ($line in $lines) {
     if ($line.Length -gt 0 -and [int][char]$line[0] -eq 2) {
       $imgPath = $line.Substring(1)
       if (Test-Path $imgPath) {
         $img = [System.Drawing.Image]::FromFile($imgPath)
         $qw = 140
-        $qx = ($e.PageBounds.Width - $qw) / 2
+        $qx = ($contentWidth - $qw) / 2
+        if ($qx -lt 0) { $qx = 0 }
         $e.Graphics.DrawImage($img, [float]$qx, $y, $qw, $qw)
         $img.Dispose()
         $y += $qw + 6
@@ -435,6 +437,11 @@ function buildBillContentUsb(p, billData) {
     });
   }
 
+  if (parseFloat(billData.given_amount || 0) > 0) {
+    p.text(`${"      Given Amount :".padEnd(28)}${String(billData.given_amount).padStart(10)}`);
+    p.text(`${"      Return Amount :".padEnd(28)}${String(billData.return_amount || "0.00").padStart(10)}`);
+  }
+
   if (parseFloat(billData.wallet_used || 0) > 0)
     p.text(`${"      Wallet Applied :".padEnd(28)}${("-" + billData.wallet_used).padStart(10)}`);
 
@@ -455,8 +462,6 @@ function buildBillContentUsb(p, billData) {
   p.text(ty.padStart(Math.floor((48 + ty.length) / 2)));
   p.text(va.padStart(Math.floor((48 + va.length) / 2)));
   p.drawLine();
-  const powered = "powered by FerryInfotech v1.0.1";
-  p.align("CT").text(powered);
 
   // ✅ Dynamic UPI QR — only when this branch has an actual UPI ID
   // configured (Master Panel > Branches). No config = no QR block at all.
@@ -467,11 +472,17 @@ function buildBillContentUsb(p, billData) {
     const qrData = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${upiAmount}&cu=INR`;
 
     p.text("");
-    p.align("CT").text("Scan & Pay via UPI");
+    const scanLabel = "Scan & Pay via UPI";
+    p.text(scanLabel.padStart(Math.floor((48 + scanLabel.length) / 2)));
     p.qrImage(qrData);
-    p.align("CT").text(`UPI ID: ${upiId}`);
+    const upiLine = `UPI ID: ${upiId}`;
+    p.text(upiLine.padStart(Math.floor((48 + upiLine.length) / 2)));
     p.drawLine();
   }
+
+  // "powered by" is always the last line on the receipt.
+  const powered = "powered by FerryInfotech v1.0.1";
+  p.align("CT").text(powered);
 }
 
 // ✅ Helper — raw ESC/POS QR code generator (no external image lib needed)
@@ -610,6 +621,11 @@ function buildBillContentNetwork(p, billData) {
         p.text(`${modeLabel.padEnd(28)}${modeAmt.padStart(10)}`);
       }
     });
+  }
+
+  if (parseFloat(billData.given_amount || 0) > 0) {
+    p.text(`${`${PAD}Given Amount:`.padEnd(28)}${String(billData.given_amount).padStart(10)}`);
+    p.text(`${`${PAD}Return Amount:`.padEnd(28)}${String(billData.return_amount || "0.00").padStart(10)}`);
   }
 
   if (parseFloat(billData.wallet_used || 0) > 0)

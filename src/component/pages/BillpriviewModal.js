@@ -47,6 +47,8 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
     round_off = 0,
     payment_splits = [],
     paymentMethod,
+    given_amount = "",
+    return_amount = "",
     wallet_used = 0,
     advance_used = 0,
     is_lending,
@@ -215,6 +217,14 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
                   <AmtRow key={i} label={s.mode} value={`: ${s.amount}`} muted />
                 ) : null
               )}
+            </>
+          )}
+
+          {/* Given / Return — cash payment only */}
+          {parseFloat(given_amount || 0) > 0 && (
+            <>
+              <AmtRow label="Given Amount" value={Number(given_amount).toFixed(2)} />
+              <AmtRow label="Return Amount" value={Number(return_amount || 0).toFixed(2)} />
             </>
           )}
 

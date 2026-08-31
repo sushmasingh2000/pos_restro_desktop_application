@@ -68,6 +68,7 @@ export default function BillPage() {
   ]);
 
   const selectedMode = paymentSplits[0]?.mode || "";
+  const hasCash = paymentSplits.some(p => p.mode?.toLowerCase() === "cash");
   const isLending = paymentSplits.some(p => p.mode?.toLowerCase() === "lending");
   const isAdvance = selectedMode?.toLowerCase() === "advance";
   const isSplitLending = isLending && paymentSplits.length > 1;
@@ -608,6 +609,8 @@ export default function BillPage() {
             date_time: billDateTime,
             tax_breakdown: taxBreakdown,
             charge_breakdown: chargeBreakdown,
+            given_amount: hasCash && givenAmt > 0 ? givenAmt.toFixed(2) : "",
+            return_amount: hasCash && givenAmt > 0 ? returnAmt.toFixed(2) : "",
             items: orderItems.map((i) => {
               const itemRate = parseFloat(i.price ?? i.basePrice);
               return {
@@ -695,6 +698,8 @@ export default function BillPage() {
         is_lending: isLending,
         is_advance: isAdvance,
         round_off: roundOff,
+        given_amount: hasCash && givenAmt > 0 ? givenAmt.toFixed(2) : "",
+        return_amount: hasCash && givenAmt > 0 ? returnAmt.toFixed(2) : "",
         items: orderItems.map((i) => {
           const itemRate = parseFloat(i.basePrice || i.price);
           return {
@@ -1037,6 +1042,8 @@ export default function BillPage() {
           discount: discountAmount.toFixed(2),
           total_amount: grandTotal.toFixed(2),
           round_off: roundOff,
+          given_amount: hasCash && givenAmt > 0 ? givenAmt.toFixed(2) : "",
+          return_amount: hasCash && givenAmt > 0 ? returnAmt.toFixed(2) : "",
           payment_splits: getFinalSplits(),
           paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
           wallet_used: useWallet || isAdvance ? maxWalletUse.toFixed(2) : 0,
