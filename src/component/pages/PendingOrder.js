@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useQueries } from "react-query";
-import { apiConnectorPost } from "../../utils/APIConnector";
+import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import { useNavigate } from "react-router-dom";
 import PosTab from "../Layout/PosTab";
@@ -13,15 +13,22 @@ export default function PendingOrder() {
 
   const limit = 8;
 
+  const { data: branchProfileData } = useQuery(
+    ["pendingorder_branch_profile"],
+    () => apiConnectorGet(endpoint.branch_profile_api),
+    { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
+  );
+  const features = branchProfileData?.data?.result?.features || {};
+
   const tabs = [
     "ALL SECTIONS",
     "DINE IN",
-    "TAKE AWAY",
-    "DOOR DELIVERY",
-    "TABLE QR",
-    "QR ORDER",
+    features.table_order && "TAKE AWAY",
+    features.door_delivery && "DOOR DELIVERY",
+    features.table_qr && "TABLE QR",
+    features.takeaway && "QR ORDER",
     // "PARK ITEMS",
-  ];
+  ].filter(Boolean);
 
   const getApiParams = (tab) => {
     const base = { page, limit, status: ["pending"] };

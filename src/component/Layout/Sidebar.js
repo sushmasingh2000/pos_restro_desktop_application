@@ -1,5 +1,6 @@
 
 import { NavLink, useNavigate } from "react-router-dom";
+import { useQuery } from "react-query";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
@@ -11,6 +12,12 @@ import { endpoint } from "../../utils/APIRoutes";
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const { data: branchProfileData } = useQuery(
+    ["sidebar_branch_profile"],
+    () => apiConnectorGet(endpoint.branch_profile_api),
+    { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
+  );
+  const features = branchProfileData?.data?.result?.features || {};
 
   const handleLogout = () => {
     localStorage.clear();
@@ -37,8 +44,12 @@ export default function Sidebar() {
         <SidebarLink to="/sales-summary" icon={<AssessmentIcon fontSize="small" />} label="Sales Summary" />
         <SidebarLink to="/payment-summary" icon={<Money fontSize="small" />} label="Payment Summary" />
         <SidebarLink to="/dine-in-order" icon={<LiveTvIcon fontSize="small" />} label="Dine In Orders" />
-        <SidebarLink to="/take-away-order" icon={<StoreIcon fontSize="small" />} label="Takeaway" />
-        <SidebarLink to="/door-dilevery-order" icon={<StoreIcon fontSize="small" />} label="Door Delivery" />
+        {features.table_order && (
+          <SidebarLink to="/take-away-order" icon={<StoreIcon fontSize="small" />} label="Takeaway" />
+        )}
+        {features.door_delivery && (
+          <SidebarLink to="/door-dilevery-order" icon={<StoreIcon fontSize="small" />} label="Door Delivery" />
+        )}
         <SidebarLink to="/lending-order" icon={<PeopleAlt fontSize="small" />} label="Lending Orders" />
         <SidebarLink to="/customer-ledger" icon={<LiveTvIcon fontSize="small" />} label="Customer Wallet" />
         <SidebarLink to="/customer-report" icon={<LiveTvIcon fontSize="small" />} label="Customer Report" />

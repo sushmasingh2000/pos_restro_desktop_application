@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
-import { apiConnectorPost } from "../../utils/APIConnector";
+import { useQuery } from "react-query";
+import { apiConnectorPost, apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 
 const badgeStyle = `
@@ -115,15 +116,22 @@ const PosTab = () => {
     return () => clearInterval(interval);
   }, [fetchCounts]);
 
+  const { data: branchProfileData } = useQuery(
+    ["postab_branch_profile"],
+    () => apiConnectorGet(endpoint.branch_profile_api),
+    { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
+  );
+  const features = branchProfileData?.data?.result?.features || {};
+
   const navItems = [
     { name: "DINE IN", path: "/userdashboard", count: counts.dineIn },
-    { name: "TAKE AWAY", path: "/pos/take-away", count: counts.takeaway },
-    { name: "DOOR DELIVERY ORDERS", path: "/online-delivery-order", count: counts.delivery },
-    { name: "TABLE QR", path: "/qr-order", count: counts.tableQr },
-    { name: "QR ORDER", path: "/qr-takeaway-order", count: counts.qrTakeaway },
+    features.table_order && { name: "TAKE AWAY", path: "/pos/take-away", count: counts.takeaway },
+    features.door_delivery && { name: "DOOR DELIVERY ORDERS", path: "/online-delivery-order", count: counts.delivery },
+    features.table_qr && { name: "TABLE QR", path: "/qr-order", count: counts.tableQr },
+    features.takeaway && { name: "QR ORDER", path: "/qr-takeaway-order", count: counts.qrTakeaway },
     { name: "ONLINE ORDERS", path: "/online-order", count: counts.online },
     { name: "PENDING ORDERS", path: "/pending-order", count: counts.pending },
-  ];
+  ].filter(Boolean);
 
   return (
     <div className="flex gap-1 main_tabs">

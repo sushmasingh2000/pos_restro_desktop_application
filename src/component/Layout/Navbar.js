@@ -37,11 +37,12 @@ const Navbar = ({ toggleSidebar }) => {
     { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
   );
   const branchName = branchData?.data?.result?.branch_name || "";
+  const branchFeatures = branchData?.data?.result?.features || {};
   const deliveryToken = branchData?.data?.result?.delivery_token || null;
-  const deliveryLink = deliveryToken ? `${frontend}/delivery/${deliveryToken}` : null;
+  const deliveryLink = deliveryToken && branchFeatures.door_delivery ? `${frontend}/delivery/${deliveryToken}` : null;
   const [linkCopied, setLinkCopied] = useState(false);
   const takeawayToken = branchData?.data?.result?.takeaway_token || null;
-  const takeawayLink = takeawayToken ? `${frontend}/takeaway/${takeawayToken}` : null;
+  const takeawayLink = takeawayToken && branchFeatures.takeaway ? `${frontend}/takeaway/${takeawayToken}` : null;
   const [takeawayLinkCopied, setTakeawayLinkCopied] = useState(false);
 
   const copyDeliveryLink = () => {

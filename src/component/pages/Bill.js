@@ -202,10 +202,12 @@ export default function BillPage() {
           dob: bill.customer_dob || "",
           anniversary: bill.customer_anniversary || "",
         });
-        // Given Amount hamesha khaali start hota hai — staff jo bhi amount
-        // customer se actually mila hai wahi khud type karega, purana
-        // paid_amount/total_amount se auto-fill nahi hota.
-        setGivenAmount("");
+        // Given Amount ab saved cash_given_amount se prefill hota hai (agar
+        // pehli baar bill Cash ke saath save hua tha) — staff chahe to
+        // reprint pe amount badal bhi sakta hai.
+        setGivenAmount(
+          bill.cash_given_amount != null ? String(bill.cash_given_amount) : ""
+        );
         const discAmt = parseFloat(bill.discount || 0);
         const sub = parseFloat(bill.subtotal || 0);
         if (discAmt > 0 && sub > 0) {
@@ -525,6 +527,9 @@ export default function BillPage() {
 
       paid_amount: isLending ? (isSplitLending ? nonLendingPaid : givenAmt) : isAdvance ? maxWalletUse : grandTotal,
 
+      cash_given_amount: hasCash && givenAmt > 0 ? givenAmt.toFixed(2) : "",
+      cash_return_amount: hasCash && givenAmt > 0 ? returnAmt.toFixed(2) : "",
+
       remaining_amount: isLending
         ? lendingRemaining
         : isAdvance
@@ -656,6 +661,8 @@ export default function BillPage() {
             customer_address: customer.address,
             discount: discountAmount,
             paid_amount: isLending ? (isSplitLending ? nonLendingPaid : givenAmt) : isAdvance ? maxWalletUse : grandTotal,
+            cash_given_amount: hasCash && givenAmt > 0 ? givenAmt.toFixed(2) : "",
+            cash_return_amount: hasCash && givenAmt > 0 ? returnAmt.toFixed(2) : "",
             remaining_amount: isLending ? lendingRemaining : isAdvance ? advanceRemaining : 0,
             wallet_used: useWallet && !isAdvance ? maxWalletUse : 0,
             advance_used: isAdvance ? maxWalletUse : 0,
@@ -771,6 +778,8 @@ export default function BillPage() {
             customer_address: customer.address,
             discount: discountAmount,
             paid_amount: isLending ? (isSplitLending ? nonLendingPaid : givenAmt) : isAdvance ? maxWalletUse : grandTotal,
+            cash_given_amount: hasCash && givenAmt > 0 ? givenAmt.toFixed(2) : "",
+            cash_return_amount: hasCash && givenAmt > 0 ? returnAmt.toFixed(2) : "",
             remaining_amount: isLending ? lendingRemaining : isAdvance ? advanceRemaining : 0,
             wallet_used: useWallet && !isAdvance ? maxWalletUse : 0,
             advance_used: isAdvance ? maxWalletUse : 0,

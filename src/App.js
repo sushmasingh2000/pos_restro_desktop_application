@@ -48,11 +48,6 @@ const App = () => {
             element={<ProtectedRoute element={route.element} />}
           />
         ))}
-
-        {/* TEMP TEST — remove after preview */}
-        <Route path="/test-expired" element={<SubscriptionExpiredPage sub={{ package_name: "Basic Plan", end_date: "2024-05-15", days_left: -5, status: "expired" }} isNoSub={false} />} />
-        <Route path="/test-nosub" element={<SubscriptionExpiredPage sub={null} isNoSub={true} />} />
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
