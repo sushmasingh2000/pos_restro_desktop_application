@@ -222,6 +222,8 @@ const POS = () => {
           tax_group_id: menuItem?.dg09_tax_group_id || null,        // ← menu se lo
           basePrice: parseFloat(menuItem?.dg09_price || item.dg07_price),  // ← menu se lo
           price: parseFloat(item.dg07_price),
+          dg09_apply_charges: menuItem?.dg09_apply_charges,
+          dg09_apply_discount: menuItem?.dg09_apply_discount,
           qtyRemark: item.dg07_item_remark || "",
           globalRemark: item.dg07_global_remark || "",
           status: order.dg06_status || "",

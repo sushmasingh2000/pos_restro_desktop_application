@@ -6,7 +6,6 @@ import CancelOrder from "../component/pages/CancelOrder";
 import CustomerLedger from "../component/pages/Customerledger";
 import DineIn from "../component/pages/DineIn";
 import DoorDelivery from "../component/pages/DoorDelivery";
-import KitchenScreen from "../component/pages/KOTOrder";
 import LendingOrders from "../component/pages/LendingOrders";
 import OnlineOrder from "../component/pages/OnlineOrder";
 import Orders from "../component/pages/Orders";
@@ -181,14 +180,7 @@ export const routes = [
     ),
   },
 
-  {
-    path: "/kitchen-order",
-    element: (
-      <MainLayout>
-        <KitchenScreen />
-      </MainLayout>
-    ),
-  },
+  
    {
     path: "/expense-report",
     element: (

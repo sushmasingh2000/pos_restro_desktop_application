@@ -573,7 +573,7 @@ function buildBillContentNetwork(p, billData) {
 
   // ── TAXABLE AMT / DISCOUNT / TAX / SUB TOTAL / ROUND OFF ──
   p.align("LT");
-  const taxableLabel = `${PAD}Total Taxable Amt:`;
+  const taxableLabel = `${PAD}Total Amount:`;
   const taxableVal = Number(billData.subtotal || 0).toFixed(2);
   p.text(`${taxableLabel.padEnd(28)}${taxableVal.padStart(10)}`);
 

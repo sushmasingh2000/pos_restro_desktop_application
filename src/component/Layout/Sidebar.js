@@ -55,7 +55,7 @@ export default function Sidebar() {
         <SidebarLink to="/customer-report" icon={<LiveTvIcon fontSize="small" />} label="Customer Report" />
         <SidebarLink to="/expense-report" icon={<LiveTvIcon fontSize="small" />} label="Expense Report" />
         <SidebarLink to="/cancelled-order" icon={<PeopleAlt fontSize="small" />} label="Cancelled Orders" />
-        <SidebarLink to="/kitchen-order" icon={<LiveTvIcon fontSize="small" />} label="Kitchen Orders" />
+     
         <SidebarLink to="/feedback" icon={<AssessmentIcon fontSize="small" />} label="Feedback" />
         <SidebarLink to="/support-tickets" icon={<AssessmentIcon fontSize="small" />} label="Support Tickets" />
 

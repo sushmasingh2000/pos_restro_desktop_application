@@ -34,6 +34,7 @@ export default function BillRightPanel({
   applyOfferDirect,
   couponBlocked,
   discountBlocked,
+  noDiscountEligibleItems,
 }) {
   const inp = "";
 
@@ -354,6 +355,11 @@ export default function BillRightPanel({
           <p style={{ fontSize: 11, color: "#f59e0b", marginBottom: 10 }}>
             ⚠️ This order already has an offer-priced item — coupon can't be applied
             {discountBlocked ? "; add a non-offer item to enable discount." : "."}
+          </p>
+        )}
+        {noDiscountEligibleItems && (
+          <p style={{ fontSize: 11, color: "#f59e0b", marginBottom: 10 }}>
+            ⚠️ Discount is disabled for the item(s) in this order — please enable discount for the item.
           </p>
         )}
         {discountMode === "percent" && !discountBlocked ? (

@@ -334,9 +334,16 @@ export default function BillPage() {
     : [];
   const totalCharges = chargeBreakdown.reduce((s, c) => s + c.amount, 0);
 
+  const discountableSubTotal = orderItems.reduce((acc, i) =>
+    i.dg09_apply_discount === 0 || i.dg09_apply_discount === false || i.dg09_apply_discount === "NO"
+      ? acc
+      : acc + parseFloat(i.basePrice || i.price) * i.qty,
+    0
+  );
+
   const discountAmount =
     discountMode === "percent"
-      ? (subTotal * parseFloat(discountPct || 0)) / 100
+      ? (discountableSubTotal * parseFloat(discountPct || 0)) / 100
       : parseFloat(couponDiscount || 0);
 
   const beforeRound =
@@ -409,7 +416,8 @@ export default function BillPage() {
   const hasOfferItem = orderItems.some(isItemOffered);
   const hasNonOfferItem = orderItems.some((i) => !isItemOffered(i));
   const couponBlocked = hasOfferItem;
-  const discountBlocked = hasOfferItem && !hasNonOfferItem;
+  const noDiscountEligibleItems = orderItems.length > 0 && discountableSubTotal <= 0;
+  const discountBlocked = (hasOfferItem && !hasNonOfferItem) || noDiscountEligibleItems;
 
   // ── Coupon apply ──────────────────────────────────
   const applyCoupon = async (code) => {
@@ -942,6 +950,7 @@ export default function BillPage() {
           applyOfferDirect={applyOfferDirect}
           couponBlocked={couponBlocked}
           discountBlocked={discountBlocked}
+          noDiscountEligibleItems={noDiscountEligibleItems}
         />
       </div>
 

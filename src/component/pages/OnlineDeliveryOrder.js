@@ -346,6 +346,7 @@ export default function OnlineDeliveryOrder() {
                                           tax_group_id: i.dg09_tax_group_id || null,
                                           basePrice: parseFloat(i.dg07_base_price || i.price),
                                           dg09_apply_charges: i.dg09_apply_charges || 0,
+                                          dg09_apply_discount: i.dg09_apply_discount || 0,
                                           qtyRemark: i.dg07_item_remark || "",
                                           globalRemark: i.dg07_global_remark || "",
                                           predefinedRemarks: i.dg07_predefined_remark

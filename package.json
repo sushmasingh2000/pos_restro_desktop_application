@@ -1,6 +1,6 @@
 {
   "name": "restro-panel",
-  "version": "1.0.34",
+  "version": "1.0.35",
   "description": "POS software for restaurant management and billing system",
   "author": "Sushma Singh",
   "private": true,
@@ -64,7 +64,7 @@
     "start": "react-scripts start",
     "electron": "electron .",
     "dev": "concurrently \"npm start\" \"npm run electron\"",
-    "build": "react-scripts build",
+    "build": "set \"GENERATE_SOURCEMAP=false\" &&  react-scripts build",
     "dist": "electron-builder"
   },
   "build": {
