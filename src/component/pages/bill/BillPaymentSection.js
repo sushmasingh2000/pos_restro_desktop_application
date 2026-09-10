@@ -143,20 +143,20 @@ export default function BillPaymentSection({
                         isSelected
                           ? isLendingBtn
                             ? {
-                              background: "rgba(239,68,68,0.3)",
-                              border: "1px solid rgba(248,113,113,0.5)",
-                              color: "#fca5a5",
+                              background: "#af6f37",
+                              border: "1px solid #af6f37",
+                              color: "#fff",
                             }
                             : isAdvanceBtn
                               ? {
-                                background: "rgba(16,185,129,0.25)",
-                                border: "1px solid rgba(52,211,153,0.5)",
-                                color: "#6ee7b7",
+                                background: "#af6f37",
+                                border: "1px solid #af6f37",
+                                color: "#fff",
                               }
                               : {
-                                background: "rgba(124,58,237,0.4)",
-                                border: "1px solid rgba(167,139,250,0.5)",
-                                color: "#A83CF6",
+                                background: "#af6f37",
+                                border: "1px solid #af6f37",
+                                color: "#fff",
                               }
                           : {
 
@@ -195,9 +195,9 @@ export default function BillPaymentSection({
                     }
                     className="px-3 py-2 rounded-xl text-sm font-bold"
                     style={{
-                      background: "rgba(239,68,68,0.2)",
-                      border: "1px solid rgba(248,113,113,0.35)",
-                      color: "#fca5a5",
+                      background: "rgba(239, 159, 68, 0.2)",
+                      border: "1px solid rgba(248, 185, 113, 0.35)",
+                      color: "#ffb67b",
                     }}
                   >
                     ✕

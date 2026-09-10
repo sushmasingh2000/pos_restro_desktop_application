@@ -7,6 +7,10 @@ import { FaUserAlt, FaLock, FaEye, FaEyeSlash, FaUserShield, FaUserCog } from "r
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import loginImg from '../assets/images/login/login-cover.svg';
+import logo from "../assets/images/logo/favicon.png";
+import beans from "../assets/images/login/beans.png";
+import bens from "../assets/images/login/bens.webm";
+import arrow from "../assets/images/login/shape_2.png";
 
 const REMEMBER_KEY = "remembered_email";
 const REMEMBER_PWD_KEY = "remembered_pwd";
@@ -83,6 +87,15 @@ const Login = ({ role }) => {
 
   return (
     <section className="login_section">
+      <div className="beans_img">
+        <img src={beans}/>
+      </div>
+      <div className="bens_video">
+        <video autoPlay muted loop playsInline>
+          <source src={bens} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
       <div className="container">
         <Col lg={9} className="mx-auto">
           <Row>
@@ -90,14 +103,14 @@ const Login = ({ role }) => {
               <div className="loin_Left_Box">
                 <div className="login_logo">
                   <div className="logo_icon">
-                    <i class="ri-send-plane-line"></i>
+                    <img src={logo} alt="Logo" />
                   </div>
                   <div>
-                    <h1>Ferry Restro</h1>
-                    <p>Restaurant Technology partner</p>
+                    <h1>Platter Way</h1>
+                      <p>Smart Restaurant Solutions.</p>
                   </div>
                 </div>
-                <h3>Manage your restaurant with confidence</h3>
+                <h3>Manage your restaurant <span>with confidence</span></h3>
                 <p>One platform for orders, inventory, staff and sales — all in real time.</p>
                 <ul>
                   <li>
@@ -132,14 +145,16 @@ const Login = ({ role }) => {
                   </li>
 
                 </ul>
-                <div class="panel-footer">© 2026 Ferry Restro &nbsp;·&nbsp; admin@ferryrestro.in</div>
+                <div class="panel-footer">© 2026 Platter Way &nbsp;·&nbsp; Developed by Ferry Infotech</div>
               </div>
             </Col>
 
             <Col md={6} className="px-md-0">
               {/* ── Card ── */}
               <div className="login_card">
-                {/* ── Header ── */}
+                <div className="arrow_img">
+                  <img src={arrow} />
+                </div>
                 <div className="login_header">
                   <h1>Welcome back</h1>
                   <p>Sign in to your branch account</p>

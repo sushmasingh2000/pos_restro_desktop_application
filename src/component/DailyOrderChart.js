@@ -3,11 +3,10 @@ import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell
 } from "recharts";
-
 const BLUE = {
-  900: "#042C53", 800: "#0C447C", 700: "#185FA5", 600: "#185FA5",
-  500: "#378ADD", 400: "#378ADD", 300: "#85B7EB", 200: "#B5D4F4",
-  100: "#E6F1FB", 50: "#F0F7FF",
+  900: "#945c32", 800: "#7c480c", 700: "#a56818", 600: "#a56818",
+  500: "#dd9037", 400: "#dd9537", 300: "#dfc8a6", 200: "#f7e4c9",
+  100: "#f9ead4", 50: "#fbf0e0",
 };
 
 const WEEK_DATA = [
@@ -52,14 +51,14 @@ const CustomTooltip = ({ active, payload, label }) => {
     <div style={{
       background: "#fff", border: `1px solid ${BLUE[200]}`,
       borderRadius: 10, padding: "10px 14px",
-      boxShadow: "0 4px 16px rgba(24,95,165,.12)",
+      boxShadow: "0 4px 16px rgba(165, 116, 24, 0.12)",
       fontSize: 13,
     }}>
       <div style={{ fontWeight: 600, color: BLUE[800], marginBottom: 6 }}>{label}</div>
       {payload.map((p) => (
         <div key={p.dataKey} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
           <div style={{ width: 9, height: 9, borderRadius: 3, background: p.color }} />
-          <span style={{ color: "#64748b" }}>{p.name}:</span>
+          <span style={{ color: "#8b7a64" }}>{p.name}:</span>
           <span style={{ fontWeight: 600, color: BLUE[900] }}>{p.value}</span>
         </div>
       ))}
@@ -118,7 +117,7 @@ const chartData = useMemo(() => {
                   fontSize: 12, fontWeight: range === r ? 600 : 400,
                   padding: "5px 12px", borderRadius: 17,
                   background: range === r ? BLUE[700] : "transparent",
-                  color: range === r ? "#fff" : "#64748b",
+                  color: range === r ? "#fff" : "#8b7764",
                   border: "none", cursor: "pointer", transition: "all .15s",
                   fontFamily: "inherit",
                 }}>{r}</button>
@@ -131,7 +130,7 @@ const chartData = useMemo(() => {
                   fontSize: 12, fontWeight: chartType === t ? 600 : 400,
                   padding: "5px 12px", borderRadius: 17,
                   background: chartType === t ? BLUE[500] : "transparent",
-                  color: chartType === t ? "#fff" : "#64748b",
+                  color: chartType === t ? "#fff" : "#8b7d64",
                   border: "none", cursor: "pointer", transition: "all .15s",
                   fontFamily: "inherit",
                 }}>{t}</button>
@@ -143,7 +142,7 @@ const chartData = useMemo(() => {
         </div>
 
         {/* Custom Legend */}
-        <div style={{ display: "flex", gap: 18, padding: "12px 22px 0", fontSize: 12, color: "#64748b" }}>
+        <div style={{ display: "flex", gap: 18, padding: "12px 22px 0", fontSize: 12, color: "#8b7964" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ width: 10, height: 10, borderRadius: 3, background: BLUE[700], display: "inline-block" }} />
             Restaurant Orders
@@ -159,13 +158,13 @@ const chartData = useMemo(() => {
           <ResponsiveContainer width="100%" height={260}>
             {chartType === "Bar" ? (
               <BarChart data={chartData} barGap={3} barCategoryGap="28%">
-                <CartesianGrid vertical={false} stroke="#E2EDFF" strokeDasharray="3 0" />
+                <CartesianGrid vertical={false} stroke="#fff3e2" strokeDasharray="3 0" />
                 <XAxis dataKey={xKey} axisLine={false} tickLine={false}
-                  tick={{ fontSize: 11, fill: "#64748b", fontFamily: "inherit" }} />
+                  tick={{ fontSize: 11, fill: "#8b7d64", fontFamily: "inherit" }} />
                 <YAxis axisLine={false} tickLine={false}
-                  tick={{ fontSize: 11, fill: "#64748b", fontFamily: "inherit" }}
+                  tick={{ fontSize: 11, fill: "#8b7d64", fontFamily: "inherit" }}
                   width={32} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#EFF6FF", radius: 4 }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#fff8ef", radius: 4 }} />
                 <Bar dataKey="restaurant" name="Restaurant Orders" fill={BLUE[700]}
                   radius={barRadius} maxBarSize={range === "This month" ? 16 : 32} />
                 <Bar dataKey="online" name="Online Orders" fill={BLUE[300]}
@@ -173,11 +172,11 @@ const chartData = useMemo(() => {
               </BarChart>
             ) : (
               <LineChart data={chartData}>
-                <CartesianGrid vertical={false} stroke="#E2EDFF" strokeDasharray="3 0" />
+                <CartesianGrid vertical={false} stroke="#fff0e2" strokeDasharray="3 0" />
                 <XAxis dataKey={xKey} axisLine={false} tickLine={false}
-                  tick={{ fontSize: 11, fill: "#64748b", fontFamily: "inherit" }} />
+                  tick={{ fontSize: 11, fill: "#8b7d64", fontFamily: "inherit" }} />
                 <YAxis axisLine={false} tickLine={false}
-                  tick={{ fontSize: 11, fill: "#64748b", fontFamily: "inherit" }}
+                  tick={{ fontSize: 11, fill: "#8b7d64", fontFamily: "inherit" }}
                   width={32} />
                 <Tooltip content={<CustomTooltip />} />
                 <Line type="monotone" dataKey="restaurant" name="Restaurant Orders"

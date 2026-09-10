@@ -968,7 +968,6 @@ export default function BillPage() {
       />
 
       <div className="flex justify-between gap-3 modal_footer px-3 py-3">
-        <div className="flex gap-3">
           <button onClick={() => navigate(-1)} className="cancel_btn">
             Cancel
           </button>
@@ -981,7 +980,6 @@ export default function BillPage() {
               🚫 Cancel Order
             </button>
           )}
-        </div>
         <div className="flex justify-end gap-3" style={{ width: "50%" }}>
           {isReprint &&
             currentStatus !== "completed" &&

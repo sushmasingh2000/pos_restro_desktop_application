@@ -74,9 +74,9 @@ const ActionDropdown = ({ table, onMove, onMerge, onSplit }) => {
           style={{
             top: "100%",
             background: "#fff",
-            border: "1px solid #b5d4f47d",
+            border: "1px solid #f4d1b57d",
             borderRadius: "12px",
-            boxShadow: "0 6px 30px rgba(37, 99, 235, .15);",
+            boxShadow: "0 6px 30px rgba(235, 116, 37, 0.15);",
             minWidth: 160,
           }}
         >
@@ -550,7 +550,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: s.color, lineHeight: 1.2 }}>{s.value}</div>
-                <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{s.label}</div>
+                <div style={{ fontSize: 12, color: "#8b7464", marginTop: 2 }}>{s.label}</div>
               </div>
             </div>
           </Col>
@@ -593,11 +593,11 @@ const Dashboard = () => {
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb" style={{ cursor: "pointer" }} onClick={() => navigate("/pos/door-delivery")}>
-            <div className="main_icon" style={{ background: main.pending_delivery_orders > 0 ? "#fee2e2" : "#fef9c3", borderColor: main.pending_delivery_orders > 0 ? "#fcd7d7" : "#f7f1ae" }}>
+            <div className="main_icon" style={{ background: main.pending_delivery_orders > 0 ? "#fef6e2" : "#fde6c2", borderColor: main.pending_delivery_orders > 0 ? "#fef6e2" : "#fde6c2" }}>
               <img src={utilisationi} />
             </div>
             <div>
-              <h4 style={{ color: main.pending_delivery_orders > 0 ? "#dc2626" : undefined }}>
+              <h4 style={{ color: main.pending_delivery_orders > 0 ? "#dcae26" : undefined }}>
                 {main.pending_delivery_orders }
               </h4>
               <p>Pending Delivery</p>

@@ -9,6 +9,7 @@ import { GraphicEqSharp, Logout, Money, PeopleAlt } from "@mui/icons-material";
 import UserProfileMenu from "../UserProfileMenu";
 import { apiConnectorGet, apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
+import logo from "../../assets/images/logo/favicon.png";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -29,11 +30,11 @@ export default function Sidebar() {
     <aside className="main_sidebar w-64 h-screen sticky top-0 overflow-y-auto  text-white relative">
       <div className="sidebar_logo">
         <div className="logo_icon">
-          <i className="ri-send-plane-line"></i>
+          <img src={logo} alt="Logo" />
         </div>
         <div>
-          <h1>Ferry Restro</h1>
-          <p>Restaurant Technology partner</p>
+          <h1>Platter Way</h1>
+          <p>Smart Restaurant Solutions.</p>
         </div>
       </div>
 

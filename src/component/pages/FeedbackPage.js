@@ -16,11 +16,11 @@ const StatBar = ({ label, count, total, color }) => {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
-      <span style={{ width: 55, fontSize: 12, color: "#64748b", flexShrink: 0 }}>{label}</span>
-      <div style={{ flex: 1, background: "#f1f5f9", borderRadius: 99, height: 8, overflow: "hidden" }}>
+      <span style={{ width: 55, fontSize: 12, color: "#754827", flexShrink: 0 }}>{label}</span>
+      <div style={{ flex: 1, background: "#faf0e6", borderRadius: 99, height: 8, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, background: color, height: "100%", borderRadius: 99, transition: "width .4s" }} />
       </div>
-      <span style={{ width: 32, fontSize: 12, color: "#64748b", textAlign: "right", flexShrink: 0 }}>{count}</span>
+      <span style={{ width: 32, fontSize: 12, color: "#b19a89", textAlign: "right", flexShrink: 0 }}>{count}</span>
     </div>
   );
 };
@@ -65,20 +65,20 @@ export default function FeedbackPage() {
       <div className="mx-3 mt-3">
         <Row className="g-3">
           <Col md={4}>
-            <div style={{ background: "#fff", borderRadius: 14, padding: "20px 24px", border: "1px solid #DBEAFE", boxShadow: "0 2px 8px rgba(37,99,235,.08)" }}>
-              <div style={{ fontSize: 13, color: "#64748b", marginBottom: 6 }}>Average Rating</div>
+            <div style={{ background: "#fff", borderRadius: 14, padding: "20px 24px", border: "1px solid #feebdb", boxShadow: "0 2px 8px rgba(37,99,235,.08)" }}>
+              <div style={{ fontSize: 13, color: "#b19a89", marginBottom: 6 }}>Average Rating</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                <span style={{ fontSize: 40, fontWeight: 800, color: "#1e3a8a", lineHeight: 1 }}>{avgRating}</span>
+                <span style={{ fontSize: 40, fontWeight: 800, color: "#945c33", lineHeight: 1 }}>{avgRating}</span>
                 <span style={{ fontSize: 18, color: "#f59e0b" }}>/ 5 ★</span>
               </div>
-              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: "#8b7364", marginTop: 4 }}>
                 Based on {totalCount} review{totalCount !== 1 ? "s" : ""}
               </div>
             </div>
           </Col>
           <Col md={8}>
-            <div style={{ background: "#fff", borderRadius: 14, padding: "16px 24px", border: "1px solid #DBEAFE", boxShadow: "0 2px 8px rgba(37,99,235,.08)" }}>
-              <div style={{ fontSize: 13, color: "#64748b", marginBottom: 10 }}>Rating Breakdown</div>
+            <div style={{ background: "#fff", borderRadius: 14, padding: "16px 24px", border: "1px solid #feebdb", boxShadow: "0 2px 8px rgba(37,99,235,.08)" }}>
+              <div style={{ fontSize: 13, color: "#a77b5c", marginBottom: 10 }}>Rating Breakdown</div>
               <StatBar label="5 Star" count={parseInt(stats.five_star || 0)} total={totalCount} color="#22c55e" />
               <StatBar label="4 Star" count={parseInt(stats.four_star || 0)} total={totalCount} color="#84cc16" />
               <StatBar label="3 Star" count={parseInt(stats.three_star || 0)} total={totalCount} color="#f59e0b" />

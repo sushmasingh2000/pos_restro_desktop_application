@@ -6,6 +6,7 @@ import { apiConnectorPost, apiConnectorGet, triggerLocalCacheNow } from "../../u
 import { endpoint } from "../../utils/APIRoutes";
 import useAppMode from "../../hooks/useAppMode";
 import { frontend } from "../../domain";
+import logo from "../../assets/images/logo/favicon.png";
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -188,11 +189,11 @@ const Navbar = ({ toggleSidebar }) => {
       <div className="flex items-center gap-4">
         <div className="sidebar_logo logo_mobile_responsvie">
           <div className="logo_icon">
-            <i className="ri-send-plane-line"></i>
+            <img src={logo} alt="Logo" />
           </div>
           <div>
-            <h1>Ferry Restro</h1>
-            <p>Restaurant Technology partner</p>
+            <h1>Platter Way</h1>
+            <p>Smart Restaurant Solutions.</p>
           </div>
         </div>
         <div className="breadcrumb_text">
@@ -207,7 +208,7 @@ const Navbar = ({ toggleSidebar }) => {
       <div className="flex items-center gap-md-3 gap-2">
 
         {/* Online/Offline Mode Indicator (manual — reflects app mode, not raw network signal) */}
-        <div style={{
+        <div className="desktop_links" style={{
           display: "flex", alignItems: "center", gap: 5,
           background: appMode === "online" ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
           border: `1px solid ${appMode === "online" ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.35)"}`,
@@ -225,12 +226,12 @@ const Navbar = ({ toggleSidebar }) => {
 
         {/* Branch Name Badge */}
         {branchName && (
-          <div style={{
+          <div className="desktop_links" style={{
             display: "flex", alignItems: "center", gap: 5,
-            background: "rgba(59,130,246,0.12)",
-            border: "1px solid rgba(59,130,246,0.3)",
+            background: "#faf4ea",
+            border: "1px solid #eadcc8",
             borderRadius: 8, padding: "4px 10px",
-            fontSize: 12, color: "#60a5fa", fontWeight: 600,
+            fontSize: 12, color: "#5c4433", fontWeight: 600,
             whiteSpace: "nowrap",
           }}>
             <i className="ri-store-2-line" style={{ fontSize: 13 }} />
@@ -399,7 +400,7 @@ const Navbar = ({ toggleSidebar }) => {
               style={{
                 width: "320px",
                 background: "#fff",
-                border: "1px solid #DBEAFE",
+                border: "1px solid #feebdb",
                 boxShadow: "0 4px 20px rgba(37, 99, 235, .13);",
               }}
             >
@@ -413,7 +414,7 @@ const Navbar = ({ toggleSidebar }) => {
 
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-white/40 text-sm">
+                  <div className="px-4 py-6 text-center text-dark text-sm">
                     Koi pending order nahi
                   </div>
                 ) : (
