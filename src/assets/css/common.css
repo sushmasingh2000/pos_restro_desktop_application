@@ -3,17 +3,18 @@
 }
 
 :root {
-    --primary-color: #1d4ed8;
+    --primary-color: #2B1B10;
 }
 
 body{
-    background: #f0f6ff !important;
+    background: #F6EEE3 !important;
 }
 
 body,
 html {
   width: 100vw;
-  overflow-x: hidden;
+  overflow: hidden;
+  padding: 0;
 
 }
 

@@ -253,9 +253,9 @@ const WalletModal = ({ customer, onClose }) => {
   );
 };
 
-const PAY_COLORS = ["#22c55e", "#3b82f6", "#a855f7", "#d9264a"];
-const LEND_COLORS = ["#22c55e", "#3b82f6", "#a855f7", "#ef4444"];
-const WALLET_COLORS = ["#22c55e", "#ef4444"];
+const PAY_COLORS = ["#8a4e22", "#4b2510", "#af6d3d", "#c47d4b"];
+const LEND_COLORS = ["#8a4e22", "#4b2510", "#af6d3d", "#c47d4b"];
+const WALLET_COLORS = ["#8a4e22", "#c47d4b"];
 
 const PaymentLendingWallet = () => {
   const [filterType, setFilterType] = useState("");

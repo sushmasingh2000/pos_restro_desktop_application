@@ -74,9 +74,9 @@ const SalesSummary = () => {
   const payBreak = paymentData?.data?.data?.breakdown || [];
 
   // ── Chart data ────────────────────────────────────────────────
-  const COLORS = ["#a855f7", "#9ca3af"];
-  const SALES_COLORS = ["#3b82f6", "#a855f7"];
-  const PAYMENT_COLORS = ["#22c55e", "#3b82f6", "#a855f7", "#d9264a"];
+  const COLORS = ["#4b2510", "#afa49c"];
+  const SALES_COLORS = ["#8A4E22", "#4b2510"];
+  const PAYMENT_COLORS = ["#c47d4b", "#8A4E22", "#4b2510", "#d9264a"];
 
   const pieData = [
     { name: "Restaurant Orders", value: orderRec.restaurantOrderProcessed || 0 },
@@ -136,7 +136,7 @@ const SalesSummary = () => {
         <>
           <Row>
             {stats.map((item) => (
-              <Col xs={12} sm={6} md={3} className="mb-md-0 mb-4" key={item.title}>
+              <Col xs={12} sm={6} md={3} className="mb-3" key={item.title}>
                 <div className="main_card" >
                   <div className="main_icon" dangerouslySetInnerHTML={{ __html: item.icon }} />
                   <h2>{item.value}</h2>
@@ -286,7 +286,7 @@ const SalesSummary = () => {
                               </PieChart>
                             </ResponsiveContainer>
                           </div>
-                          <div className="flex gap-4 mt-4 text-xs text-white/60">
+                          <div className="flex gap-4 mt-4 text-xs text-dark">
                             <span className="flex items-center gap-2">
                               <span className="w-3 h-3 bg-blue-400" />Restaurant In Sales
                             </span>
@@ -338,7 +338,7 @@ const SalesSummary = () => {
                       </div>
                       <button className="chart_btn">View Report</button>
                     </div>
-                    <div className="p-5 h-56">
+                    <div className="p-2" style={{height: "14rem"}}>
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie data={paymentPieData} dataKey="value" nameKey="name" outerRadius={80} label>

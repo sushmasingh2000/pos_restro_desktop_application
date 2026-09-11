@@ -8,7 +8,7 @@ const fmtD = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit"
 const fmtDT= (d) => d ? new Date(d).toLocaleString("en-IN",  { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 const ini  = (n) => (n || "?").split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 
-const card = { background: "#fff", borderRadius: 12, border: "1px solid #c7dcff", padding: "14px 16px", marginBottom: 14 };
+const card = { background: "#fff", borderRadius: 12, border: "1px solid #eadcc8", padding: "14px 16px", marginBottom: 14 };
 const th   = {   };
 const td   = {  };
 
@@ -38,9 +38,9 @@ const statusBadge = (s) => {
   return <Badge text={s || "—"} type={m[s] || "gray"} />;
 };
 
-const Stat = ({ label, value, color = "#1e3a8a" }) => (
-  <div style={{ background: "#1d4ed81f", border: "1px solid #1d4ed81f", borderRadius: 8, padding: "10px 12px" }}>
-    <div style={{ fontSize: 11, color: "#373737", marginBottom: 4 }}>{label}</div>
+const Stat = ({ label, value, color = "#4A2410" }) => (
+  <div style={{ background: "#945c333d", border: "1px solid #945c333d", borderRadius: 8, padding: "10px 12px" }}>
+    <div style={{ fontSize: 11, color: "#945c33", marginBottom: 4 }}>{label}</div>
     <div style={{ fontSize: 17, fontWeight: 700, color }}>{value}</div>
   </div>
 );
@@ -53,7 +53,7 @@ const StatGrid = ({ children }) => (
 
 const Section = ({ label, children }) => (
   <div style={card}>
-    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", color: "#696969", textTransform: "uppercase", marginBottom: 12 }}>
+    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", color: "#945c33", textTransform: "uppercase", marginBottom: 12 }}>
       {label}
     </div>
     {children}
@@ -61,7 +61,7 @@ const Section = ({ label, children }) => (
 );
 
 const Empty = ({ text }) => (
-  <div style={{ color: "#696969", textAlign: "center", padding: "24px 0", fontSize: 13 }}>{text}</div>
+  <div style={{ color: "#945c33", textAlign: "center", padding: "24px 0", fontSize: 13 }}>{text}</div>
 );
 
 // ── BILL TABLE ───────────────────────────────────────────────
@@ -147,7 +147,7 @@ const WalletList = ({ list }) => {
             <div style={{ fontSize: 13, fontWeight: 500, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {w.remark || "—"}
             </div>
-            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: "#80736b", marginTop: 2 }}>
               {fmtDT(w.createdAt)} · {w.paymentMode || "—"}{w.referenceId ? ` · Ref: ${w.referenceId}` : ""}
             </div>
           </div>
@@ -171,7 +171,7 @@ const OrderItems = ({ items, topItems }) => {
           { k: "top",   label: `Top ordered (${topItems.length})` },
         ].map((t) => (
           <button key={t.k} onClick={() => setView(t.k)}
-            style={{ padding: "5px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", background: view === t.k ? "var(--primary-color)" : "#c7dcff", color: view === t.k ? "#fff" : "var(--primary-color)" }}>
+            style={{ padding: "5px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", background: view === t.k ? "var(--primary-color)" : "#eadcc8", color: view === t.k ? "#fff" : "var(--primary-color)" }}>
             {t.label}
           </button>
         ))}
@@ -196,7 +196,7 @@ const OrderItems = ({ items, topItems }) => {
                     <td style={{ ...td, fontWeight: 700, color: "#059669" }}>{fmt(it.total)}</td>
                     <td style={td}>{it.kotNo || "—"}</td>
                     <td style={td}>{statusBadge(it.itemStatus)}</td>
-                    <td style={{ ...td, color: "#6b7280", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <td style={{ ...td, color: "#80736b", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {it.itemRemark || it.predefinedRemark || it.globalRemark || "—"}
                     </td>
                   </tr>
@@ -219,7 +219,7 @@ const OrderItems = ({ items, topItems }) => {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.menuName}</div>
-                  <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{fmtN(t.orderCount)} baar · Qty: {fmtN(t.totalQty)}</div>
+                  <div style={{ fontSize: 11, color: "#80736b", marginTop: 2 }}>{fmtN(t.orderCount)} baar · Qty: {fmtN(t.totalQty)}</div>
                   <div style={{ marginTop: 5, height: 5, background: "#f3f4f6", borderRadius: 99, overflow: "hidden" }}>
                     <div style={{ height: "100%", width: `${pct}%`, background: "var(--primary-color)", borderRadius: 99 }} />
                   </div>
@@ -236,13 +236,13 @@ const OrderItems = ({ items, topItems }) => {
 
 // ── CUSTOMER LIST ITEM ───────────────────────────────────────
 const CustItem = ({ c, active, onClick }) => (
-  <div onClick={onClick} style={{ padding: "11px 14px", borderBottom: "1px solid #c7dcff", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, background: active ? "#1d4ed826" : "#fff", borderLeft: active ? "3px solid var(--primary-color)" : "3px solid transparent", transition: "background .12s" }}>
-    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#1d4ed81f", color: "var(--primary-color)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+  <div onClick={onClick} style={{ padding: "11px 14px", borderBottom: "1px solid #eadcc8", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, background: active ? "#d8641d26" : "#fff", borderLeft: active ? "3px solid var(--primary-color)" : "3px solid transparent", transition: "background .12s" }}>
+    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#4a241026", color: "var(--primary-color)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
       {ini(c.name)}
     </div>
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e3a8a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
-      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>{c.phone || ""}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#4A2410", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
+      <div style={{ fontSize: 11, color: "#80736b", marginTop: 1 }}>{c.phone || ""}</div>
     </div>
     <div style={{ textAlign: "right", flexShrink: 0 }}>
       <div style={{ fontSize: 12, color: "var(--primary-color)", fontWeight: 600 }}>{fmt(c.totalBilled)}</div>
@@ -349,13 +349,13 @@ export default function CustomerReport() {
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } @keyframes spin { to { transform: rotate(360deg); } } table tr:hover td { background: #f0f9ff; }`}</style>
 
       {/* ── TOP BAR ── */}
-      <div style={{ background: "#fff", border: "1px solid #c7dcff", borderRadius: "10px 10px 0px 0px", padding: "10px 18px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 15, fontWeight: 700, marginRight: 4, color: "#1e3a8a" }}> Customer Report</span>
+      <div style={{ background: "#fff", border: "1px solid #eadcc8", borderRadius: "10px 10px 0px 0px", padding: "10px 18px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 15, fontWeight: 700, marginRight: 4, color: "#4A2410" }}> Customer Report</span>
         <input
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search by name / phone..."
-          style={{ padding: "7px 12px", color: "#1e3a8a", border: "1px solid #B5D4F4", background: "#e6f1fb5c", borderRadius: 8, fontSize: 13, width: 230, outline: "none" }}
+          style={{ padding: "7px 12px", color: "#4A2410", border: "1px solid #eadcc8", background: "#fbeee65c", borderRadius: 8, fontSize: 13, width: 230, outline: "none" }}
         />
         <span style={{ fontSize: 12, color: "#fff" }}>{filtered.length} customers</span>
         <button
@@ -371,17 +371,17 @@ export default function CustomerReport() {
 
         {/* ── LEFT: Customer List ── */}
         <div className="main_chat_sidebar">
-          <div style={{ padding: "10px 12px", borderBottom: "1px solid #c7dcff" }}>
+          <div style={{ padding: "10px 12px", borderBottom: "1px solid #eadcc8" }}>
             <input
               value={localQ}
               onChange={(e) => handleLocal(e.target.value)}
               placeholder="🔍 Filter list..."
-              style={{ width: "100%", padding: "7px 10px", color: "#1e3a8a", background: "#e6f1fb5c", border: "1px solid #c7dcff", borderRadius: 8, fontSize: 13, outline: "none" }}
+              style={{ width: "100%", padding: "7px 10px", color: "#4A2410", background: "#fbeee65c", border: "1px solid #eadcc8", borderRadius: 8, fontSize: 13, outline: "none" }}
             />
           </div>
           <div style={{ flex: 1, overflowY: "auto" }}>
             {listLoad ? (
-              <div style={{ padding: 24, textAlign: "center", color: "#6b7280" }}><Spinner /> &nbsp;Loading...</div>
+              <div style={{ padding: 24, textAlign: "center", color: "#80736b" }}><Spinner /> &nbsp;Loading...</div>
             ) : listErr ? (
               <div style={{ padding: 16, color: "#dc2626", fontSize: 13 }}>❌ {listErr}</div>
             ) : !filtered.length ? (
@@ -415,7 +415,7 @@ export default function CustomerReport() {
           )}
 
           {detLoad && (
-            <div style={{ padding: 40, textAlign: "center", color: "#6b7280" }}>
+            <div style={{ padding: 40, textAlign: "center", color: "#80736b" }}>
               <Spinner /> &nbsp;Report loading...
             </div>
           )}
@@ -428,12 +428,12 @@ export default function CustomerReport() {
             <>
               {/* Profile Card */}
               <div style={{ ...card, display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 50, height: 50, borderRadius: "50%", background: "#1d4ed81f", border: "1px solid #c7dcff", color: "var(--primary-color)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
+                <div style={{ width: 50, height: 50, borderRadius: "50%", background: "#e4dedb", border: "1px solid #eadcc8", color: "var(--primary-color)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
                   {ini(cu.name)}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "#1e3a8a", }}>{cu.name}</div>
-                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#4A2410", }}>{cu.name}</div>
+                  <div style={{ fontSize: 12, color: "#8b7364", marginTop: 4 }}>
                     📞 {cu.phone || "—"} &nbsp;·&nbsp; 📍 {cu.address || "—"} &nbsp;·&nbsp; Since {fmtD(cu.customerSince)}
                   </div>
                   <div style={{ marginTop: 7, display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -449,7 +449,7 @@ export default function CustomerReport() {
                   </div>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>Wallet balance</div>
+                  <div style={{ fontSize: 12, color: "#8b7364" }}>Wallet balance</div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: "#059669", marginTop: 3 }}>{fmt(cu.walletBalance)}</div>
                 </div>
               </div>
@@ -493,7 +493,7 @@ export default function CustomerReport() {
               </Section>
 
               {/* TABS */}
-              <div style={{ display: "flex", gap: 4, marginBottom: 14, background: "#fff", borderRadius: 10, border: "1px solid #c7dcff", padding: 4 }}>
+              <div style={{ display: "flex", gap: 4, marginBottom: 14, background: "#fff", borderRadius: 10, border: "1px solid #eadcc8", padding: 4 }}>
                 {TABS.map((t) => (
                   <button key={t.key} onClick={() => setActiveTab(t.key)}
                     style={{ flex: 1, padding: "7px 6px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: activeTab === t.key ? "var(--primary-color)" : "transparent", color: activeTab === t.key ? "#fff" : "rgb(105, 105, 105)" }}>

@@ -159,36 +159,42 @@ const MyTickets = () => {
       {showRaise && (
         <div style={overlayStyle}>
           <div style={modalStyle}>
-            <h3 style={{ marginBottom: 12 }}>Raise a Support Ticket</h3>
-            <label style={labelStyle}>Subject</label>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Bill amount mismatch"
-              style={inputStyle}
-            />
-            <label style={labelStyle}>Message</label>
+          <div className="Order_Details_modal_header">
+            <h2 className="mb-0">Raise a Support Ticket</h2>
+          </div>
+            <div className="main_input px-3">
+              <label>Subject</label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="e.g. Bill amount mismatch"
+              />
+          </div>
+          <div className="main_input px-3">
+            <label>Message</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe your issue in detail..."
               rows={5}
-              style={{ ...inputStyle, resize: "vertical" }}
+              style={{ resize: "vertical" }}
             />
-            <label style={labelStyle}>Attachment (optional)</label>
+            </div>
+            <div className="main_input px-3">
+            <label>Attachment (optional)</label>
             <input
               type="file"
               accept="image/*,.pdf"
               onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-              style={inputStyle}
             />
+            </div>
             {attachment && (
               <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{attachment.name}</div>
             )}
-            <div className="flex justify-end gap-2 mt-3">
+            <div className="flex justify-between gap-3 modal_footer px-3 py-3 mt-3">
               <button className="cancel_btn" onClick={() => { setShowRaise(false); setAttachment(null); }}>Cancel</button>
-              <button className="main_btn" disabled={submitting} onClick={handleRaise}>
+              <button className="update_btn" disabled={submitting} onClick={handleRaise}>
                 {submitting ? "Submitting..." : "Submit Ticket"}
               </button>
             </div>
@@ -199,104 +205,261 @@ const MyTickets = () => {
       {/* Thread Modal */}
       {activeTicketId && (
         <div style={overlayStyle}>
-          <div style={{ ...modalStyle, maxWidth: 560 }}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 style={{ margin: 0 }}>
-                {ticket ? `#${ticket.dg048_ticket_id} — ${ticket.dg048_subject}` : "Loading..."}
-              </h3>
-              <button onClick={() => { setActiveTicketId(null); setReplyText(""); setReplyAttachment(null); }} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer" }}>✕</button>
+          <div className="chait_box_main">
+
+  {/* Header */}
+  <div className="chai_head">
+    <div className="bot-av">
+      <svg viewBox="0 0 24 24">
+        <rect x="4" y="8" width="16" height="11" rx="3"></rect>
+        <path d="M12 4v4M9 13v1.5M15 13v1.5"></path>
+        <path d="M2 12v3M22 12v3"></path>
+      </svg>
+    </div>
+
+    <div>
+      <h1>
+        {ticket
+          ? `#${ticket.dg048_ticket_id} — ${ticket.dg048_subject}`
+          : "Loading..."}
+      </h1>
+    </div>
+
+    <div className="acts">
+      <button
+        onClick={() => {
+          setActiveTicketId(null);
+          setReplyText("");
+          setReplyAttachment(null);
+        }}
+        className="iconbtn"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+
+  {/* Ticket Status */}
+  {ticket && (
+    <div className="flex items-center gap-2 mb-2">
+      <span
+        style={{
+          fontSize: 12,
+          padding: "4px 10px",
+          borderRadius: 8,
+          background:
+            (statusColors[ticket.dg048_status] ||
+              statusColors.open).bg,
+          color:
+            (statusColors[ticket.dg048_status] ||
+              statusColors.open).color,
+          fontWeight: 700,
+        }}
+      >
+        {(statusColors[ticket.dg048_status] ||
+          statusColors.open).label}
+      </span>
+    </div>
+  )}
+
+  {/* Chat Body */}
+  <div className="chait_body">
+
+    {threadLoading ? (
+      <div className="text-center p-4">
+        Loading...
+      </div>
+    ) : messages.length === 0 ? (
+      <div className="text-center p-4">
+        No messages yet.
+      </div>
+    ) : (
+      messages.map((m) => {
+
+        const isMaster =
+          m.dg049_sender_role === "master_admin";
+
+        return (
+          <React.Fragment key={m.dg049_message_id}>
+
+            {/* Date Separator */}
+            <div className="daysplit">
+              {new Date(
+                m.dg049_created_at
+              ).toLocaleDateString("en-GB")}
             </div>
 
-            {ticket && (
-              <div style={{
-                fontSize: 12, marginBottom: 10, padding: "4px 10px", borderRadius: 8,
-                display: "inline-block",
-                background: (statusColors[ticket.dg048_status] || statusColors.open).bg,
-                color: (statusColors[ticket.dg048_status] || statusColors.open).color,
-                fontWeight: 700,
-              }}>
-                {(statusColors[ticket.dg048_status] || statusColors.open).label}
-              </div>
-            )}
+            {/* Message Row */}
+            <div
+              className={`chait_row ${
+                isMaster
+                  ? "master-message"
+                  : "user-message"
+              }`}
+            >
 
-            <div style={{ maxHeight: 320, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 10, padding: 10, marginBottom: 12 }}>
-              {threadLoading ? (
-                <div className="text-center p-4">Loading...</div>
-              ) : (
-                messages.map((m) => {
-                  const isMaster = m.dg049_sender_role === "master_admin";
-                  return (
-                    <div key={m.dg049_message_id} style={{
-                      display: "flex", justifyContent: isMaster ? "flex-start" : "flex-end", marginBottom: 8,
-                    }}>
-                      <div style={{
-                        maxWidth: "75%", padding: "8px 12px", borderRadius: 10,
-                        background: isMaster ? "#eff6ff" : "#f3f4f6",
-                        border: `1px solid ${isMaster ? "#bfdbfe" : "#e5e7eb"}`,
-                      }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: isMaster ? "#2563eb" : "#374151", marginBottom: 2 }}>
-                          {m.dg049_sender_name}
-                        </div>
-                        {m.dg049_message && (
-                          <div style={{ fontSize: 13, color: "#111827", whiteSpace: "pre-wrap" }}>{m.dg049_message}</div>
-                        )}
-                        {m.dg049_attachment_url && (
-                          isImageFile(m.dg049_attachment_url) ? (
-                            <a href={`${domain}${m.dg049_attachment_url}`} target="_blank" rel="noopener noreferrer">
-                              <img
-                                src={`${domain}${m.dg049_attachment_url}`}
-                                alt="attachment"
-                                style={{ maxWidth: 180, maxHeight: 180, borderRadius: 8, marginTop: 6, display: "block" }}
-                              />
-                            </a>
-                          ) : (
-                            <a
-                              href={`${domain}${m.dg049_attachment_url}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ fontSize: 12, color: "#2563eb", marginTop: 6, display: "inline-block" }}
-                            >
-                              📎 View attachment
-                            </a>
-                          )
-                        )}
-                        <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>{fmtDate(m.dg049_created_at)}</div>
-                      </div>
+              {/* Dynamic Initials */}
+              <span className="mini_name">
+                {m.dg049_sender_name
+                  ?.split(" ")
+                  .filter(Boolean)
+                  .map((name) => name[0])
+                  .join("")
+                  .toUpperCase()}
+              </span>
+
+              <div className="chait_text_name">
+
+                {/* Sender Name */}
+                <h6>
+                  {m.dg049_sender_name}
+                </h6>
+
+                {/* Text Message */}
+                {m.dg049_message && (
+                  <div className="chait_text">
+
+                    <p>
+                      {m.dg049_message}
+                    </p>
+
+                    <div className="time_chait">
+                      {new Date(
+                        m.dg049_created_at
+                      ).toLocaleTimeString("en-IN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
                     </div>
-                  );
-                })
-              )}
+
+                  </div>
+                )}
+
+                {/* Attachment */}
+                {m.dg049_attachment_url && (
+                  isImageFile(
+                    m.dg049_attachment_url
+                  ) ? (
+                    <a
+                      href={`${domain}${m.dg049_attachment_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        src={`${domain}${m.dg049_attachment_url}`}
+                        alt="attachment"
+                        style={{
+                          maxWidth: 180,
+                          maxHeight: 180,
+                          borderRadius: 8,
+                          marginTop: 6,
+                          display: "block",
+                        }}
+                      />
+
+                      <div className="time_chait">
+                        {new Date(
+                          m.dg049_created_at
+                        ).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </div>
+                    </a>
+                  ) : (
+                    <a
+                      href={`${domain}${m.dg049_attachment_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: 12,
+                        color: "#59371c",
+                        marginTop: 6,
+                        display: "inline-block",
+                      }}
+                    >
+                      📎 View attachment
+                    </a>
+                  )
+                )}
+
+              </div>
             </div>
 
-            {ticket?.dg048_status !== "closed" && (
-              <div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    placeholder="Type a reply..."
-                    style={{ ...inputStyle, flex: 1 }}
-                    onKeyDown={(e) => e.key === "Enter" && handleReply()}
-                  />
-                  <button className="main_btn" disabled={replying} onClick={handleReply}>
-                    {replying ? "..." : "Send"}
-                  </button>
-                </div>
-                <div className="flex items-center gap-2" style={{ marginTop: 6 }}>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => setReplyAttachment(e.target.files?.[0] || null)}
-                    style={{ fontSize: 12 }}
-                  />
-                  {replyAttachment && (
-                    <span style={{ fontSize: 12, color: "#6b7280" }}>{replyAttachment.name}</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          </React.Fragment>
+        );
+      })
+    )}
+
+  </div>
+
+  {/* Reply Footer */}
+  {ticket?.dg048_status !== "closed" && (
+    <div className="chait_footer">
+
+      {/* Reply Input */}
+      <input
+        className="input_chait"
+        type="text"
+        value={replyText}
+        onChange={(e) =>
+          setReplyText(e.target.value)
+        }
+        placeholder="Type a reply..."
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleReply();
+          }
+        }}
+      />
+
+      {/* Attachment */}
+      <div className="file_attachment">
+
+        <input
+          type="file"
+          accept="image/*,.pdf"
+          onChange={(e) =>
+            setReplyAttachment(
+              e.target.files?.[0] || null
+            )
+          }
+          style={{
+            fontSize: 12,
+          }}
+        />
+
+        <i className="ri-attachment-line"></i>
+
+        {replyAttachment && (
+          <span
+            style={{
+              fontSize: 12,
+              color: "#6b7280",
+            }}
+          >
+            {replyAttachment.name}
+          </span>
+        )}
+
+      </div>
+
+      {/* Send Button */}
+      <button
+        className="main_btn"
+        disabled={replying}
+        onClick={handleReply}
+      >
+        {replying ? "..." : "Send"}
+      </button>
+
+    </div>
+  )}
+
+</div>
         </div>
       )}
     </div>
@@ -308,7 +471,7 @@ const overlayStyle = {
   display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
 };
 const modalStyle = {
-  background: "#fff", borderRadius: 14, padding: 20, width: "90%", maxWidth: 460,
+  background: "#fff", borderRadius: 14, width: "90%", maxWidth: 460,
   maxHeight: "85vh", overflowY: "auto", color: "#111827",
 };
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginTop: 10, marginBottom: 4 };
