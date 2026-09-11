@@ -343,7 +343,7 @@ export default function BillPage() {
 
   const discountAmount =
     discountMode === "percent"
-      ? (discountableSubTotal * Math.min(100, Math.max(0, parseFloat(discountPct || 0)))) / 100
+      ? (discountableSubTotal * parseFloat(discountPct || 0)) / 100
       : parseFloat(couponDiscount || 0);
 
   const beforeRound =

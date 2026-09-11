@@ -112,7 +112,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
        
 
         {/* FORM */}
-        <form onSubmit={handleSubmit}>
+        <form >
           <Row className="p-3 pt-2">
             {/* CATEGORY */}
             <Col md={6}>
@@ -169,28 +169,29 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
                 />
               </div>
             </Col>
-            </Row>
-          <div className="flex justify-between gap-3 modal_footer px-3 py-3">
-
-            <button type="button" onClick={onClose} className="cancel_btn">
-             ✕ Cancel
-            </button>
-
-            <button
-              type="submit"
-              className="update_btn"
-            >
-              {isEdit
-                ? updateExpenseMutation.isLoading
-                  ? "✓ Updating..."
-                  : "✓ Update"
-                : addExpenseMutation.isLoading
-                  ? "✓ Saving..."
-                  : "✓Save"}
-            </button>
-
-          </div>
+          </Row>
         </form>
+        <div className="flex justify-between gap-3 modal_footer px-3 py-3">
+
+          <button type="button" onClick={onClose} className="cancel_btn">
+           ✕ Cancel
+          </button>
+
+          <button
+          onClick={handleSubmit}
+            type="submit"
+            className="update_btn"
+          >
+            {isEdit
+              ? updateExpenseMutation.isLoading
+                ? "✓ Updating..."
+                : "✓ Update"
+              : addExpenseMutation.isLoading
+                ? "✓ Saving..."
+                : "✓Save"}
+          </button>
+
+        </div>
       </div>
     </div>
   );
