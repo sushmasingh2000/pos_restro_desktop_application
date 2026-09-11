@@ -368,8 +368,15 @@ export default function BillRightPanel({
               <label>Discount %</label>
               <input
                 type="number"
+                min="0"
+                max="100"
                 value={discountPct}
-                onChange={(e) => setDiscountPct(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "") { setDiscountPct(v); return; }
+                  const clamped = Math.min(100, Math.max(0, parseFloat(v)));
+                  setDiscountPct(isNaN(clamped) ? v : clamped);
+                }}
                 placeholder="0.00"
               />
             </div>
