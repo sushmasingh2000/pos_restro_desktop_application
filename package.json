@@ -110,7 +110,7 @@
       }
     ],
     "win": {
-      "icon": "public/icon.png",
+      "icon": "public/icon.ico",
       "target": "nsis",
       "artifactName": "RestroPanel Setup ${version}.exe"
     },
