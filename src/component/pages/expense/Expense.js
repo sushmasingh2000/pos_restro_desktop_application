@@ -75,6 +75,7 @@ const ExpenseManagementReport = () => {
       "Expense ID": exp.dg022_unique_id,
       "Category": exp.category_name || "-",
       "Name": exp.dg022_name,
+      "Description": exp.dg022_description || "-",
       "Date": moment(exp.dg022_date).format("YYYY-MM-DD"),
       "Amount": parseFloat(exp.dg022_amount).toFixed(2),
       "Payment Method": exp.dg022_payment_method,
@@ -178,6 +179,7 @@ const ExpenseManagementReport = () => {
                 <th>Expense ID</th>
                 <th>Category</th>
                 <th>Name</th>
+                <th>Description</th>
                 <th>Date</th>
                 <th>Amount</th>
                 <th>MOP</th>
@@ -190,13 +192,13 @@ const ExpenseManagementReport = () => {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="9" className="text-center p-6 text-white/60">
+                  <td colSpan="10" className="text-center p-6 text-white/60">
                     Loading...
                   </td>
                 </tr>
               ) : expenses.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center p-6 text-white/60">
+                  <td colSpan="10" className="text-center p-6 text-white/60">
                     No expenses found
                   </td>
                 </tr>
@@ -214,6 +216,7 @@ const ExpenseManagementReport = () => {
                       {exp.category_name || "-"}
                     </td>
                     <td>{exp.dg022_name}</td>
+                    <td>{exp.dg022_description || "—"}</td>
                     <td>{moment(exp.dg022_date).format("YYYY-MM-DD")}</td>
 
                     <td className="text-emerald-300">

@@ -12,6 +12,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
   const [formData, setFormData] = useState({
     name: "",
     category: "",
+    product: "",
     date: "",
     amount: "",
     payment_method: "Cash",
@@ -25,6 +26,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
       setFormData({
         name: editExpense.dg022_name || "",
         category: editExpense.dg022_category || "",
+        product: editExpense.dg022_product || "",
         date: editExpense.dg022_date || "",
         amount: editExpense.dg022_amount || "",
         payment_method: editExpense.dg022_payment_method || "Cash",
@@ -34,6 +36,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
       setFormData({
         name: "",
         category: "",
+        product: "",
         date: "",
         amount: "",
         payment_method: "Cash",
@@ -50,6 +53,15 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
   );
 
   const categories = data?.data?.result || [];
+
+  // ================= GET PRODUCTS (cascading on selected category) =================
+  const { data: productsData } = useQuery(
+    ["expense_products_by_category", formData.category],
+    () => apiConnectorGet(endpoint.expense_product_get_api, { category_id: formData.category }),
+    { refetchOnWindowFocus: false, enabled: Boolean(formData.category) }
+  );
+
+  const products = formData.category ? (productsData?.data?.result || []) : [];
 
   // ================= ADD =================
   const addExpenseMutation = useMutation(
@@ -79,6 +91,21 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "category") {
+      setFormData((prev) => ({ ...prev, category: value, product: "" }));
+      return;
+    }
+    if (name === "product") {
+      const selected = products.find(
+        (p) => String(p.dg051_expense_product_id) === String(value)
+      );
+      setFormData((prev) => ({
+        ...prev,
+        product: value,
+        name: selected ? selected.dg051_name : prev.name
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -128,10 +155,26 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
                 </select>
               </div>
             </Col>
+            {/* PRODUCT — cascades based on selected category */}
             <Col md={6}>
               <div className="main_input">
-                  <label>Name <span className="text-red-500">*</span></label>
-                  <input name="name" value={formData.name} onChange={handleChange} placeholder="Expense Name" required/>
+                <label>Product <span className="text-red-500">*</span></label>
+                <select
+                  name="product"
+                  value={formData.product}
+                  onChange={handleChange}
+                  disabled={!formData.category}
+                  required
+                >
+                  <option value="">
+                    {formData.category ? "Select Product" : "Select a category first"}
+                  </option>
+                  {products.map((p) => (
+                    <option key={p.dg051_expense_product_id} value={p.dg051_expense_product_id}>
+                      {p.dg051_name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </Col>
             <Col md={6}>
