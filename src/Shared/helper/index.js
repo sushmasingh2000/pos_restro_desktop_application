@@ -21,4 +21,11 @@ const getBusyDuration = (startTime) => {
   return `${min}m ${sec}s`;
 };
 
+// "Aaj" ki date device ke local timezone mein (YYYY-MM-DD). new Date().toISOString()
+// UTC deta hai — India mein raat 12 se subah 5:30 tak wo kal ki date nikalta hai.
+export const todayLocal = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 export default getBusyDuration;

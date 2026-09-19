@@ -18,7 +18,7 @@ escpos.Network = require("escpos-network");
 let backendProcess;
 let mainWindow;
 
-const API_BASE = "http://localhost:9047";
+const API_BASE = "http://localhost:9036";
 
 // ✅ Auto detect node.exe based on Windows version
 function getNodeExec() {
@@ -54,7 +54,7 @@ function startBackend() {
     env: {
       ...process.env,
       ...envConfig,
-      PORT: "9047",
+      PORT: "9036",
       NODE_SKIP_PLATFORM_CHECK: "1",
     },
   });

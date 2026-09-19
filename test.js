@@ -15,7 +15,7 @@ let backendProcess;
 let mainWindow;
 
 const API_BASE = app.isPackaged
-  ? "http://localhost:9047"
+  ? "http://localhost:9036"
   : "https://cbc.ferryinfotech.in";
 
 function startBackend() {
@@ -32,7 +32,7 @@ function startBackend() {
   backendProcess = spawn(nodeExec, [backendPath], {
     env: {
       ...process.env,
-      PORT: "9047",
+      PORT: "9036",
     },
   });
 

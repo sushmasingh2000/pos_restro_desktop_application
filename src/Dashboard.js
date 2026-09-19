@@ -16,6 +16,7 @@ import available from "./assets/images/dashbord/available.png";
 import busy from "./assets/images/dashbord/busy.png";
 import utilisationi from "./assets/images/dashbord/utilisation.png";
 import { frontend } from "./domain";
+import { todayLocal } from "./Shared/helper";
 
 
 function timeDifference(targetDateStr) {
@@ -310,9 +311,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const client = useQueryClient();
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayLocal();
   const { data: mainData } = useQuery(
-    ["panel_dashboard_main"],
+    ["panel_dashboard_main", today],
     () => apiConnectorGet(`${endpoint.dashboard_main_api}?startDate=${today}&endDate=${today}`),
     { refetchOnWindowFocus: false }
   );
@@ -389,6 +390,7 @@ const Dashboard = () => {
   ];
   const [qrModal, setQrModal] = useState(null);
   const [allQrModal, setAllQrModal] = useState(false);
+  const [tableSearch, setTableSearch] = useState("");
 
   const [moveModal, setMoveModal] = useState(null);
   const [mergeModal, setMergeModal] = useState(null);
@@ -425,6 +427,11 @@ const Dashboard = () => {
     acc[t.dg05_table_id] = t.dg05_table_name;
     return acc;
   }, {});
+
+  const searchQuery = tableSearch.trim().toLowerCase();
+  const visibleTables = searchQuery
+    ? tables.filter((t) => String(t.dg05_table_name || "").toLowerCase().includes(searchQuery))
+    : tables;
 
   const handleTableClick = (table) => {
     navigate("/pos/dine-in", { state: { table: table.dg05_table_id } });
@@ -618,7 +625,12 @@ const Dashboard = () => {
         <div className="flex items-center justify-between gap-6">
           <div className="search-box">
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" placeholder="Search Table" />
+            <input
+              type="text"
+              placeholder="Search Table"
+              value={tableSearch}
+              onChange={(e) => setTableSearch(e.target.value)}
+            />
           </div>
           {/* NEW BUTTON */}
           {/* <button onClick={() => navigate("/pos/take-away")} className="scanner_btn" style={{ background: "#2563eb" }}>
@@ -647,7 +659,12 @@ const Dashboard = () => {
 
       {/* GRID */}
       <Row>
-        {tables.map((table) => (
+        {searchQuery && visibleTables.length === 0 && (
+          <p className="text-center py-4" style={{ color: "#8b7464" }}>
+            No table found for "{tableSearch.trim()}"
+          </p>
+        )}
+        {visibleTables.map((table) => (
           <Col
             md={3} sm={6} xs={12} className="mb-3"
             key={table.dg05_table_id}
@@ -727,7 +744,13 @@ const Dashboard = () => {
                     Print
                   </button>
 
-                  <button className="card-action-btn red" onclick="event.stopPropagation();setAvailable(3)">
+                  <button
+                    className="card-action-btn red"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      client.refetchQueries("get_table");
+                    }}
+                  >
                     <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     Refresh
                   </button>

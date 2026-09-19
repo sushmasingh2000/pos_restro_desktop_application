@@ -1,9 +1,10 @@
 import axios from "axios";
-import { frontend } from "../domain";
+import { domain } from "../domain";
 import { getAppMode } from "./appMode";
 
-const LIVE_DOMAIN = 'https://cbc.ferryinfotech.in';
-const LOCAL_DOMAIN = 'http://localhost:9047';
+// Must equal APIRoutes' domain, else the live→local replace() is a silent no-op.
+const LIVE_DOMAIN = domain;
+const LOCAL_DOMAIN = 'http://localhost:9036';
 
 // Routing now follows the manually-set app mode (staff switches it explicitly
 // via the banner/button), not the raw navigator.onLine signal — avoids silent
@@ -72,6 +73,7 @@ export const apiConnectorGet = async (endpoint, params = {}) => {
     if (handleInvalidToken(response)) return;
     return response;
   } catch (e) {
+    if (e?.response?.data) return { data: e.response.data, status: e.response.status };
     return {
       msg: e?.message,
     };
@@ -93,6 +95,7 @@ export const apiConnectorPost = async (endpoint, reqBody) => {
     if (handleInvalidToken(response)) return;
     return response;
   } catch (e) {
+    if (e?.response?.data) return { data: e.response.data, status: e.response.status };
     return {
       msg: e?.message,
     };
