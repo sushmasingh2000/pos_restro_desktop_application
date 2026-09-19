@@ -40,6 +40,26 @@ export const triggerLocalCacheNow = async () => {
   }
 };
 
+// Live backend rejects a stale/other-device token with a 201 + "Invalid token"
+// body (not a 401), so axios doesn't throw — check the body and send the user
+// back to login. Panel runs from file:// with HashRouter, so "/" won't work;
+// use the hash route. Skipped in offline mode (local backend has its own auth).
+let redirectingToLogin = false;
+const handleInvalidToken = (response) => {
+  if (response?.data?.message !== "Invalid token") return false;
+  if (getAppMode() === "offline") return false;
+  if (!redirectingToLogin) {
+    redirectingToLogin = true;
+    const mode = localStorage.getItem("app_mode");
+    localStorage.clear();
+    sessionStorage.clear();
+    if (mode) localStorage.setItem("app_mode", mode);
+    window.location.hash = "#/";
+    window.location.reload();
+  }
+  return true;
+};
+
 export const apiConnectorGet = async (endpoint, params = {}) => {
   try {
     const response = await axios.get(getActiveEndpoint(endpoint), {
@@ -49,6 +69,7 @@ export const apiConnectorGet = async (endpoint, params = {}) => {
       },
       params: params,
     });
+    if (handleInvalidToken(response)) return;
     return response;
   } catch (e) {
     return {
@@ -69,6 +90,7 @@ export const apiConnectorPost = async (endpoint, reqBody) => {
         },
       }
     );
+    if (handleInvalidToken(response)) return;
     return response;
   } catch (e) {
     return {

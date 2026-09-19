@@ -266,8 +266,16 @@ const UserProfileMenu = ({ apiGet, apiPost, profileEndpoint, changePasswordEndpo
     setShowChangePwd(true);
   };
 
-  const handleLogout = () => {
+  const logoutEndpoint = changePasswordEndpoint.replace("/change-password", "/logout");
+
+  const handleLogout = async () => {
     setMenuOpen(false);
+    // Server se session hatne tak ruko (max 3s) — bina wait kiye page reload
+    // request cancel kar deta hai aur session dg02_user_sessions mein reh jata hai.
+    await Promise.race([
+      Promise.resolve(apiPost(logoutEndpoint)).catch(() => {}),
+      new Promise((resolve) => setTimeout(resolve, 3000)),
+    ]);
     localStorage.clear();
     navigate("/");
     window.location.reload();

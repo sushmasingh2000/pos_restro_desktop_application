@@ -11,6 +11,7 @@ import logo from "../assets/images/logo/favicon.png";
 import beans from "../assets/images/login/beans.png";
 import bens from "../assets/images/login/bens.webm";
 import arrow from "../assets/images/login/shape_2.png";
+import { getDeviceCredentials } from "../utils/deviceInfo";
 
 const REMEMBER_KEY = "remembered_email";
 const REMEMBER_PWD_KEY = "remembered_pwd";
@@ -39,9 +40,11 @@ const Login = ({ role = "staff" }) => {
     }
     setLoading(true);
     try {
+      const deviceCreds = await getDeviceCredentials();
       const res = await apiConnectorPost(endpoint.login_api, {
         email: username.trim(),
         password,
+        ...deviceCreds,
       });
 
       if (!res?.data?.success) {

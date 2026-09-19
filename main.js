@@ -864,3 +864,9 @@ ipcMain.handle("print-statement", async (event, { statementData, token }) => {
 
 // ✅ IPC — Log file path frontend ko bata do
 ipcMain.handle("get-log-path", () => logFile);
+
+// Login Sessions mein dikhane ke liye — is computer ka naam
+ipcMain.handle("get-device-info", () => ({
+  hostname: os.hostname(),
+  platform: os.platform(),
+}));
