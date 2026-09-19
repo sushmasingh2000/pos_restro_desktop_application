@@ -22,9 +22,14 @@ import TakeawayLiveOrder from "../component/pages/TakeawayLiveOrder";
 import QrTakeawayOrder from "../component/pages/QrTakeawayOrder";
 import FeedbackPage from "../component/pages/FeedbackPage";
 import MyTickets from "../component/pages/MyTickets";
+import KitchenDisplay from "../component/pages/KitchenDisplay";
 
 
 export const routes = [
+  {
+    path: "/kitchen-display",
+    element: <KitchenDisplay />,
+  },
   {
     path: "/bill",
     element: (

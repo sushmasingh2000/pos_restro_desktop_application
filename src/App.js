@@ -41,6 +41,15 @@ const App = () => {
           }
         />
 
+        <Route
+          path="/kitchen-login"
+          element={
+            isTokenValid()
+              ? <Navigate to="/kitchen-display" replace />
+              : <Login role="kitchen" />
+          }
+        />
+
         {routes.map((route, i) => (
           <Route
             key={i}

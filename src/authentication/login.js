@@ -17,7 +17,7 @@ const REMEMBER_PWD_KEY = "remembered_pwd";
 const encodePwd = (s) => btoa(unescape(encodeURIComponent(s || "")));
 const decodePwd = (s) => { try { return decodeURIComponent(escape(atob(s || ""))); } catch { return ""; } };
 
-const Login = ({ role }) => {
+const Login = ({ role = "staff" }) => {
   const [username, setUsername] = useState(() => localStorage.getItem(REMEMBER_KEY) || "");
   const [password, setPassword] = useState(() => decodePwd(localStorage.getItem(REMEMBER_PWD_KEY)));
   const [showPassword, setShowPassword] = useState(false);
@@ -53,12 +53,12 @@ const Login = ({ role }) => {
         toast.error("User not found");
         return;
       }
-      if (user.role !== "staff") {
-        toast.error("Only staff login is allowed");
+      if (user.role !== role) {
+        toast.error(`Only ${role} login is allowed here`);
         return;
       }
       localStorage.setItem("token", user.token);
-      localStorage.setItem("role", "staff");
+      localStorage.setItem("role", role);
       localStorage.setItem("user_name", user?.name || "");
       localStorage.setItem("user_email", user?.email || "");
       localStorage.setItem("loginTime", Date.now().toString());
@@ -74,7 +74,7 @@ const Login = ({ role }) => {
       }
 
       toast.success("Login successful");
-      navigate("/userdashboard");
+      navigate(role === "kitchen" ? "/kitchen-display" : "/userdashboard");
 
     } catch (error) {
       console.error("Login Error:", error);
