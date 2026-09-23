@@ -16,6 +16,7 @@ import CustomerReport from "../component/pages/Report";
 import SalesSummary from "../component/pages/SalesOrderSummary";
 import TakeAway from "../component/pages/TakeAway";
 import ExpenseManagementReport from "../component/pages/expense/Expense";
+import Inventory from "../component/pages/inventory/Inventory";
 import OnlineDeliveryOrder from "../component/pages/OnlineDeliveryOrder";
 import QROrder from "../component/pages/QROrder";
 import TakeawayLiveOrder from "../component/pages/TakeawayLiveOrder";
@@ -191,6 +192,14 @@ export const routes = [
     element: (
       <MainLayout>
         <ExpenseManagementReport />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/inventory",
+    element: (
+      <MainLayout>
+        <Inventory />
       </MainLayout>
     ),
   },

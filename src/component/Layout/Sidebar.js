@@ -5,7 +5,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
 import StoreIcon from "@mui/icons-material/Store";
-import { GraphicEqSharp, Logout, Money, PeopleAlt } from "@mui/icons-material";
+import { GraphicEqSharp, Logout, Money, PeopleAlt, Inventory2 } from "@mui/icons-material";
 import UserProfileMenu from "../UserProfileMenu";
 import { apiConnectorGet, apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
@@ -50,11 +50,11 @@ export default function Sidebar() {
         )}
         {features.door_delivery && (
           <SidebarLink to="/door-dilevery-order" icon={<StoreIcon fontSize="small" />} label="Door Delivery" />
-        )}
+        )} <SidebarLink to="/expense-report" icon={<LiveTvIcon fontSize="small" />} label="Expense Report" />
+        <SidebarLink to="/inventory" icon={<Inventory2 fontSize="small" />} label="Inventory Report" />
         <SidebarLink to="/lending-order" icon={<PeopleAlt fontSize="small" />} label="Lending Orders" />
         <SidebarLink to="/customer-ledger" icon={<LiveTvIcon fontSize="small" />} label="Customer Wallet" />
         <SidebarLink to="/customer-report" icon={<LiveTvIcon fontSize="small" />} label="Customer Report" />
-        <SidebarLink to="/expense-report" icon={<LiveTvIcon fontSize="small" />} label="Expense Report" />
         <SidebarLink to="/cancelled-order" icon={<PeopleAlt fontSize="small" />} label="Cancelled Orders" />
      
         <SidebarLink to="/feedback" icon={<AssessmentIcon fontSize="small" />} label="Feedback" />

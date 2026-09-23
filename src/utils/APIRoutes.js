@@ -71,6 +71,11 @@ export const endpoint = {
   expense_categroy_get_api: `${domain}/api/v1/get-expense-category`,
   expense_product_get_api: `${domain}/api/v1/get-expense-product`,
 
+  // ── INVENTORY (panel: view stock + add stock only)
+  categroy_get_api: `${domain}/api/v1/get-category`,
+  product_get_api: `${domain}/api/v1/get-product`,
+  product_add_stock_api: `${domain}/api/v1/add-stock-product`,
+
   // app
   get_customer_placed_orders: `${domain}/api/v1/order-customer-placed`,
   confirm_customer_order: `${domain}/api/v1/order-confirm-customer`,
