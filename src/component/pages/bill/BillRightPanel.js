@@ -259,10 +259,12 @@ export default function BillRightPanel({
           <input
             value={customer.phone}
             onChange={(e) =>
-              setCustomer((p) => ({ ...p, phone: e.target.value }))
+              setCustomer((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))
             }
             placeholder="Phone number"
             type="tel"
+            inputMode="numeric"
+            maxLength={10}
             className={`${inp} ${(isLending || isAdvance) && !customer.phone
               ? "border-red-400/50"
               : ""
