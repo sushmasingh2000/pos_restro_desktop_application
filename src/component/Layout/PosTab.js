@@ -43,6 +43,7 @@ const PosTab = () => {
   const [counts, setCounts] = useState({
     dineIn: 0,
     delivery: 0,
+    doorDelivery: 0,
     tableQr: 0,
     qrTakeaway: 0,
     takeaway: 0,
@@ -104,9 +105,15 @@ const PosTab = () => {
         (o) => o.dg06_order_type === "takeaway"
       ).length;
 
+      // Door Delivery = orders staff placed at the counter (phone/walk-in) —
+      // distinct from `delivery` above, which is customer-app-placed.
+      const doorDelivery = pendingOrders.filter(
+        (o) => o.dg06_order_type === "delivery"
+      ).length;
+
       const pending = pendingTotal;
 
-      setCounts({ dineIn, delivery, tableQr, qrTakeaway, takeaway, online, pending });
+      setCounts({ dineIn, delivery, doorDelivery, tableQr, qrTakeaway, takeaway, online, pending });
     } catch { }
   }, []);
 
@@ -126,10 +133,11 @@ const PosTab = () => {
   const navItems = [
     { name: "DINE IN", path: "/userdashboard", count: counts.dineIn },
     features.table_order && { name: "TAKE AWAY", path: "/pos/take-away", count: counts.takeaway },
-    features.door_delivery && { name: "DOOR DELIVERY ORDERS", path: "/online-delivery-order", count: counts.delivery },
+    { name: "DOOR DELIVERY", path: "/pos/delivery", count: counts.doorDelivery },
+    features.door_delivery && { name: "ONLINE DELIVERY", path: "/online-delivery-order", count: counts.delivery },
     features.table_qr && { name: "TABLE QR", path: "/qr-order", count: counts.tableQr },
     features.takeaway && { name: "QR ORDER", path: "/qr-takeaway-order", count: counts.qrTakeaway },
-    { name: "ONLINE ORDERS", path: "/online-order", count: counts.online },
+    // { name: "ONLINE ORDERS", path: "/online-order", count: counts.online },
     { name: "PENDING ORDERS", path: "/pending-order", count: counts.pending },
   ].filter(Boolean);
 

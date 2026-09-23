@@ -44,6 +44,8 @@ const POS = () => {
   const [orderItems, setOrderItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [address, setAddress] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [modifyMode, setModifyMode] = useState(false);
   const [tableNameMap, setTableNameMap] = useState({});
   const [showQtyModal, setShowQtyModal] = useState(false);
@@ -427,7 +429,9 @@ const POS = () => {
     try {
       const res = await apiConnectorPost(endpoint.add_update_order_api, {
         tableId: getTableId(),
-        customerName: type === "delivery" ? address : "",
+        customerName: type === "delivery" || type === "take-away" ? customerName : "",
+        customerPhone: type === "delivery" || type === "take-away" ? customerPhone : "",
+        customerAddress: type === "delivery" ? address : "",
         paymentMethod: "",
         orderType: getOrderTypeEnum(),
         items: orderItems.map((item) => ({
@@ -659,7 +663,7 @@ const POS = () => {
                 : type === "take-away" ? "Table: 1001"
                   : type === "delivery" ? "Table: 1002" : "N/A"}
             </span>
-            {type === "delivery" && (
+            {(type === "delivery" || type === "take-away") && (
               <div
                 onClick={() => setShowModal(true)}
                 className="flex items-center gap-2 cursor-pointer bg-white/10 px-3 py-1 rounded-full"
@@ -811,15 +815,38 @@ const POS = () => {
           <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
             <div className="Order_Details_modal">
               <Row className="p-3">
-                <Col md={12}>
+                <Col md={type === "delivery" ? 6 : 12}>
                   <div className="main_input">
-                    <label>Enter Address <span className="text-red-500">*</span></label>
-                    <textarea
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Enter delivery address..." />
+                    <label>Customer Name <span className="text-red-500">*</span></label>
+                    <input
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Enter customer name" />
                   </div>
                 </Col>
+                <Col md={type === "delivery" ? 6 : 12}>
+                  <div className="main_input">
+                    <label>Mobile Number <span className="text-red-500">*</span></label>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="Enter mobile number" />
+                  </div>
+                </Col>
+                {type === "delivery" && (
+                  <Col md={12}>
+                    <div className="main_input">
+                      <label>Enter Address <span className="text-red-500">*</span></label>
+                      <textarea
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Enter delivery address..." />
+                    </div>
+                  </Col>
+                )}
               </Row>
 
 

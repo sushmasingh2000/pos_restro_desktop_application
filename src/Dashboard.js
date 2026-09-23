@@ -599,7 +599,7 @@ const Dashboard = () => {
           </div>
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
-          <div className="table_dsb" style={{ cursor: "pointer" }} onClick={() => navigate("/pos/door-delivery")}>
+          <div className="table_dsb" style={{ cursor: "pointer" }} onClick={() => navigate("/pos/delivery")}>
             <div className="main_icon" style={{ background: main.pending_delivery_orders > 0 ? "#fef6e2" : "#fde6c2", borderColor: main.pending_delivery_orders > 0 ? "#fef6e2" : "#fde6c2" }}>
               <img src={utilisationi} />
             </div>
