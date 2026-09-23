@@ -33,7 +33,7 @@ const Navbar = ({ toggleSidebar }) => {
 
   // ── Branch name ──
   const { data: branchData } = useQuery(
-    ["navbar_branch_profile"],
+    ["branch_profile"],
     () => apiConnectorGet(endpoint.branch_profile_api),
     { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
   );

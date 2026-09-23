@@ -14,7 +14,7 @@ import logo from "../../assets/images/logo/favicon.png";
 export default function Sidebar() {
   const navigate = useNavigate();
   const { data: branchProfileData } = useQuery(
-    ["sidebar_branch_profile"],
+    ["branch_profile"],
     () => apiConnectorGet(endpoint.branch_profile_api),
     { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
   );

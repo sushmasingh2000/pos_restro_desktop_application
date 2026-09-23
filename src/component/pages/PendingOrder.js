@@ -14,7 +14,7 @@ export default function PendingOrder() {
   const limit = 8;
 
   const { data: branchProfileData } = useQuery(
-    ["pendingorder_branch_profile"],
+    ["branch_profile"],
     () => apiConnectorGet(endpoint.branch_profile_api),
     { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
   );

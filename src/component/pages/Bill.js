@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
 import { apiConnectorGet, apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import toast from "react-hot-toast";
@@ -94,12 +94,13 @@ export default function BillPage() {
   const { data: branchData } = useQuery(
     ["branch_profile"],
     () => apiConnectorGet(endpoint.branch_profile_api),
-    { enabled: true, refetchOnWindowFocus: false }
+    { enabled: true, refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
   );
 
   const branch = branchData?.data?.result || {};
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Single payment ke liye amount auto-normalize (empty amount fix)
   const getFinalSplits = () => {
@@ -794,17 +795,20 @@ export default function BillPage() {
           }
         );
       }
-      await apiConnectorPost(endpoint.update_order_status_api, {
-        orderId,
-        status: "completed"
-      });
-
-      if (orderType === "dine_in" && tableId) {
-        await apiConnectorPost(endpoint.update_table_status_api, {
-          tableId,
-          status: "Available",
-        });
-      }
+      // These two don't depend on each other's result — firing them
+      // together instead of one-after-another halves this wait.
+      await Promise.all([
+        apiConnectorPost(endpoint.update_order_status_api, {
+          orderId,
+          status: "completed"
+        }),
+        orderType === "dine_in" && tableId
+          ? apiConnectorPost(endpoint.update_table_status_api, {
+              tableId,
+              status: "Available",
+            })
+          : Promise.resolve(),
+      ]);
 
       toast.success(
         isLending
@@ -814,8 +818,12 @@ export default function BillPage() {
             : "Table closed successfully!"
       );
 
+      // Dashboard's table grid and today's stats are cached (refetchOnMount:
+      // false) so they wouldn't otherwise notice this table just closed —
+      // refresh just those instead of reloading the whole app.
+      queryClient.refetchQueries("get_table");
+      queryClient.invalidateQueries("panel_dashboard_main");
       navigate("/userdashboard");
-      window.location.reload();
 
     } catch (err) {
       console.error(err);

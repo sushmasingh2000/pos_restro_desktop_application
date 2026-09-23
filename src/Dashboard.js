@@ -320,7 +320,7 @@ const Dashboard = () => {
   const main = mainData?.data?.result || {};
 
   const { data: branchProfileData } = useQuery(
-    ["dashboard_branch_profile"],
+    ["branch_profile"],
     () => apiConnectorGet(endpoint.branch_profile_api),
     { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
   );

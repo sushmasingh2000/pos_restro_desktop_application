@@ -32,6 +32,10 @@ const POS = () => {
   const { type } = useParams();
   const table = location.state?.table;
   const clickReady = React.useRef(false);
+  // Per-menu-item option groups rarely change mid-shift — cache them so
+  // clicking the same item again (very common — same drink ordered many
+  // times a day) skips the network round-trip and adds instantly.
+  const itemOptionsCache = React.useRef({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [optionItem, setOptionItem] = useState(null);
@@ -274,8 +278,11 @@ const POS = () => {
   const addToOrder = async (item) => {
     if (!clickReady.current) return;
     try {
-      const res = await apiConnectorGet(endpoint.item_options_pos_api + item.dg09_menu_id);
-      const groups = res?.data?.result || [];
+      const cached = itemOptionsCache.current[item.dg09_menu_id];
+      const groups = cached
+        ? cached
+        : (await apiConnectorGet(endpoint.item_options_pos_api + item.dg09_menu_id))?.data?.result || [];
+      itemOptionsCache.current[item.dg09_menu_id] = groups;
 
       if (groups.length === 0) {
         addItemDirectly(item, 0);

@@ -79,7 +79,7 @@ const LendingOrders = () => {
   const { data: branchData } = useQuery(
     ["branch_profile"],
     () => apiConnectorGet(endpoint.branch_profile_api),
-    { refetchOnWindowFocus: false }
+    { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
   );
   const branch = branchData?.data?.result || {};
 
