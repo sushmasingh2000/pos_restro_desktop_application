@@ -4,7 +4,11 @@ export const isTokenValid = () => {
 
   if (!token || !loginTime) return false;
 
-  const satDin = 7 * 24 * 60 * 60 * 1000;
+  // Backend ka login token ab 15 din ka hai (latest_backend/auth/index.js) —
+  // yahan bhi 15 din hona chahiye, warna 7-15 din ke beech ye session ko
+  // galat "expired" maan kar localStorage clear kar deta, chahe backend
+  // token abhi bhi valid ho.
+  const satDin = 15 * 24 * 60 * 60 * 1000;
   const expired = (Date.now() - parseInt(loginTime)) > satDin;
 
   if (expired) {

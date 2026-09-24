@@ -26,6 +26,7 @@ export default function BillPage() {
     deliveryCustomerName = "",
     deliveryCustomerPhone = "",
     deliveryCustomerAddress = "",
+    isOnlineOrder = false,
   } = location.state || {};
 
   // ── Customer ──────────────────────────────────────
@@ -795,20 +796,26 @@ export default function BillPage() {
           }
         );
       }
-      // These two don't depend on each other's result — firing them
-      // together instead of one-after-another halves this wait.
-      await Promise.all([
-        apiConnectorPost(endpoint.update_order_status_api, {
+      // Pehle order "completed" (WhatsApp bill receipt yahi trigger karta
+      // hai — sirf jab status pehli baar completed ho raha ho). Table wala
+      // call sequential/baad me isliye — wo "Table Time" (table_busy_seconds)
+      // calculate karta hai aur orderId explicitly bhejte hain taaki wo is
+      // order ko dhoond le chahe status ab "completed" ho chuka ho. Pehle
+      // ye dono parallel (Promise.all) chalte the, jisse race lag jaata tha:
+      // kabhi table wala order ko "completed" set kar deta tha isse pehle ki
+      // order-status wala apna "already completed?" check kare — WhatsApp
+      // skip ho jata, aur table_busy_seconds bhi hamesha "--" reh jata.
+      await apiConnectorPost(endpoint.update_order_status_api, {
+        orderId,
+        status: "completed"
+      });
+      if (orderType === "dine_in" && tableId) {
+        await apiConnectorPost(endpoint.update_table_status_api, {
+          tableId,
           orderId,
-          status: "completed"
-        }),
-        orderType === "dine_in" && tableId
-          ? apiConnectorPost(endpoint.update_table_status_api, {
-              tableId,
-              status: "Available",
-            })
-          : Promise.resolve(),
-      ]);
+          status: "Available",
+        });
+      }
 
       toast.success(
         isLending
@@ -973,6 +980,7 @@ export default function BillPage() {
         setEstimatedTime={setEstimatedTime}
         confirmDialog={confirmDialog}
         setConfirmDialog={setConfirmDialog}
+        isOnlineOrder={isOnlineOrder}
       />
 
       <div className="flex justify-between gap-3 modal_footer px-3 py-3">
@@ -991,7 +999,7 @@ export default function BillPage() {
         <div className="flex justify-end gap-3" style={{ width: "50%" }}>
           {isReprint &&
             currentStatus !== "completed" &&
-            (orderType !== "delivery" || currentStatus === "out_for_delivery") && (
+            (orderType !== "delivery" || !isOnlineOrder || currentStatus === "out_for_delivery") && (
               <button
                 onClick={openCloseConfirm}
                 disabled={loading}

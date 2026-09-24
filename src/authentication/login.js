@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { endpoint } from "../utils/APIRoutes";
-import { apiConnectorPost, cacheLoginLocally } from "../utils/APIConnector";
+import { apiConnectorPost } from "../utils/APIConnector";
 import toast from "react-hot-toast";
-import { FaUserAlt, FaLock, FaEye, FaEyeSlash, FaUserShield, FaUserCog } from "react-icons/fa";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import loginImg from '../assets/images/login/login-cover.svg';
 import logo from "../assets/images/logo/favicon.png";
 import beans from "../assets/images/login/beans.png";
 import bens from "../assets/images/login/bens.webm";
@@ -14,39 +12,54 @@ import arrow from "../assets/images/login/shape_2.png";
 import { getDeviceCredentials } from "../utils/deviceInfo";
 
 const REMEMBER_KEY = "remembered_email";
-const REMEMBER_PWD_KEY = "remembered_pwd";
-const encodePwd = (s) => btoa(unescape(encodeURIComponent(s || "")));
-const decodePwd = (s) => { try { return decodeURIComponent(escape(atob(s || ""))); } catch { return ""; } };
 
 const Login = ({ role = "staff" }) => {
   const [username, setUsername] = useState(() => localStorage.getItem(REMEMBER_KEY) || "");
-  const [password, setPassword] = useState(() => decodePwd(localStorage.getItem(REMEMBER_PWD_KEY)));
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem(REMEMBER_KEY));
+  // Password hata diya gaya hai — login ab sirf mobile number verify karke
+  // WhatsApp OTP se hota hai. Step 1: mobile number bhejo -> backend OTP
+  // bhej deta hai (otp_required). Step 2: wahi OTP daal kar verify karo.
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpInfo, setOtpInfo] = useState("");
   const navigate = useNavigate();
 
-  // ── Reset form on tab switch ──────────────────────
-  const switchTab = (tab) => {
-    setUsername(localStorage.getItem(REMEMBER_KEY) || "");
-    setPassword(decodePwd(localStorage.getItem(REMEMBER_PWD_KEY)));
-    setShowPassword(false);
-  };
+  const resetOtp = () => { setOtpStep(false); setOtp(""); setOtpInfo(""); };
 
-  const handleSubmit = async () => {
-    if (!username.trim() || !password.trim()) {
-      toast.error("Email and Password required");
+  // resend = true -> OTP dobara mangwao (otp field nahi bhejte)
+  const handleSubmit = async (resend = false) => {
+    if (!username.trim()) {
+      toast.error("Mobile number required");
+      return;
+    }
+    if (!/^\d{10}$/.test(username.trim())) {
+      toast.error("Enter a valid 10-digit mobile number");
+      return;
+    }
+    const sendOtp = otpStep && !resend;
+    if (sendOtp && !/^\d{4,6}$/.test(otp.trim())) {
+      toast.error("Please enter valid OTP");
       return;
     }
     setLoading(true);
     try {
       const deviceCreds = await getDeviceCredentials();
       const res = await apiConnectorPost(endpoint.login_api, {
-        email: username.trim(),
-        password,
+        phone: username.trim(),
+        expected_role: role,
         ...deviceCreds,
+        ...(sendOtp ? { otp: otp.trim() } : {}),
       });
 
+      if (res?.data?.otp_required) {
+        setOtpStep(true);
+        setOtp("");
+        setOtpInfo(res.data.message || "Enter OTP");
+        toast.success(res.data.message || "Enter OTP");
+        return;
+      }
+      if (res?.data?.otp_expired) setOtp("");
       if (!res?.data?.success) {
         toast.error(res?.data?.message || "Login failed");
         return;
@@ -65,15 +78,15 @@ const Login = ({ role = "staff" }) => {
       localStorage.setItem("user_name", user?.name || "");
       localStorage.setItem("user_email", user?.email || "");
       localStorage.setItem("loginTime", Date.now().toString());
-      cacheLoginLocally(endpoint.login_api, { email: username.trim(), password });
+      // Password hatne se offline cache seed (legacy backend/ folder, jo
+      // email+password se live /login dobara call karta hai) ab kaam nahi
+      // karega — true offline login is waqt tak kaam nahi karega jab tak
+      // backend/ bhi OTP-based login samjhe.
 
-      // "Remember me" — email + password dono save karte hain.
       if (rememberMe) {
         localStorage.setItem(REMEMBER_KEY, username.trim());
-        localStorage.setItem(REMEMBER_PWD_KEY, encodePwd(password));
       } else {
         localStorage.removeItem(REMEMBER_KEY);
-        localStorage.removeItem(REMEMBER_PWD_KEY);
       }
 
       toast.success("Login successful");
@@ -166,45 +179,54 @@ const Login = ({ role = "staff" }) => {
                 {/* ── Form ── */}
                 <div className="space-y-4">
 
-                  {/* Email */}
+                  {/* Mobile Number */}
                   <div className="flex flex-col gap-1.5">
-                    <label>Email address</label>
+                    <label>Mobile Number</label>
                     <div className="relative login_input_box">
-                      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
                       <input
                         type="text"
-                        placeholder="Enter your Email"
+                        inputMode="numeric"
+                        placeholder="Enter your Mobile Number"
                         value={username}
-                        onChange={e => setUsername(e.target.value)}
+                        disabled={otpStep}
+                        onChange={e => { setUsername(e.target.value.replace(/\D/g, "").slice(0, 10)); resetOtp(); }}
                         onKeyDown={e => e.key === "Enter" && handleSubmit()}
                         className="login_input"
                       />
                     </div>
                   </div>
 
-                  {/* Password */}
-                  <div className="flex flex-col gap-1.5">
-                    <label>Password</label>
-                    <div className="relative login_input_box">
-                      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your Password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && handleSubmit()}
-                        className="login_input"
-
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition"
-                      >
-                        {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
-                      </button>
+                  {/* OTP (WhatsApp) */}
+                  {otpStep && (
+                    <div className="flex flex-col gap-1.5">
+                      <label>OTP</label>
+                      <div className="relative login_input_box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          autoFocus
+                          placeholder="Enter OTP"
+                          value={otp}
+                          onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                          className="login_input"
+                        />
+                      </div>
+                      <div className="row-between">
+                        <span style={{ fontSize: 12, opacity: 0.7 }}>{otpInfo}</span>
+                        <span style={{ display: "flex", gap: 12 }}>
+                          <button className="forgot" type="button" disabled={loading} onClick={() => handleSubmit(true)}>
+                            Resend OTP
+                          </button>
+                          <button className="forgot" type="button" onClick={resetOtp}>
+                            Change
+                          </button>
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div class="row-between">
                     <label class="remember">
@@ -215,12 +237,11 @@ const Login = ({ role = "staff" }) => {
                         onChange={e => setRememberMe(e.target.checked)}
                       /> Remember me
                     </label>
-                    <button class="forgot" type="button">Forgot password?</button>
                   </div>
 
                   {/* Login Button */}
                   <button
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit()}
                     disabled={loading}
                     className="login-btn w-full disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
                   >
@@ -251,7 +272,7 @@ const Login = ({ role = "staff" }) => {
                     ) : (
                       <>
                         <i class="ri-contract-right-line"></i>
-                        Sign in
+                        {otpStep ? "Verify OTP" : "Send OTP"}
                       </>
                     )}
                   </button>

@@ -525,9 +525,15 @@ const POS = () => {
         orderStatus: currentOrderStatus,
         tableNameMap,
         existingBillId,
-        deliveryCustomerName: currentOrder?.customerName || "",
-        deliveryCustomerPhone: currentOrder?.customerPhone || "",
-        deliveryCustomerAddress: currentOrder?.customerAddress || "",
+        // currentOrder sirf dine-in ke liye backend se refetch hota hai
+        // (getOrdersByTable query "type === dine-in" par hi enabled hai) —
+        // takeaway/delivery ke liye currentOrder kabhi bharta hi nahi tha,
+        // isliye customerName/Phone/Address hamesha khali jaate the. Modal me
+        // jo type kiya wahi state (customerName/customerPhone/address) yahan
+        // seedha use karo.
+        deliveryCustomerName: currentOrder?.customerName || customerName || "",
+        deliveryCustomerPhone: currentOrder?.customerPhone || customerPhone || "",
+        deliveryCustomerAddress: currentOrder?.customerAddress || address || "",
       },
     });
   };

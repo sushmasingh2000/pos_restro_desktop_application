@@ -14,8 +14,9 @@ export default function BillDeliverySection({
   setEstimatedTime,
   confirmDialog,
   setConfirmDialog,
+  isOnlineOrder,
 }) {
-  if (orderType !== "delivery") return null;
+  if (orderType !== "delivery" || !isOnlineOrder) return null;
 
   return (
     <div style={{ margin: 8 }}>

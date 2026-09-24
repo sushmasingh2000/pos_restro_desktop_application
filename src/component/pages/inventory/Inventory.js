@@ -119,6 +119,7 @@ const Inventory = () => {
                 <th>Product</th>
                 <th>Unit</th>
                 <th>Current Stock</th>
+                <th>Last Stock Added</th>
                 <th>Status</th>
                 <th>Add Stock</th>
               </tr>
@@ -127,13 +128,13 @@ const Inventory = () => {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="8" className="text-center p-6 text-white/60">
+                  <td colSpan="9" className="text-center p-6 text-white/60">
                     Loading...
                   </td>
                 </tr>
               ) : paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="p-6 text-center text-white/60">
+                  <td colSpan="9" className="p-6 text-center text-white/60">
                     No products found
                   </td>
                 </tr>
@@ -155,6 +156,11 @@ const Inventory = () => {
                       )}
                     </td>
                     <td>{formatQty(product.dg011_current_stock, product)}</td>
+                    <td>
+                      {product.last_stock_added_at
+                        ? new Date(product.last_stock_added_at).toLocaleDateString()
+                        : "—"}
+                    </td>
                     <td>
                       <span
                         className={
