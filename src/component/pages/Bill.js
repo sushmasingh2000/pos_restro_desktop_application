@@ -161,9 +161,55 @@ export default function BillPage() {
     return true;
   };
 
-  // ── Print Bill ke liye — sirf basic check ──
+  // ── Print Bill ke liye ──
   const validateForPrint = () => {
-    if (isReprint) return true;
+    if (!paymentSplits[0]?.mode?.trim()) {
+      toast.error("Select payment method!");
+      return false;
+    }
+    if (!isLending && !isAdvance && paymentSplits.length > 1) {
+      const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
+      if (!allModesSelected) {
+        toast.error("Select split methods!");
+        return false;
+      }
+      const totalSplitPaid = paymentSplits.reduce(
+        (s, p) => s + parseFloat(p.amount || 0), 0
+      );
+      if (Math.abs(totalSplitPaid - afterWalletTotal) > 0.5) {
+        toast.error(`Split total ₹${afterWalletTotal.toFixed(2)} hona chahiye!`);
+        return false;
+      }
+    }
+    // Split-lending: lending split + non-lending splits must add up to the bill total,
+    // otherwise paid_amount/remaining_amount saved against the bill won't match its total.
+    if (isSplitLending) {
+      const splitSum = parseFloat((nonLendingPaid + lendingSplitAmt).toFixed(2));
+      if (Math.abs(splitSum - afterWalletTotal) > 0.5) {
+        toast.error(`Split total ₹${afterWalletTotal.toFixed(2)} hona chahiye! Abhi: ₹${splitSum.toFixed(2)}`);
+        return false;
+      }
+    }
+    if (isLending && !customer.phone.trim()) {
+      toast.error("Customer phone required for Lending!");
+      return false;
+    }
+    if (isLending && !customer.name.trim()) {
+      toast.error("Customer name required for Lending!");
+      return false;
+    }
+    if (isAdvance && !selectedCustomerId) {
+      toast.error("Customer select for Advance payment!");
+      return false;
+    }
+    if (isAdvance && walletBalance <= 0) {
+      toast.error("Your wallet balance is zero!");
+      return false;
+    }
+    if (useWallet && !selectedCustomerId) {
+      toast.error("Please Select customer !");
+      return false;
+    }
     return true;
   };
 
@@ -584,7 +630,7 @@ export default function BillPage() {
 
   const handlePrintBill = async () => {
     if (loading) return;
-    if (!isReprint && !validateForPrint()) return;
+    if (!validateForPrint()) return;
     setLoading(true);
 
     try {
