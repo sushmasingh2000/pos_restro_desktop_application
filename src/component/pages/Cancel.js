@@ -17,6 +17,8 @@ const CANCEL_REASONS = [
 export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled }) {
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
+  // Khana ban chuka tha → stock wapas nahi jayega, wastage report me aayega
+  const [addToWastage, setAddToWastage] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const reason = selectedReason === "Other" ? customReason : selectedReason;
@@ -29,7 +31,9 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
 
     const result = await Swal.fire({
       title: "Are you sure?",
-      text: "All items of this order will be cancelled permanently.",
+      text: addToWastage
+        ? "Order cancel hoga aur prepared items ka stock wastage me jayega."
+        : "All items of this order will be cancelled permanently.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#dc2626",
@@ -46,10 +50,12 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
       const res = await apiConnectorPost(endpoint.cancel_order_api, {
         orderId,
         reason: reason.trim(),
+        add_to_wastage: addToWastage,
       });
 
       if (res?.data?.success) {
-        toast.success("Order cancelled!");
+        toast.success(res?.data?.message || "Order cancelled!");
+        setAddToWastage(false);
         client.refetchQueries("get_table");
         client.removeQueries("getOrdersByTable");
         onCancelled?.();
@@ -68,6 +74,7 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
   const handleClose = () => {
     setSelectedReason("");
     setCustomReason("");
+    setAddToWastage(false);
     onClose();
   };
 
@@ -134,6 +141,23 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
               />
             </div>
           )}
+
+          {/* Wastage — jab KOT ja chuka ho aur khana ban gaya ho */}
+          <label className="flex items-start gap-2 cursor-pointer order_paira">
+            <input
+              type="checkbox"
+              checked={addToWastage}
+              onChange={(e) => setAddToWastage(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              <b>Food already prepared — add to wastage</b>
+              <br />
+              <small style={{ opacity: 0.75 }}>
+                Tick karne par KOT items ka stock inventory me wapas nahi jayega, Wastage Report me dikhega.
+              </small>
+            </span>
+          </label>
         </div>
 
         {/* Footer */}

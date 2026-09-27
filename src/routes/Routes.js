@@ -24,6 +24,7 @@ import QrTakeawayOrder from "../component/pages/QrTakeawayOrder";
 import FeedbackPage from "../component/pages/FeedbackPage";
 import MyTickets from "../component/pages/MyTickets";
 import KitchenDisplay from "../component/pages/KitchenDisplay";
+import WastageReport from "../component/pages/WastageReport";
 
 
 export const routes = [
@@ -200,6 +201,14 @@ export const routes = [
     element: (
       <MainLayout>
         <Inventory />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/wastage-report",
+    element: (
+      <MainLayout>
+        <WastageReport />
       </MainLayout>
     ),
   },

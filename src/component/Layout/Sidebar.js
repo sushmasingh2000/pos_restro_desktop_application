@@ -56,6 +56,7 @@ export default function Sidebar() {
         <SidebarLink to="/customer-ledger" icon={<LiveTvIcon fontSize="small" />} label="Customer Wallet" />
         <SidebarLink to="/customer-report" icon={<LiveTvIcon fontSize="small" />} label="Customer Report" />
         <SidebarLink to="/cancelled-order" icon={<PeopleAlt fontSize="small" />} label="Cancelled Orders" />
+        <SidebarLink to="/wastage-report" icon={<Inventory2 fontSize="small" />} label="Wastage Report" />
      
         <SidebarLink to="/feedback" icon={<AssessmentIcon fontSize="small" />} label="Feedback" />
         <SidebarLink to="/support-tickets" icon={<AssessmentIcon fontSize="small" />} label="Support Tickets" />

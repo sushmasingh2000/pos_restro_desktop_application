@@ -191,7 +191,9 @@ const POS = () => {
   const { data: orderData } = useQuery(
     ["getOrdersByTable", table],
     () => apiConnectorPost(endpoint.get_orders_by_table_api, { tableId: table }),
-    { enabled: !!table && type === "dine-in" }
+    // cacheTime 0 — table close hone ke baad purana cached order (items + bill id)
+    // dobara table kholne pe flash hokar screen pe atak jata tha. Hamesha fresh lo.
+    { enabled: !!table && type === "dine-in", cacheTime: 0 }
   );
 
   useEffect(() => {
@@ -451,6 +453,12 @@ const POS = () => {
         const captainName = res?.data?.order?.captainName || "—";
         const orderUniqueNo = res?.data?.order?.uniqueOrderId || `CBC-R${orderId}`;
 
+        // Naya order bana (purane se alag) to purana bill id mat le jao —
+        // warna Bill page naya bill banaye bina table close kar deta hai.
+        if (String(orderId) !== String(savedOrderId)) {
+          setExistingBillId(null);
+          setExistingBillNo(null);
+        }
         setSavedOrderId(orderId);
         await apiConnectorPost(endpoint.generate_kot_api, { orderId });
 

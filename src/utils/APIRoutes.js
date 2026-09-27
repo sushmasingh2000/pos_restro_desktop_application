@@ -3,6 +3,7 @@ import { domain } from "../domain";
 
 export const endpoint = {
   login_api: `${domain}/api/v1/login`,
+  login_mode_api: `${domain}/api/v1/login-mode`,
   table_branch_api: `${domain}/api/v1/get-table-by-branch`,
   menu_branch_api: `${domain}/api/v1/get-menu-by-branch`,
   get_orders_by_table_api: `${domain}/api/v1/get-order-by-table`,
@@ -27,6 +28,7 @@ export const endpoint = {
   charge_get_api: `${domain}/api/v1/bill/charges`,
   payment_mode_get_api: `${domain}/api/v1/bill/payment-modes`,
   cancel_order_api: `${domain}/api/v1/cancel-order`,
+  wastage_report_api: `${domain}/api/v1/wastage-report`,
 
   ticket_create_api: `${domain}/api/v1/ticket/create`,
   ticket_my_tickets_api: `${domain}/api/v1/ticket/my-tickets`,

@@ -15,7 +15,6 @@ import total_table from "./assets/images/dashbord/total-tables.png";
 import available from "./assets/images/dashbord/available.png";
 import busy from "./assets/images/dashbord/busy.png";
 import utilisationi from "./assets/images/dashbord/utilisation.png";
-import { frontend } from "./domain";
 import { todayLocal } from "./Shared/helper";
 
 
@@ -318,13 +317,6 @@ const Dashboard = () => {
     { refetchOnWindowFocus: false }
   );
   const main = mainData?.data?.result || {};
-
-  const { data: branchProfileData } = useQuery(
-    ["branch_profile"],
-    () => apiConnectorGet(endpoint.branch_profile_api),
-    { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
-  );
-  const branchFeatures = branchProfileData?.data?.result?.features || {};
   const summaryStats = [
     {
       label: "Today's Bills",
@@ -388,8 +380,6 @@ const Dashboard = () => {
     // },
     
   ];
-  const [qrModal, setQrModal] = useState(null);
-  const [allQrModal, setAllQrModal] = useState(false);
   const [tableSearch, setTableSearch] = useState("");
 
   const [moveModal, setMoveModal] = useState(null);
@@ -640,20 +630,6 @@ const Dashboard = () => {
             </svg>
             New Takeaway
           </button> */}
-          {branchFeatures.table_qr && (
-            <button onClick={() => setAllQrModal(true)} className="scanner_btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-                <rect x="5" y="5" width="3" height="3" fill="white" stroke="none" />
-                <rect x="16" y="5" width="3" height="3" fill="white" stroke="none" />
-                <rect x="5" y="16" width="3" height="3" fill="white" stroke="none" />
-                <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17v3" />
-              </svg>
-              All QR
-            </button>
-          )}
         </div>
       </div>
 
@@ -678,22 +654,7 @@ const Dashboard = () => {
                   : "table_pending"
                 }`}
             >
-              <div className="flex items-center justify-between">
-                <button className="qr_btns"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setQrModal({ tableName: table.dg05_table_name, qrImage: table.dg05_qr_image });
-                  }}
-                  title="View QR Code" >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                    <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <rect x="5" y="5" width="3" height="3" fill="white" stroke="none" />
-                    <rect x="16" y="5" width="3" height="3" fill="white" stroke="none" />
-                    <rect x="5" y="16" width="3" height="3" fill="white" stroke="none" />
-                    <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17v3" />
-                  </svg>
-                </button>
+              <div className="flex items-center justify-end">
                 {/* 3-dot action dropdown */}
                 <ActionDropdown
                   table={table}
@@ -761,127 +722,6 @@ const Dashboard = () => {
         ))}
       </Row>
 
-      {/* All QR Modal */}
-      {allQrModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "#0e2a47b5", }}
-          onClick={() => setAllQrModal(false)}
-        >
-          <div
-            style={{
-              position: "relative",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close */}
-            <button
-              onClick={() => setAllQrModal(false)}
-              style={{
-                position: "absolute",
-                top: "-12px",
-                right: "-12px",
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: "#EFF6FF",
-                border: "1px solid #C7DCFF",
-                color: "#378ADD",
-                fontSize: "22px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 10,
-              }}
-            >
-              ×
-            </button>
-
-            {/* Grid of all QRs */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "center" }}>
-              {tables.map((table) => (
-                <div key={table.dg05_table_id} style={{ textAlign: "center" }}>
-                  <div style={{ background: "white", borderRadius: "8px", padding: "6px", display: "inline-block" }}>
-                    <img
-                      src={table.dg05_qr_image}
-                      alt={table.dg05_table_name}
-                      style={{ width: 150, height: 150, display: "block" }}
-                    />
-                  </div>
-                  <p style={{ color: "white", fontSize: "12px", marginTop: "6px" }}>
-                    {table.dg05_table_name}
-                  </p>
-                  {table.dg05_qr_token && (
-                    <p
-                      style={{ color: "#93c5fd", fontSize: "10px", marginTop: "2px", cursor: "pointer", wordBreak: "break-all", maxWidth: 150 }}
-                      title="Click to copy"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${frontend}/menu/${table.dg05_qr_token}`);
-                        toast.success("Link copied");
-                      }}
-                    >
-                      {`${frontend}/menu/${table.dg05_qr_token}`}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* QR Modal */}
-      {qrModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "#0e2a47b5", }}
-          onClick={() => setQrModal(null)}
-        >
-          <div
-            style={{
-              position: "relative",
-              background: "white",
-              borderRadius: "12px",
-              padding: "8px",
-              display: "inline-block",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setQrModal(null)}
-              style={{
-                position: "absolute",
-                top: "-12px",
-                right: "-12px",
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: "#EFF6FF",
-                border: "1px solid #C7DCFF",
-                color: "#378ADD",
-                fontSize: "22px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 10,
-                lineHeight: 1,
-              }}
-            >
-              ×
-            </button>
-
-            {/* QR Image - bada */}
-            <img
-              src={qrModal.qrImage}
-              alt="QR Code"
-              style={{ width: 240, height: 260, display: "block", borderRadius: "8px" }}
-            />
-          </div>
-        </div>
-      )}
       {/* Move Modal */}
       {moveModal && (
         <MoveModal

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { endpoint } from "../utils/APIRoutes";
-import { apiConnectorPost } from "../utils/APIConnector";
+import { apiConnectorGet, apiConnectorPost } from "../utils/APIConnector";
 import toast from "react-hot-toast";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -12,6 +12,7 @@ import arrow from "../assets/images/login/shape_2.png";
 import { getDeviceCredentials } from "../utils/deviceInfo";
 
 const REMEMBER_KEY = "remembered_email";
+const REMEMBER_LOGIN_EMAIL_KEY = "remembered_login_email";
 
 const Login = ({ role = "staff" }) => {
   const [username, setUsername] = useState(() => localStorage.getItem(REMEMBER_KEY) || "");
@@ -27,31 +28,66 @@ const Login = ({ role = "staff" }) => {
 
   const resetOtp = () => { setOtpStep(false); setOtp(""); setOtpInfo(""); };
 
+  // Login mode master panel se aata hai: "otp" (Mobile + OTP) ya
+  // "password" (Email + Password). Fetch fail ho to OTP hi rehta hai.
+  const [loginMode, setLoginMode] = useState("otp");
+  const [email, setEmail] = useState(() => localStorage.getItem(REMEMBER_LOGIN_EMAIL_KEY) || "");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const isPasswordMode = loginMode === "password";
+
+  useEffect(() => {
+    apiConnectorGet(endpoint.login_mode_api).then((res) => {
+      const mode = res?.data?.login_mode;
+      if (mode === "otp" || mode === "password") setLoginMode(mode);
+    });
+  }, []);
+
   // resend = true -> OTP dobara mangwao (otp field nahi bhejte)
   const handleSubmit = async (resend = false) => {
-    if (!username.trim()) {
-      toast.error("Mobile number required");
-      return;
-    }
-    if (!/^\d{10}$/.test(username.trim())) {
-      toast.error("Enter a valid 10-digit mobile number");
-      return;
-    }
-    const sendOtp = otpStep && !resend;
-    if (sendOtp && !/^\d{4,6}$/.test(otp.trim())) {
-      toast.error("Please enter valid OTP");
-      return;
+    const sendOtp = !isPasswordMode && otpStep && !resend;
+    if (isPasswordMode) {
+      if (!email.trim() || !password) {
+        toast.error("Please enter email and password!");
+        return;
+      }
+      if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+        toast.error("Enter a valid email address");
+        return;
+      }
+    } else {
+      if (!username.trim()) {
+        toast.error("Mobile number required");
+        return;
+      }
+      if (!/^\d{10}$/.test(username.trim())) {
+        toast.error("Enter a valid 10-digit mobile number");
+        return;
+      }
+      if (sendOtp && !/^\d{4,6}$/.test(otp.trim())) {
+        toast.error("Please enter valid OTP");
+        return;
+      }
     }
     setLoading(true);
     try {
       const deviceCreds = await getDeviceCredentials();
       const res = await apiConnectorPost(endpoint.login_api, {
-        phone: username.trim(),
+        ...(isPasswordMode
+          ? { email: email.trim(), password }
+          : { phone: username.trim(), ...(sendOtp ? { otp: otp.trim() } : {}) }),
         expected_role: role,
         ...deviceCreds,
-        ...(sendOtp ? { otp: otp.trim() } : {}),
       });
 
+      // Master ne beech me mode badal diya ho to sahi form par switch karo
+      const serverMode = res?.data?.login_mode;
+      if (!res?.data?.success && (serverMode === "otp" || serverMode === "password") && serverMode !== loginMode) {
+        setLoginMode(serverMode);
+        resetOtp();
+        toast.error(serverMode === "otp" ? "Login is now via Mobile + OTP" : "Login is now via Email + Password");
+        return;
+      }
       if (res?.data?.otp_required) {
         setOtpStep(true);
         setOtp("");
@@ -84,9 +120,11 @@ const Login = ({ role = "staff" }) => {
       // backend/ bhi OTP-based login samjhe.
 
       if (rememberMe) {
-        localStorage.setItem(REMEMBER_KEY, username.trim());
+        if (isPasswordMode) localStorage.setItem(REMEMBER_LOGIN_EMAIL_KEY, email.trim());
+        else localStorage.setItem(REMEMBER_KEY, username.trim());
       } else {
         localStorage.removeItem(REMEMBER_KEY);
+        localStorage.removeItem(REMEMBER_LOGIN_EMAIL_KEY);
       }
 
       toast.success("Login successful");
@@ -179,6 +217,45 @@ const Login = ({ role = "staff" }) => {
                 {/* ── Form ── */}
                 <div className="space-y-4">
 
+                  {isPasswordMode ? (
+                    <>
+                      <div className="flex flex-col gap-1.5">
+                        <label>Email</label>
+                        <div className="relative login_input_box">
+                          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                          <input
+                            type="email"
+                            placeholder="Enter your Email"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                            className="login_input"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label>Password</label>
+                        <div className="relative login_input_box">
+                          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter your Password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                            className="login_input"
+                          />
+                        </div>
+                        <div className="row-between">
+                          <span />
+                          <button className="forgot" type="button" onClick={() => setShowPassword(v => !v)}>
+                            {showPassword ? "Hide password" : "Show password"}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                  <>
                   {/* Mobile Number */}
                   <div className="flex flex-col gap-1.5">
                     <label>Mobile Number</label>
@@ -227,6 +304,8 @@ const Login = ({ role = "staff" }) => {
                       </div>
                     </div>
                   )}
+                  </>
+                  )}
 
                   <div class="row-between">
                     <label class="remember">
@@ -272,7 +351,7 @@ const Login = ({ role = "staff" }) => {
                     ) : (
                       <>
                         <i class="ri-contract-right-line"></i>
-                        {otpStep ? "Verify OTP" : "Send OTP"}
+                        {isPasswordMode ? "Login" : otpStep ? "Verify OTP" : "Send OTP"}
                       </>
                     )}
                   </button>

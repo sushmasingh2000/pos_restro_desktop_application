@@ -162,11 +162,9 @@ export default function BillPage() {
   };
 
   // ── Print Bill ke liye ──
+  // Payment method yahan compulsory NAHI — bill bina payment method ke bhi print ho.
+  // Payment method Close Table (validateForClose) pe check hota hai.
   const validateForPrint = () => {
-    if (!paymentSplits[0]?.mode?.trim()) {
-      toast.error("Select payment method!");
-      return false;
-    }
     if (!isLending && !isAdvance && paymentSplits.length > 1) {
       const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
       if (!allModesSelected) {
@@ -706,9 +704,10 @@ export default function BillPage() {
 
       } else {
         // ── Reprint ───────────────────────────
-        await apiConnectorPost(
+        const updRes = await apiConnectorPost(
           `${endpoint.update_bill_details_api}/${savedBillId}`,
           {
+            orderId,
             paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
             payment_splits: getFinalSplits(),
             customer_id: selectedCustomerId,
@@ -724,6 +723,11 @@ export default function BillPage() {
             advance_used: isAdvance ? maxWalletUse : 0,
           }
         );
+        if (updRes?.data?.code === "BILL_ORDER_MISMATCH") {
+          toast.error(updRes.data.message);
+          setLoading(false);
+          return;
+        }
       }
 
       // ── ONLINE — normal bill data ─────────────
@@ -823,9 +827,10 @@ export default function BillPage() {
           await deductWalletIfNeeded(newBillId);
         }
       } else {
-        await apiConnectorPost(
+        const updRes = await apiConnectorPost(
           `${endpoint.update_bill_details_api}/${savedBillId}`,
           {
+            orderId,
             paymentMethod: paymentSplits.map((p) => p.mode).join("+"),
             payment_splits: getFinalSplits(),
             customer_id: selectedCustomerId,
@@ -841,6 +846,12 @@ export default function BillPage() {
             advance_used: isAdvance ? maxWalletUse : 0,
           }
         );
+        // Bill kisi aur order ka nikla → table close mat karo (order bina bill ke reh jata)
+        if (updRes?.data?.code === "BILL_ORDER_MISMATCH") {
+          toast.error(updRes.data.message);
+          setLoading(false);
+          return;
+        }
       }
       // Pehle order "completed" (WhatsApp bill receipt yahi trigger karta
       // hai — sirf jab status pehli baar completed ho raha ho). Table wala
