@@ -5,10 +5,13 @@ import { endpoint } from "../../utils/APIRoutes";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Pagination from "../../Shared/Page";
+import AddWastageModal from "./AddWastageModal";
 
-// Cancel popup me "add to wastage" tick karke cancel hue orders ka stock yahan dikhta hai
+// Cancel popup me "add to wastage" tick karke cancel hue orders ka stock yahan
+// dikhta hai, aur "Add Wastage" se manually kharab hua stock bhi.
 const WastageReport = () => {
   const today = new Date().toISOString().split("T")[0];
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   const [filters, setFilters] = useState({
     fromDate: today,
@@ -58,8 +61,11 @@ const WastageReport = () => {
         <div className="cards_header flex items-center justify-between">
           <div>
             <h3>Wastage Report</h3>
-            <p>Cancel hue orders jinka khana ban chuka tha — unka inventory stock yahan wastage me dikhega.</p>
+            <p>Cancel hue orders ka bana hua khana aur manually add kiya kharab stock — sab yahan dikhega.</p>
           </div>
+          <button onClick={() => setIsAddOpen(true)} className="main_btn">
+            + Add Wastage
+          </button>
         </div>
         <Row className="px-3 items-end mb-3">
           <Col xl={3} lg={3} md={3} sm={4}>
@@ -185,7 +191,7 @@ const WastageReport = () => {
                     return (
                       <tr key={log.dg052_wastage_id} className="border-t border-white/10 hover:bg-white/5 transition">
                         <td>{sno}</td>
-                        <td style={{ fontWeight: 600, color: "#a78bfa" }}>{log.dg052_order_id || "—"}</td>
+                        <td style={{ fontWeight: 600, color: "#a78bfa" }}>{log.dg052_order_id || "Manual"}</td>
                         <td>{log.dg06_bill_no || "—"}</td>
                         <td>{log.dg052_menu_name || "—"}</td>
                         <td>{fmtQty(log.dg052_menu_quantity)}</td>
@@ -213,6 +219,8 @@ const WastageReport = () => {
           />
         </div>
       </div>
+
+      <AddWastageModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} />
     </div>
   );
 };

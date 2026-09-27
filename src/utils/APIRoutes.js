@@ -29,6 +29,7 @@ export const endpoint = {
   payment_mode_get_api: `${domain}/api/v1/bill/payment-modes`,
   cancel_order_api: `${domain}/api/v1/cancel-order`,
   wastage_report_api: `${domain}/api/v1/wastage-report`,
+  wastage_add_manual_api: `${domain}/api/v1/wastage-add-manual`,
 
   ticket_create_api: `${domain}/api/v1/ticket/create`,
   ticket_my_tickets_api: `${domain}/api/v1/ticket/my-tickets`,
