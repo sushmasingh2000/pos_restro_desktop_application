@@ -1,19 +1,23 @@
 import { useQuery } from "react-query";
 import { apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
+import { getAppMode } from "../../utils/appMode";
 
 // ── Subscription Guard ────────────────────────────────────────
 export const SubscriptionGuard = ({ children }) => {
   const role = localStorage.getItem("role");
   const isMaster = role === "master_admin";
+  // Local backend has no subscription endpoint — checking it here would
+  // always fail and wrongly show the expired/no-subscription page.
+  const isOffline = getAppMode() === "offline";
 
   const { data, isLoading } = useQuery(
     ["sub_guard"],
     () => apiConnectorGet(endpoint.get_my_subscription),
-    { staleTime: 5 * 60 * 1000, retry: false, refetchOnWindowFocus: false, enabled: !isMaster }
+    { staleTime: 5 * 60 * 1000, retry: false, refetchOnWindowFocus: false, enabled: !isMaster && !isOffline }
   );
 
-  if (isMaster) return children;
+  if (isMaster || isOffline) return children;
 
   if (isLoading) {
     return (
