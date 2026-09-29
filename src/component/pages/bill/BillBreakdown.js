@@ -59,7 +59,7 @@ export default function BillBreakdown({
         taxBreakdown.map((t, i) => (
           <Row
             key={i}
-            label={`${t.name} (${t.pct}%)`}
+            label={t.pct != null ? `${t.name} (${t.pct}%)` : t.name}
             value={`₹${t.amount.toFixed(2)}`}
             muted
           />

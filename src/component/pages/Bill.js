@@ -88,6 +88,11 @@ export default function BillPage() {
   const isReprint = !!savedBillId;
   const [reprintRemainingDue, setReprintRemainingDue] = useState(0);
   const [billCreatedAt, setBillCreatedAt] = useState(null);
+  // Reprint ke liye bill ke saath jo subtotal/tax/discount/total actually
+  // save hua tha, wahi frozen values yahan store hoti hain — reprint screen
+  // ab live menu/tax-rate se dobara calculate nahi karta (warna menu me baad
+  // me tax/price badalne par purane bills ka total badal jaata tha).
+  const [frozenBillTotals, setFrozenBillTotals] = useState(null);
   const billDateTime = isReprint && billCreatedAt
     ? new Date(billCreatedAt).toLocaleString("en-IN")
     : new Date().toLocaleString("en-IN");
@@ -103,9 +108,14 @@ export default function BillPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Single payment ke liye amount auto-normalize (empty amount fix)
+  // Single payment ke liye amount auto-normalize (empty amount fix).
+  // Pehle ye sirf Cash/UPI/Card ke liye chalta tha (!isLending) — Lending
+  // single-split is se bahar thi, isliye jab mode select karte waqt ka
+  // stale amount (discount/tax final hone se pehle ka snapshot) hi
+  // seedha save ho jaata tha, live total se match nahi karta tha (₹1 tak
+  // ka farak dekha gaya). Ab Lending bhi live afterWalletTotal use karegi.
   const getFinalSplits = () => {
-    if (!isLending && !isAdvance && paymentSplits.length === 1) {
+    if (!isAdvance && paymentSplits.length === 1) {
       return [{ mode: paymentSplits[0].mode, amount: afterWalletTotal.toFixed(2) }];
     }
     return paymentSplits;
@@ -117,13 +127,14 @@ export default function BillPage() {
       toast.error("Select payment method!");
       return false;
     }
-    if (!isLending && !isAdvance && paymentSplits.length === 1) {
-      const paidAmt = parseFloat(paymentSplits[0].amount || 0);
-      if (paidAmt > afterWalletTotal + 0.5) {
-        toast.error(`Payment ₹${paidAmt.toFixed(2)} bill total ₹${afterWalletTotal.toFixed(2)} se zyada nahi ho sakta!`);
-        return false;
-      }
-    }
+    // Single-split (Cash/UPI/Card) ka amount input hamesha readOnly hota hai
+    // aur live afterWalletTotal dikhata hai — jo submit hota hai wo bhi
+    // hamesha getFinalSplits() se live afterWalletTotal hi hota hai, kabhi
+    // paymentSplits[0].amount nahi. Isliye us (stale) value ko yahan check
+    // karna galat tha: payment mode select karne ke BAAD discount badalne
+    // par amount ka snapshot purana reh jaata tha aur "Payment zyada nahi ho
+    // sakta" bol kar Close Table/Save hi block kar deta tha, chahe asal me
+    // koi mismatch na ho.
     if (!isLending && !isAdvance && paymentSplits.length > 1) {
       const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
       if (!allModesSelected) {
@@ -260,6 +271,15 @@ export default function BillPage() {
           setDiscountMode("percent");
           setDiscountPct(((discAmt / sub) * 100).toFixed(2));
         }
+        // Bill ke saath jo total actually save hua tha, wahi freeze kar lo —
+        // isi se Grand Total banega, live menu/tax se dobara nahi.
+        setFrozenBillTotals({
+          subtotal: sub,
+          tax: parseFloat(bill.tax_amount || 0),
+          discount: discAmt,
+          roundOff: parseFloat(bill.round_off || 0),
+          total: parseFloat(bill.total_amount || 0),
+        });
         if (bill.customer_id) setSelectedCustomerId(bill.customer_id);
         if (bill.remaining_amount) {
           setReprintRemainingDue(parseFloat(bill.remaining_amount));
@@ -347,14 +367,28 @@ export default function BillPage() {
     !i.tax_group_id ? acc + i.price * i.qty : acc, 0
   );
 
-  const subTotal = taxableSubTotal + nonTaxableSubTotal;
+  // Reprint mode: bill ke saath jo subtotal/tax already save hua tha wahi
+  // dikhao — live menu/tax-rate se dobara mat nikalo (menu baad me badal
+  // sakta hai, jisse purane bill ka total galat ban jaata tha).
+  const subTotal =
+    isReprint && frozenBillTotals
+      ? frozenBillTotals.subtotal
+      : taxableSubTotal + nonTaxableSubTotal;
 
-  const taxBreakdown = taxes.map((t) => ({
-    name: t.dg032_name,
-    pct: parseFloat(t.dg032_percentage),
-    amount: Math.round(((taxableSubTotal * parseFloat(t.dg032_percentage)) / 100) * 100) / 100,
-  }));
-  const totalTax = taxBreakdown.reduce((s, t) => s + t.amount, 0);
+  const taxBreakdown =
+    isReprint && frozenBillTotals
+      ? frozenBillTotals.tax > 0
+        ? [{ name: "Tax", pct: null, amount: frozenBillTotals.tax }]
+        : []
+      : taxes.map((t) => ({
+        name: t.dg032_name,
+        pct: parseFloat(t.dg032_percentage),
+        amount: Math.round(((taxableSubTotal * parseFloat(t.dg032_percentage)) / 100) * 100) / 100,
+      }));
+  const totalTax =
+    isReprint && frozenBillTotals
+      ? frozenBillTotals.tax
+      : taxBreakdown.reduce((s, t) => s + t.amount, 0);
 
   const totalItemQty = orderItems.reduce((s, i) => s + i.qty, 0);
 
@@ -387,14 +421,23 @@ export default function BillPage() {
     0
   );
 
+  // Discount staff yahan reprint ke baad bhi badal sakta hai (jaise bill
+  // close hone se pehle discount adjust karna) — isliye ye hamesha LIVE hi
+  // rehta hai. Bas jis subtotal par % lagta hai wo reprint me frozen wala
+  // (subTotal, jo upar se already frozen hai) hota hai, live-menu wala
+  // discountableSubTotal nahi — isse discount % badalne par bhi grandTotal
+  // sahi hi rehta hai, menu baad me badla ho tab bhi.
   const discountAmount =
-    discountMode === "percent"
-      ? (discountableSubTotal * Math.min(100, Math.max(0, parseFloat(discountPct || 0)))) / 100
-      : parseFloat(couponDiscount || 0);
+    isReprint && frozenBillTotals
+      ? discountMode === "percent"
+        ? (subTotal * Math.min(100, Math.max(0, parseFloat(discountPct || 0)))) / 100
+        : parseFloat(couponDiscount || 0)
+      : discountMode === "percent"
+        ? (discountableSubTotal * Math.min(100, Math.max(0, parseFloat(discountPct || 0)))) / 100
+        : parseFloat(couponDiscount || 0);
 
   const beforeRound =
-    Math.round((subTotal + totalTax + totalCharges - discountAmount) * 100) /
-    100;
+    Math.round((subTotal + totalTax + totalCharges - discountAmount) * 100) / 100;
   const grandTotal = Math.round(beforeRound);
   const roundOff = parseFloat((grandTotal - beforeRound).toFixed(2));
 
