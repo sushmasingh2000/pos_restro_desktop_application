@@ -2,7 +2,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
 import { useState, useEffect, useRef } from "react";
-import { apiConnectorPost, apiConnectorGet, triggerLocalCacheNow } from "../../utils/APIConnector";
+import { apiConnectorPost, apiConnectorGet, triggerLocalCacheNow, triggerLocalSyncNow } from "../../utils/APIConnector";
+import toast from "react-hot-toast";
 import { endpoint } from "../../utils/APIRoutes";
 import useAppMode from "../../hooks/useAppMode";
 import { frontend } from "../../domain";
@@ -17,6 +18,7 @@ const Navbar = ({ toggleSidebar }) => {
   const [showSubDropdown, setShowSubDropdown] = useState(false);
   const [prevCount, setPrevCount] = useState(null);
   const [switchingOffline, setSwitchingOffline] = useState(false);
+  const [switchingOnline, setSwitchingOnline] = useState(false);
   const audioRef = useRef(null);
   const subDropRef = useRef(null);
   const notifDropRef = useRef(null);
@@ -26,9 +28,22 @@ const Navbar = ({ toggleSidebar }) => {
 
   const handleStartOffline = async () => {
     setSwitchingOffline(true);
-    await triggerLocalCacheNow(); // best-effort fresh sync before switching
+    const cached = await triggerLocalCacheNow(); // best-effort fresh sync before switching
     setSwitchingOffline(false);
+    if (!cached) {
+      toast.error("Offline cache could not refresh — menu/orders may be outdated until next retry.");
+    }
     startOfflineMode();
+  };
+
+  const handleGoOnline = async () => {
+    setSwitchingOnline(true);
+    const synced = await triggerLocalSyncNow(); // push pending offline orders/bills before switching
+    setSwitchingOnline(false);
+    if (!synced) {
+      toast.error("Could not push offline orders yet — they'll sync automatically in the background, check again shortly.");
+    }
+    goOnlineMode();
   };
 
   // ── Branch name ──
@@ -171,14 +186,16 @@ const Navbar = ({ toggleSidebar }) => {
       }}>
         <span>✅ Internet is back — switch back to online mode?</span>
         <button
-          onClick={goOnlineMode}
+          onClick={handleGoOnline}
+          disabled={switchingOnline}
           style={{
             background: "#22c55e", color: "#fff", border: "none",
             borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700,
-            cursor: "pointer",
+            cursor: switchingOnline ? "not-allowed" : "pointer",
+            opacity: switchingOnline ? 0.7 : 1,
           }}
         >
-          Go Online
+          {switchingOnline ? "Syncing..." : "Go Online"}
         </button>
       </div>
     )}

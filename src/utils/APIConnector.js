@@ -41,6 +41,24 @@ export const triggerLocalCacheNow = async () => {
   }
 };
 
+// "Go Online" dabane se pehle local backend ko turant push-sync (offline
+// orders/bills/status live server ko bhejo) karne ko kehte hain — warna
+// background 30s timer ka wait karna padta, aur tab tak order live panel
+// pe "pending" hi dikhta reh jaata. LOCAL_DOMAIN pe seedha, appMode se
+// independent — isliye ye still-offline appMode ke "x-force-offline" header
+// se blocked nahi hota.
+export const triggerLocalSyncNow = async () => {
+  try {
+    await axios.post(`${LOCAL_DOMAIN}/api/v1/sync-now`, {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      timeout: 20000,
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
 // Live backend rejects a stale/other-device token with a 201 + "Invalid token"
 // body (not a 401), so axios doesn't throw — check the body and send the user
 // back to login. Panel runs from file:// with HashRouter, so "/" won't work;
