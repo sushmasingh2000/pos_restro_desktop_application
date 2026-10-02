@@ -412,6 +412,20 @@ const POS = () => {
     if (!orderItems.length) { toast.error("Please add items first"); return; }
     if (isSubmitting) return;
 
+    // Delivery ke liye phone + address zaroori hai — modal kholkar bharwao
+    if (type === "delivery") {
+      if (!/^\d{10}$/.test((customerPhone || "").trim())) {
+        toast.error("Enter a valid 10-digit mobile number for delivery");
+        setShowModal(true);
+        return;
+      }
+      if (!(address || "").trim()) {
+        toast.error("Enter delivery address");
+        setShowModal(true);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     const newItems = orderItems.filter((item) => {
       const prev = previousItems.find((p) => p.id === item.id);

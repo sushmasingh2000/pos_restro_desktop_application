@@ -86,6 +86,8 @@ export default function BillPage() {
   const [savedBillId, setSavedBillId] = useState(existingBillId);
   const [savedBillNo, setSavedBillNo] = useState(null);
   const isReprint = !!savedBillId;
+  // Order close ho chuka — bill mein koi change nahi (backend bhi reject karta hai)
+  const isOrderClosed = isReprint && currentStatus === "completed";
   const [reprintRemainingDue, setReprintRemainingDue] = useState(0);
   const [billCreatedAt, setBillCreatedAt] = useState(null);
   // Reprint ke liye bill ke saath jo subtotal/tax/discount/total actually
@@ -1016,6 +1018,10 @@ export default function BillPage() {
             advanceRemaining={advanceRemaining}
           />
 
+          {/* Order close (completed) ho gaya to payment/customer/discount lock —
+              fieldset disabled sab inputs-buttons ko band kar deta hai, layout
+              wahi rehta hai (display: contents). */}
+          <fieldset disabled={isOrderClosed} style={{ display: "contents", border: 0, padding: 0, margin: 0 }}>
           <BillPaymentSection
             paymentSplits={paymentSplits}
             setPaymentSplits={setPaymentSplits}
@@ -1029,8 +1035,10 @@ export default function BillPage() {
             lendingRemaining={lendingRemaining}
             returnAmt={returnAmt}
           />
+          </fieldset>
         </div>
 
+        <fieldset disabled={isOrderClosed} style={{ display: "contents", border: 0, padding: 0, margin: 0 }}>
         <BillRightPanel
           customer={customer}
           setCustomer={setCustomer}
@@ -1067,6 +1075,7 @@ export default function BillPage() {
           discountBlocked={discountBlocked}
           noDiscountEligibleItems={noDiscountEligibleItems}
         />
+        </fieldset>
       </div>
 
       <BillDeliverySection
