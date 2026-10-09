@@ -424,24 +424,39 @@ export default function BillPage() {
   );
 
   // Discount staff yahan reprint ke baad bhi badal sakta hai (jaise bill
-  // close hone se pehle discount adjust karna) — isliye ye hamesha LIVE hi
-  // rehta hai. Bas jis subtotal par % lagta hai wo reprint me frozen wala
-  // (subTotal, jo upar se already frozen hai) hota hai, live-menu wala
-  // discountableSubTotal nahi — isse discount % badalne par bhi grandTotal
-  // sahi hi rehta hai, menu baad me badla ho tab bhi.
+  // close hone se pehle discount adjust karna) — isliye jab tak order close
+  // NAHI hua, ye LIVE rehta hai. Bas jis subtotal par % lagta hai wo reprint
+  // me frozen wala (subTotal, jo upar se already frozen hai) hota hai,
+  // live-menu wala discountableSubTotal nahi — isse discount % badalne par
+  // bhi grandTotal sahi hi rehta hai, menu baad me badla ho tab bhi.
+  //
+  // Order close (completed) ho chuka ho to inputs already fieldset-disabled
+  // hain (upar isOrderClosed) — ab discount/total bhi 100% FROZEN (bill ke
+  // saath save hua wahi) dikhao, dobara live recompute mat karo. Warna
+  // paisa to settle ho chuka tha wahi reh jaata hai, bas rounding chhote
+  // intermediate-precision farak ki wajah se reprint har baar ₹1 idhar-udhar
+  // dikha sakta tha (jaisa ek purane bill pe actually hua).
   const discountAmount =
-    isReprint && frozenBillTotals
-      ? discountMode === "percent"
-        ? (subTotal * Math.min(100, Math.max(0, parseFloat(discountPct || 0)))) / 100
-        : parseFloat(couponDiscount || 0)
-      : discountMode === "percent"
-        ? (discountableSubTotal * Math.min(100, Math.max(0, parseFloat(discountPct || 0)))) / 100
-        : parseFloat(couponDiscount || 0);
+    isOrderClosed && frozenBillTotals
+      ? frozenBillTotals.discount
+      : isReprint && frozenBillTotals
+        ? discountMode === "percent"
+          ? (subTotal * Math.min(100, Math.max(0, parseFloat(discountPct || 0)))) / 100
+          : parseFloat(couponDiscount || 0)
+        : discountMode === "percent"
+          ? (discountableSubTotal * Math.min(100, Math.max(0, parseFloat(discountPct || 0)))) / 100
+          : parseFloat(couponDiscount || 0);
 
   const beforeRound =
-    Math.round((subTotal + totalTax + totalCharges - discountAmount) * 100) / 100;
-  const grandTotal = Math.round(beforeRound);
-  const roundOff = parseFloat((grandTotal - beforeRound).toFixed(2));
+    isOrderClosed && frozenBillTotals
+      ? frozenBillTotals.total - frozenBillTotals.roundOff
+      : Math.round((subTotal + totalTax + totalCharges - discountAmount) * 100) / 100;
+  const grandTotal =
+    isOrderClosed && frozenBillTotals ? frozenBillTotals.total : Math.round(beforeRound);
+  const roundOff =
+    isOrderClosed && frozenBillTotals
+      ? frozenBillTotals.roundOff
+      : parseFloat((grandTotal - beforeRound).toFixed(2));
 
   const maxWalletUse = useWallet ? Math.min(walletBalance, grandTotal) : 0;
   const afterWalletTotal = Math.max(0, grandTotal - maxWalletUse);
