@@ -126,8 +126,9 @@ const AddCategoryExpenseModal = ({ isOpen, onClose, categoryToEdit }) => {
           </button>
 
           <button
-            onClick={() => mutation.mutate()}
+            onClick={() => !mutation.isLoading && mutation.mutate()}
             className="update_btn"
+            disabled={mutation.isLoading}
           >
             {mutation.isLoading
               ? categoryToEdit

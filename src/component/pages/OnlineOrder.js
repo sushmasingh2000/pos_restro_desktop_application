@@ -11,6 +11,7 @@ export default function OnlineOrder() {
   const [activeTab, setActiveTab] = useState("PLACED");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [processingId, setProcessingId] = useState(null);
   const client = useQueryClient();
 
   useEffect(() => {
@@ -40,6 +41,8 @@ export default function OnlineOrder() {
   };
 
   const handleConfirm = async (orderId) => {
+    if (processingId) return;
+    setProcessingId(orderId);
     try {
       const res = await apiConnectorPost(endpoint.confirm_customer_order, { orderId });
       if (res?.data?.success) {
@@ -49,10 +52,14 @@ export default function OnlineOrder() {
       }
     } catch {
       toast.error("Failed to confirm order");
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const handleCancel = async (orderId) => {
+    if (processingId) return;
+    setProcessingId(orderId);
     try {
       const res = await apiConnectorPost(endpoint.cancel_customer_order, { orderId });
       if (res?.data?.success) {
@@ -62,6 +69,8 @@ export default function OnlineOrder() {
       }
     } catch {
       toast.error("Failed to cancel order");
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -146,13 +155,15 @@ export default function OnlineOrder() {
                             <button
                               onClick={() => handleConfirm(order.dg06_order_id)}
                               className="main_btn"
+                              disabled={!!processingId}
                               style={{ padding: "4px 12px", fontSize: 12 }}
                             >
-                              ✓ Confirm
+                              {processingId === order.dg06_order_id ? "Please wait..." : "✓ Confirm"}
                             </button>
                             <button
                               onClick={() => handleCancel(order.dg06_order_id)}
                               className="cancel_btn"
+                              disabled={!!processingId}
                               style={{ padding: "4px 12px", fontSize: 12 }}
                             >
                               ✕ Cancel

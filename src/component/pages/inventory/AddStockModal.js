@@ -60,6 +60,8 @@ const AddStockModal = ({ isOpen, onClose, product }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (addStockMutation.isLoading) return;
+
     if (stockToAdd <= 0) {
       return toast.error("Enter a valid quantity to add!");
     }
@@ -142,11 +144,21 @@ const AddStockModal = ({ isOpen, onClose, product }) => {
           </div>
 
           <div className="flex justify-between gap-3 modal_footer px-3 py-3">
-            <button type="button" onClick={onClose} className="cancel_btn">
+            <button
+              type="button"
+              onClick={onClose}
+              className="cancel_btn"
+              disabled={addStockMutation.isLoading}
+            >
               ✕ Cancel
             </button>
-            <button type="submit" className="update_btn">
-              ✓ Add Stock
+            <button
+              type="submit"
+              className="update_btn"
+              disabled={addStockMutation.isLoading}
+              style={addStockMutation.isLoading ? { opacity: 0.7, cursor: "not-allowed" } : undefined}
+            >
+              {addStockMutation.isLoading ? "Adding..." : "✓ Add Stock"}
             </button>
           </div>
         </form>

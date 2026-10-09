@@ -111,6 +111,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (addExpenseMutation.isLoading || updateExpenseMutation.isLoading) return;
     isEdit ? updateExpenseMutation.mutate() : addExpenseMutation.mutate();
   };
 
@@ -222,6 +223,7 @@ const AddExpenseModal = ({ isOpen, onClose, editExpense }) => {
             <button
               type="submit"
               className="update_btn"
+              disabled={addExpenseMutation.isLoading || updateExpenseMutation.isLoading}
             >
               {isEdit
                 ? updateExpenseMutation.isLoading
