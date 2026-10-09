@@ -108,7 +108,10 @@ export default function TableQuickPrintModal({
                 discount: totalDiscount,
                 is_quick_print: true,
                 items: orderItems.map((i) => {
-                    const itemRate = parseFloat(i.basePrice || i.price);
+                    // Receipt par actually-charged price dikhna chahiye
+                    // (offer laga ho to offer-price), regular menu price
+                    // nahi — isliye price ko basePrice se pehle priority.
+                    const itemRate = parseFloat(i.price ?? i.basePrice);
                     return {
                         name: i.dg09_name,
                         qty: i.qty,

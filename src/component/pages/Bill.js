@@ -813,7 +813,13 @@ export default function BillPage() {
         given_amount: hasCash && givenAmt > 0 ? givenAmt.toFixed(2) : "",
         return_amount: hasCash && givenAmt > 0 ? returnAmt.toFixed(2) : "",
         items: orderItems.map((i) => {
-          const itemRate = parseFloat(i.basePrice || i.price);
+          // i.basePrice = menu ka regular price; i.price = is order me
+          // actually charged price (offer lagi ho to offer-price). Receipt
+          // par hamesha jo actually charge hua wahi dikhna chahiye — isliye
+          // price ko pehle priority, basePrice sirf fallback ke liye (jab
+          // price missing ho). Pehle ulta tha, isliye offer-wale item ka
+          // receipt par bhi full/regular price dikh jaata tha.
+          const itemRate = parseFloat(i.price ?? i.basePrice);
           return {
             name: i.dg09_name,
             qty: i.qty,
