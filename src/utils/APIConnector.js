@@ -79,6 +79,33 @@ const handleInvalidToken = (response) => {
   return true;
 };
 
+// Read-only calls jo hamesha LIVE server se hone chahiye, chahe app manually
+// offline mode mein ho (jaise customer-placed order bell / subscription alert —
+// ye data sirf live par hota hai, local backend ke paas hota hi nahi). Sirf
+// tab use karo jab internet ho; fail hone par {msg} return hota hai, throw nahi.
+const liveHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+  "x-force-offline": "false",
+});
+
+export const apiConnectorGetLive = async (endpoint, params = {}) => {
+  try {
+    return await axios.get(endpoint, { headers: liveHeaders(), params, timeout: 8000 });
+  } catch (e) {
+    if (e?.response?.data) return { data: e.response.data, status: e.response.status };
+    return { msg: e?.message };
+  }
+};
+
+export const apiConnectorPostLive = async (endpoint, reqBody) => {
+  try {
+    return await axios.post(endpoint, reqBody, { headers: liveHeaders(), timeout: 8000 });
+  } catch (e) {
+    if (e?.response?.data) return { data: e.response.data, status: e.response.status };
+    return { msg: e?.message };
+  }
+};
+
 export const apiConnectorGet = async (endpoint, params = {}) => {
   try {
     const response = await axios.get(getActiveEndpoint(endpoint), {

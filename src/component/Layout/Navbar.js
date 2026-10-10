@@ -2,7 +2,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
 import { useState, useEffect, useRef } from "react";
-import { apiConnectorPost, apiConnectorGet, triggerLocalCacheNow, triggerLocalSyncNow } from "../../utils/APIConnector";
+import { apiConnectorPost, apiConnectorGet, apiConnectorPostLive, apiConnectorGetLive, triggerLocalCacheNow, triggerLocalSyncNow } from "../../utils/APIConnector";
 import toast from "react-hot-toast";
 import { endpoint } from "../../utils/APIRoutes";
 import useAppMode from "../../hooks/useAppMode";
@@ -78,9 +78,16 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   // ── Subscription alert ──
+  // Offline mode mein bhi internet ho to subscription/notifications live se
+  // padho — local backend ka offline jawab nakli ("Offline Mode", 999 days) /
+  // khali hota hai, isliye expiry alert aur customer-order bell gayab ho jaate the.
+  const readLive = appMode === "offline" && rawOnline;
+
   const { data: subData } = useQuery(
-    ["my_subscription_nav"],
-    () => apiConnectorGet(endpoint.get_my_subscription),
+    ["my_subscription_nav", readLive],
+    () => (readLive
+      ? apiConnectorGetLive(endpoint.get_my_subscription)
+      : apiConnectorGet(endpoint.get_my_subscription)),
     {
       refetchOnWindowFocus: false,
       retry: false,
@@ -107,9 +114,9 @@ const Navbar = ({ toggleSidebar }) => {
   }, []);
 
   const { data: notifData } = useQuery(
-    ["pending_notifications"],
+    ["pending_notifications", readLive],
     () =>
-      apiConnectorPost(endpoint.order_branch_status_api, {
+      (readLive ? apiConnectorPostLive : apiConnectorPost)(endpoint.order_branch_status_api, {
         status: ["customer_placed"],
       }),
     {

@@ -93,8 +93,23 @@ const POS = () => {
   // ── Fetch menu ────────────────────────────────────────────
   const { data } = useQuery(
     ["getMenuByBranch"],
-    () => apiConnectorPost(endpoint.menu_branch_api),
-    { refetchOnMount: false, refetchOnWindowFocus: false, retry: false }
+    async () => {
+      const res = await apiConnectorPost(endpoint.menu_branch_api);
+      // apiConnectorPost network/server error ko throw nahi karta (sirf {msg}
+      // return karta hai), to react-query use "success" maan ke cache kar leta
+      // tha — offline mein local backend ek baar bhi late/fail hua to khaali
+      // menu reload tak atka rehta tha. Fail ko throw karo taaki retry ho aur
+      // bad response cache na ho.
+      if (!res?.data?.success) throw new Error(res?.data?.message || res?.msg || "Menu fetch failed");
+      return res;
+    },
+    {
+      // Sirf tab dobara fetch karo jab cached data hi na ho (pehle jaisa behaviour)
+      refetchOnMount: (query) => !query.state.data,
+      refetchOnWindowFocus: false,
+      retry: 3,
+      retryDelay: 1000,
+    }
   );
   const currentOrder = allOrders[activeOrderIndex];
 
