@@ -83,7 +83,7 @@ const AddWastageModal = ({ isOpen, onClose }) => {
       <div className="Order_Details_modal" style={{ maxWidth: 420 }}>
         <div className="Order_Details_modal_header">
           <div className="flex items-center gap-3">
-            <div className="modal_header_icon">🗑️</div>
+            <div className="modal_header_icon">➕</div>
             <div>
               <h2>Add Wastage</h2>
               <p>Kharab hua stock inventory se ghatayein</p>

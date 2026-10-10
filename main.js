@@ -101,6 +101,14 @@ function startBackend() {
   log("Backend starting...");
 }
 
+// Print (PowerShell/printer process) ke baad Windows kabhi window ka keyboard
+// focus chheen leta hai — inputs me type nahi hota jab tak reload na ho.
+function refocusWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (!mainWindow.isFocused()) mainWindow.focus();
+  mainWindow.webContents.focus();
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -113,10 +121,16 @@ function createWindow() {
     },
   });
 
+  // Window dobara focus me aaye (alt-tab, dialog, print ke baad) to web page
+  // ko keyboard focus wapas do — warna inputs "dead" ho jate hain.
+  mainWindow.on("focus", () => {
+    if (!mainWindow.isDestroyed()) mainWindow.webContents.focus();
+  });
+
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, "build/index.html"));
   } else {
-    mainWindow.loadURL("http://localhost:3000");
+    mainWindow.loadURL("http://localhost:3001");
   }
 
   setTimeout(() => {
@@ -128,12 +142,18 @@ app.whenReady().then(() => {
   log("App ready, log file:", logFile);
   startBackend();
   autoUpdater.on('update-downloaded', () => {
-    dialog.showMessageBox({
+    dialog.showMessageBox(mainWindow, {
       type: 'info',
       title: 'Update Ready',
       message: 'A new update has been downloaded. Restart now to install?',
       buttons: ['Install Now', 'Later']
     }).then((res) => {
+      // Native dialog band hone ke baad Electron kabhi keyboard focus wapas
+      // nahi deta — inputs me type hi nahi hota jab tak reload na ho.
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.focus();
+        mainWindow.webContents.focus();
+      }
       if (res.response === 0) autoUpdater.quitAndInstall();
     });
   });
@@ -319,7 +339,7 @@ Write-Host "Done"
       fs.writeFileSync(psFile, psScript, 'utf8');
       log("Running PrintDocument ps1:", psFile);
 
-      exec(`powershell -ExecutionPolicy Bypass -File "${psFile}"`, { timeout: 15000 }, (err, stdout, stderr) => {
+      exec(`powershell -ExecutionPolicy Bypass -File "${psFile}"`, { timeout: 15000, windowsHide: true }, (err, stdout, stderr) => {
         try { fs.unlinkSync(txtFile); } catch (e) { }
         try { fs.unlinkSync(psFile); } catch (e) { }
         for (const qf of qrFiles) { try { fs.unlinkSync(qf); } catch (e) { } }
@@ -738,10 +758,12 @@ ipcMain.handle("print-bill", async (event, { billData, token }) => {
         errors.push(err.message);
       }
     }
+    refocusWindow();
     return errors.length
       ? { success: false, message: errors.join(" | ") }
       : { success: true };
   } catch (err) {
+    refocusWindow();
     log("print-bill top-level error:", err.message);
     return { success: false, message: err.message };
   }
@@ -768,10 +790,12 @@ ipcMain.handle("print-kot", async (event, { kotData, token }) => {
         errors.push(err.message);
       }
     }
+    refocusWindow();
     return errors.length
       ? { success: false, message: errors.join(" | ") }
       : { success: true };
   } catch (err) {
+    refocusWindow();
     log("print-kot top-level error:", err.message);
     return { success: false, message: err.message };
   }
@@ -853,10 +877,12 @@ ipcMain.handle("print-statement", async (event, { statementData, token }) => {
         errors.push(err.message);
       }
     }
+    refocusWindow();
     return errors.length
       ? { success: false, message: errors.join(" | ") }
       : { success: true };
   } catch (err) {
+    refocusWindow();
     log("print-statement top-level error:", err.message);
     return { success: false, message: err.message };
   }

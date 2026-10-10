@@ -32,6 +32,7 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
     captain_name = "",
     customer_name = "",
     customer_phone = "",
+    customer_address = "",
     billNo,
     uniqueOrderId,
     table_no,
@@ -55,6 +56,11 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
     is_advance,
     remaining_amount = 0,
   } = billData;
+
+  const hasAddress =
+    typeof customer_address === "string" &&
+    customer_address.trim() !== "" &&
+    customer_address.trim() !== "Not Available";
 
   const totalTax = tax_breakdown.reduce((s, t) => s + (t.amount || 0), 0);
 
@@ -128,10 +134,16 @@ export default function BillPreviewModal({ isOpen, billData, onConfirm, onClose,
           <Divider />
 
           {/* Customer — sirf tab dikhao jab ho */}
-          {(customer_name || customer_phone) && (
+          {(customer_name || customer_phone || hasAddress) && (
             <>
               {customer_name && <Row label="Customer Name" value={customer_name} />}
               {customer_phone && <Row label="Customer Mobile No." value={customer_phone} />}
+              {hasAddress && (
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11, marginBottom: 2 }}>
+                  <span style={{ color: "#333", whiteSpace: "nowrap" }}>Customer Address</span>
+                  <span style={{ fontWeight: "bold", textAlign: "right", wordBreak: "break-word" }}>{customer_address.trim()}</span>
+                </div>
+              )}
               <Divider />
             </>
           )}

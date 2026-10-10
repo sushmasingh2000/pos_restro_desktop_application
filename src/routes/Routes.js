@@ -1,31 +1,31 @@
-
-import Dashboard from "../Dashboard";
+import { lazyPage } from "../utils/lazyPage";
 import MainLayout from "../component/Layout/MainLayout";
-import BillPage from "../component/pages/Bill";
-import CancelOrder from "../component/pages/CancelOrder";
-import CustomerLedger from "../component/pages/Customerledger";
-import DineIn from "../component/pages/DineIn";
-import DoorDelivery from "../component/pages/DoorDelivery";
-import LendingOrders from "../component/pages/LendingOrders";
-import OnlineOrder from "../component/pages/OnlineOrder";
-import Orders from "../component/pages/Orders";
-import PaymentLendingWallet from "../component/pages/PaymentSummary";
-import PendingOrder from "../component/pages/PendingOrder";
-import POS from "../component/pages/POS";
-import CustomerReport from "../component/pages/Report";
-import SalesSummary from "../component/pages/SalesOrderSummary";
-import TakeAway from "../component/pages/TakeAway";
-import ExpenseManagementReport from "../component/pages/expense/Expense";
-import Inventory from "../component/pages/inventory/Inventory";
-import OnlineDeliveryOrder from "../component/pages/OnlineDeliveryOrder";
-import QROrder from "../component/pages/QROrder";
-import TakeawayLiveOrder from "../component/pages/TakeawayLiveOrder";
-import QrTakeawayOrder from "../component/pages/QrTakeawayOrder";
-import FeedbackPage from "../component/pages/FeedbackPage";
-import MyTickets from "../component/pages/MyTickets";
-import KitchenDisplay from "../component/pages/KitchenDisplay";
-import WastageReport from "../component/pages/WastageReport";
 
+const Dashboard = lazyPage(() => import("../Dashboard"));
+const BillPage = lazyPage(() => import("../component/pages/Bill"), null, { preload: true });
+const CancelOrder = lazyPage(() => import("../component/pages/CancelOrder"));
+const CustomerLedger = lazyPage(() => import("../component/pages/Customerledger"));
+const DineIn = lazyPage(() => import("../component/pages/DineIn"), null, { preload: true });
+const DoorDelivery = lazyPage(() => import("../component/pages/DoorDelivery"));
+const LendingOrders = lazyPage(() => import("../component/pages/LendingOrders"));
+const OnlineOrder = lazyPage(() => import("../component/pages/OnlineOrder"));
+const Orders = lazyPage(() => import("../component/pages/Orders"));
+const PaymentLendingWallet = lazyPage(() => import("../component/pages/PaymentSummary"));
+const PendingOrder = lazyPage(() => import("../component/pages/PendingOrder"));
+const POS = lazyPage(() => import("../component/pages/POS"), null, { preload: true });
+const CustomerReport = lazyPage(() => import("../component/pages/Report"));
+const SalesSummary = lazyPage(() => import("../component/pages/SalesOrderSummary"));
+const TakeAway = lazyPage(() => import("../component/pages/TakeAway"));
+const ExpenseManagementReport = lazyPage(() => import("../component/pages/expense/Expense"));
+const Inventory = lazyPage(() => import("../component/pages/inventory/Inventory"));
+const OnlineDeliveryOrder = lazyPage(() => import("../component/pages/OnlineDeliveryOrder"));
+const QROrder = lazyPage(() => import("../component/pages/QROrder"));
+const TakeawayLiveOrder = lazyPage(() => import("../component/pages/TakeawayLiveOrder"));
+const QrTakeawayOrder = lazyPage(() => import("../component/pages/QrTakeawayOrder"));
+const FeedbackPage = lazyPage(() => import("../component/pages/FeedbackPage"));
+const MyTickets = lazyPage(() => import("../component/pages/MyTickets"));
+const KitchenDisplay = lazyPage(() => import("../component/pages/KitchenDisplay"));
+const WastageReport = lazyPage(() => import("../component/pages/WastageReport"));
 
 export const routes = [
   {

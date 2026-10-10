@@ -67,9 +67,6 @@ export default function BillRightPanel({
                     name: c.name,
                     phone: c.phone,
                     address: c.address || "",
-                    tax_id: c.tax_id || "",
-                    dob: c.dob || "",
-                    anniversary: c.anniversary || "",
                   });
                   setCustomerSearch(c.name);
                   setCustomerList([]);
@@ -272,46 +269,14 @@ export default function BillRightPanel({
           />
         </div>
         <div className="main_input">
+          <label>Address</label>
           <input
             value={customer.address}
             onChange={(e) =>
               setCustomer((p) => ({ ...p, address: e.target.value }))
             }
-            placeholder="Customer Address"
+            placeholder="Enter address"
             className={inp}
-          />
-        </div>
-        <div className="main_input">
-          <input
-            value={customer.tax_id}
-            onChange={(e) =>
-              setCustomer((p) => ({ ...p, tax_id: e.target.value }))
-            }
-            placeholder="Customer Tax ID"
-            className={inp}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div className="main_input">
-          <label>Date of Birth</label>
-          <input
-            type="date"
-            value={customer.dob}
-            onChange={(e) =>
-              setCustomer((p) => ({ ...p, dob: e.target.value }))
-            }
-          />
-        </div>
-        <div className="main_input">
-          <label>Anniversary</label>
-          <input
-            type="date"
-            value={customer.anniversary}
-            onChange={(e) =>
-              setCustomer((p) => ({ ...p, anniversary: e.target.value }))
-            }
           />
         </div>
       </div>

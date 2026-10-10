@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function ItemOptionsModal({ isOpen, onClose, item, onConfirm }) {
   const [selections, setSelections] = useState({});
@@ -33,7 +34,7 @@ export default function ItemOptionsModal({ isOpen, onClose, item, onConfirm }) {
     for (const group of groups) {
       const selected = selections[group.dg030_group_id] || [];
       if (selected.length < group.dg030_min_selectable) {
-        alert(`"${group.dg030_display_name}" at Least ${group.dg030_min_selectable} Please Select option !`);
+        toast.error(`"${group.dg030_display_name}" at Least ${group.dg030_min_selectable} Please Select option !`);
         return;
       }
     }

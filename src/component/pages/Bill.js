@@ -47,9 +47,6 @@ export default function BillPage() {
     name: deliveryCustomerName || "",
     phone: deliveryCustomerPhone || "",
     address: deliveryCustomerAddress || "",
-    tax_id: "",
-    dob: "",
-    anniversary: "",
   });
 
   // ── Wallet ────────────────────────────────────────
@@ -257,9 +254,6 @@ export default function BillPage() {
           name: bill.customer_name || "",
           phone: bill.customer_phone || "",
           address: bill.customer_address || "",
-          tax_id: bill.customer_tax_id || "",
-          dob: bill.customer_dob || "",
-          anniversary: bill.customer_anniversary || "",
         });
         // Given Amount ab saved cash_given_amount se prefill hota hai (agar
         // pehli baar bill Cash ke saath save hua tha) — staff chahe to
