@@ -116,6 +116,14 @@ const POS = () => {
   const categories = data?.data?.result?.categories || [];
   const itemsData = data?.data?.result?.menus || [];
 
+  // Offline cache is user ke branch ke liye kabhi bana hi nahi (net jaane se
+  // pehle kabhi online login/cache nahi hua) — blank screen ka matlab saaf bolo.
+  useEffect(() => {
+    if (data?.data?.offline && categories.length === 0 && itemsData.length === 0) {
+      toast.error("Offline menu not available yet. Connect to the internet once and go online to download it.", { id: "offline-menu-empty" });
+    }
+  }, [data]);
+
   // ── Active item-specific offers (e.g. "Cappuccino @ ₹79 today") ──
   // Automatic — no coupon code needed. Backend already filters by
   // day/date/time and business+branch, so whatever comes back here is

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { endpoint } from "../utils/APIRoutes";
-import { apiConnectorGet, apiConnectorPost } from "../utils/APIConnector";
+import { apiConnectorGet, apiConnectorPost, triggerLocalCacheNow } from "../utils/APIConnector";
 import toast from "react-hot-toast";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -114,10 +114,13 @@ const Login = ({ role = "staff" }) => {
       localStorage.setItem("user_name", user?.name || "");
       localStorage.setItem("user_email", user?.email || "");
       localStorage.setItem("loginTime", Date.now().toString());
-      // Password hatne se offline cache seed (legacy backend/ folder, jo
-      // email+password se live /login dobara call karta hai) ab kaam nahi
-      // karega — true offline login is waqt tak kaam nahi karega jab tak
-      // backend/ bhi OTP-based login samjhe.
+      // Offline cache seed: OTP login ke baad local backend ko is user ka
+      // branch pata hi nahi chalta tha (offline_users sirf "Start Offline
+      // Order" dabane par bharta tha) — to net jaane se pehle menu/tables ka
+      // cache bana hi nahi hota aur offline mein sab khali dikhta tha. Ab
+      // login hote hi background mein cache bharo (fire-and-forget, login
+      // block nahi hota, local backend band ho to chupchaap fail).
+      triggerLocalCacheNow();
 
       if (rememberMe) {
         if (isPasswordMode) localStorage.setItem(REMEMBER_LOGIN_EMAIL_KEY, email.trim());

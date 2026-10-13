@@ -83,6 +83,18 @@ const Navbar = ({ toggleSidebar }) => {
   // khali hota hai, isliye expiry alert aur customer-order bell gayab ho jaate the.
   const readLive = appMode === "offline" && rawOnline;
 
+  // App khulte hi (pehle se logged-in session ke liye bhi) online + internet
+  // hone par ek baar local cache seed karo — warna jis user ne "Start Offline
+  // Order" kabhi dabaya hi nahi, uska menu/tables local mein hota hi nahi.
+  const cacheSeededRef = useRef(false);
+  useEffect(() => {
+    if (cacheSeededRef.current) return;
+    if (appMode !== "online" || !rawOnline) return;
+    if (!localStorage.getItem("token")) return;
+    cacheSeededRef.current = true;
+    triggerLocalCacheNow();
+  }, [appMode, rawOnline]);
+
   const { data: subData } = useQuery(
     ["my_subscription_nav", readLive],
     () => (readLive
@@ -121,6 +133,12 @@ const Navbar = ({ toggleSidebar }) => {
       }),
     {
       refetchInterval: 10000,
+      // Window background / covered ho tab bhi polling chale — warna naye
+      // order ki notification tab aati thi jab staff window par wapas aata tha.
+      refetchIntervalInBackground: true,
+      // Online/offline switch par key badalti hai — purana count tab tak
+      // dikhao jab tak naya na aaye, warna 0 → N hone par galat beep bajta.
+      keepPreviousData: true,
       refetchOnWindowFocus: true,
       enabled: showBell,
     }

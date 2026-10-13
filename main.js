@@ -118,6 +118,10 @@ function createWindow() {
       contextIsolation: true,
       devTools: true,
       preload: path.join(__dirname, "preload.js"),
+      // Window minimize / dusri app ke peeche ho to Chromium timers throttle
+      // kar deta hai (1/min tak) — bell ka 10s polling late/ruk jaata tha aur
+      // naye order ki awaaz der se aati thi. Billing app ko hamesha live rakho.
+      backgroundThrottling: false,
     },
   });
 
@@ -137,6 +141,11 @@ function createWindow() {
     autoUpdater.checkForUpdatesAndNotify();
   }, 3000);
 }
+
+// Dhaka hua / background window ko bhi full-speed chalne do (notification polling).
+// Ye switches app ready hone se pehle set karne padte hain.
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
 
 app.whenReady().then(() => {
   log("App ready, log file:", logFile);
