@@ -50,9 +50,10 @@ const Navbar = ({ toggleSidebar }) => {
   const { data: branchData } = useQuery(
     ["branch_profile"],
     () => apiConnectorGet(endpoint.branch_profile_api),
-    { refetchOnWindowFocus: false, retry: false, staleTime: 30 * 60 * 1000 }
+    { refetchOnWindowFocus: true, retry: false, staleTime: 5 * 60 * 1000 }
   );
   const branchName = branchData?.data?.result?.branch_name || "";
+  const bannerText = branchData?.data?.result?.banner_text || "";
   const branchFeatures = branchData?.data?.result?.features || {};
   const deliveryToken = branchData?.data?.result?.delivery_token || null;
   const deliveryLink = deliveryToken && branchFeatures.door_delivery ? `${frontend}/delivery/${deliveryToken}` : null;
@@ -145,7 +146,30 @@ const Navbar = ({ toggleSidebar }) => {
   );
 
   const notifications = notifData?.data?.result?.orders || [];
-  const notifCount = notifications.length;
+
+  // Staff ke cancel requests — sirf branch admin approve/reject kar sakta hai
+  const isApprover = type === "branch_admin";
+  const [actingOrderId, setActingOrderId] = useState(null);
+  const { data: cancelData, refetch: refetchCancelRequests } = useQuery(
+    ["pending_cancel_requests"],
+    () => apiConnectorPost(endpoint.cancel_requests_api, {}),
+    { refetchInterval: 10000, refetchOnWindowFocus: true, enabled: isApprover }
+  );
+  const cancelRequests = isApprover ? cancelData?.data?.result?.requests || [] : [];
+
+  const handleCancelAction = async (orderId, action) => {
+    setActingOrderId(orderId);
+    try {
+      const res = await apiConnectorPost(endpoint.cancel_request_action_api, { orderId, action });
+      if (res?.data?.success) toast.success(res.data.message);
+      else toast.error(res?.data?.message || "Action failed");
+      refetchCancelRequests();
+    } catch (e) {
+      toast.error("Server error");
+    }
+    setActingOrderId(null);
+  };
+  const notifCount = notifications.length + cancelRequests.length;
 
   useEffect(() => {
     if (prevCount === null) {
@@ -222,6 +246,14 @@ const Navbar = ({ toggleSidebar }) => {
         >
           {switchingOnline ? "Syncing..." : "Go Online"}
         </button>
+      </div>
+    )}
+    {bannerText && (
+      <div style={{
+        background: "#dc2626", color: "#fff", textAlign: "center",
+        fontSize: 13, fontWeight: 700, padding: "6px 12px",
+      }}>
+        {bannerText}
       </div>
     )}
     <nav className="flex items-center justify-between">
@@ -454,10 +486,50 @@ const Navbar = ({ toggleSidebar }) => {
                 </button>
               </div>
 
+
+              {cancelRequests.length > 0 && (
+                <div style={{ borderBottom: "1px solid #eee" }}>
+                  <div className="px-3 py-2 text-sm font-bold" style={{ background: "#fef2f2", color: "#b91c1c" }}>
+                    🚫 Cancel Requests ({cancelRequests.length})
+                  </div>
+                  {cancelRequests.map((r) => (
+                    <div key={r.dg06_order_id} className="order_notifaction" style={{ cursor: "default" }}>
+                      <div className="flex justify-between items-center order_stattus_box">
+                        <span>Order #{r.dg06_order_id}</span>
+                        <span className="order_status">Cancel Pending</span>
+                      </div>
+                      <div className="np-order-meta">
+                        {r.dg06_order_type === "dine_in"
+                          ? r.dg05_table_name || "Dine In"
+                          : r.dg06_order_type} • ₹{r.dg06_total_amount}
+                        {r.requested_by_name ? ` • by ${r.requested_by_name}` : ""}
+                      </div>
+                      <div className="np-order-meta">Reason: {r.reason}{r.add_to_wastage ? " (wastage)" : ""}</div>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          disabled={actingOrderId === r.dg06_order_id}
+                          onClick={() => handleCancelAction(r.dg06_order_id, "approve")}
+                          style={{ background: "#dc2626", color: "#fff", padding: "4px 12px", borderRadius: 8, fontSize: 12 }}
+                        >
+                          Approve Cancel
+                        </button>
+                        <button
+                          disabled={actingOrderId === r.dg06_order_id}
+                          onClick={() => handleCancelAction(r.dg06_order_id, "reject")}
+                          style={{ background: "#e5e7eb", color: "#111", padding: "4px 12px", borderRadius: 8, fontSize: 12 }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="px-4 py-6 text-center text-dark text-sm">
-                    Koi pending order nahi
+                   Not found any pending orders
                   </div>
                 ) : (
                   notifications.map((order, index) => (

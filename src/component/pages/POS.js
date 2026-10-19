@@ -7,7 +7,7 @@ import { endpoint } from "../../utils/APIRoutes";
 import { useQuery, useQueryClient } from "react-query";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
-import CancelOrderModal from "./Cancel";
+import CancelOrderModal, { useCancelRequestStatus } from "./Cancel";
 import AddQtyRemarkModal from "./AddQtyRemark";
 import KOTPrintSlip from "./KOTPrintSlip";
 import PosTab from "../Layout/PosTab";
@@ -51,6 +51,7 @@ const POS = () => {
   const [showQtyModal, setShowQtyModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [savedOrderId, setSavedOrderId] = useState(null);
+  const cancelRequestPending = useCancelRequestStatus(savedOrderId) === "pending";
   const [existingBillId, setExistingBillId] = useState(null);
   const [existingBillNo, setExistingBillNo] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
@@ -766,7 +767,7 @@ const POS = () => {
           <div className="flex justify-between items-center">
             {modifyMode && savedOrderId && (
               <button className="bg-red-600 text-white p-2 mx-3 rounded-lg text-sm" onClick={() => setShowCancelModal(true)}>
-                Cancel Order
+                {cancelRequestPending ? "⏳ Cancel Pending" : "Cancel Order"}
               </button>
             )}
             <div className="mt-2 text-right font-semibold text-gold ml-auto px-3">

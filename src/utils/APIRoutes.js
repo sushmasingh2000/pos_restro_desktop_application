@@ -28,6 +28,9 @@ export const endpoint = {
   charge_get_api: `${domain}/api/v1/bill/charges`,
   payment_mode_get_api: `${domain}/api/v1/bill/payment-modes`,
   cancel_order_api: `${domain}/api/v1/cancel-order`,
+  cancel_requests_api: `${domain}/api/v1/cancel-requests`,
+  cancel_request_action_api: `${domain}/api/v1/cancel-request-action`,
+  cancel_request_status_api: `${domain}/api/v1/cancel-request-status`,
   wastage_report_api: `${domain}/api/v1/wastage-report`,
   wastage_add_manual_api: `${domain}/api/v1/wastage-add-manual`,
 

@@ -10,7 +10,7 @@ import BillBreakdown from "./bill/BillBreakdown";
 import BillPaymentSection from "./bill/BillPaymentSection";
 import BillRightPanel from "./bill/BillRightPanel";
 import BillDeliverySection from "./bill/BillDeliverySection";
-import CancelOrderModal from "./Cancel";
+import CancelOrderModal, { useCancelRequestStatus } from "./Cancel";
 
 export default function BillPage() {
   const location = useLocation();
@@ -106,6 +106,7 @@ export default function BillPage() {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const cancelRequestPending = useCancelRequestStatus(orderId) === "pending";
 
   // Single payment ke liye amount auto-normalize (empty amount fix).
   // Pehle ye sirf Cash/UPI/Card ke liye chalta tha (!isLending) — Lending
@@ -1117,7 +1118,7 @@ export default function BillPage() {
               className="cancel_btn"
               style={{ background: "rgba(220,38,38,0.2)", border: "1px solid rgba(248,113,113,0.4)", color: "#f87171" }}
             >
-              🚫 Cancel Order
+              {cancelRequestPending ? "⏳ Cancel Pending" : "🚫 Cancel Order"}
             </button>
           )}
         <div className="flex justify-end gap-3" style={{ width: "50%" }}>

@@ -3,6 +3,8 @@ import { apiConnectorGet } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import { getAppMode } from "../../utils/appMode";
 
+const SUB_CACHE_KEY = "sub_guard_cache";
+
 // ── Subscription Guard ────────────────────────────────────────
 export const SubscriptionGuard = ({ children }) => {
   const role = localStorage.getItem("role");
@@ -39,10 +41,36 @@ export const SubscriptionGuard = ({ children }) => {
     );
   }
 
-  const sub = data?.data?.result;
+  // Only trust the server when it actually answered with a valid payload.
+  // Network errors / Cloudflare 5xx pages / timeouts must NOT be treated as
+  // "no subscription" — fall back to the last known good subscription.
+  const body = data?.data;
+  const serverAnswered = body && typeof body === "object" && body.success === true && "result" in body;
+
+  let sub;
+  let isNoSub = false;
+  if (serverAnswered) {
+    sub = body.result || undefined;
+    isNoSub = !sub;
+    try {
+      if (sub) localStorage.setItem(SUB_CACHE_KEY, JSON.stringify(sub));
+      else localStorage.removeItem(SUB_CACHE_KEY);
+    } catch (e) { /* ignore */ }
+  } else {
+    // Server unreachable / error: use cached subscription, judged by its end_date.
+    try {
+      sub = JSON.parse(localStorage.getItem(SUB_CACHE_KEY) || "null") || undefined;
+    } catch (e) { sub = undefined; }
+    if (sub?.end_date) {
+      const diff = Math.ceil((new Date(sub.end_date).getTime() - Date.now()) / 86400000);
+      sub = { ...sub, days_left: diff, is_expired: diff <= 0 };
+    }
+    // No cache + server down => don't lock the POS out; let it run.
+    if (!sub) return children;
+  }
+
   const daysLeft = sub?.days_left !== undefined ? Number(sub.days_left) : 999;
   const isExpired = sub ? (sub.is_expired || daysLeft <= 0) : false;
-  const isNoSub = !sub;
 
   if (isExpired || isNoSub) {
     return <SubscriptionExpiredPage sub={sub} isNoSub={isNoSub} />;

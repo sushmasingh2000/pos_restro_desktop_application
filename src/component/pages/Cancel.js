@@ -2,7 +2,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { apiConnectorPost } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
-import { useQueryClient } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
 import Swal from "sweetalert2";
 
 const CANCEL_REASONS = [
@@ -14,12 +14,26 @@ const CANCEL_REASONS = [
   "Other",
 ];
 
+// "pending" | "rejected" | null — staff ke cancel request ki current halat.
+// Modal aur Cancel buttons dono yahi use karte hain.
+export function useCancelRequestStatus(orderId) {
+  const { data } = useQuery(
+    ["cancel_request_status", orderId],
+    () => apiConnectorPost(endpoint.cancel_request_status_api, { orderId }),
+    { enabled: !!orderId, refetchInterval: 10000, refetchOnWindowFocus: true }
+  );
+  return data?.data?.result?.status || null;
+}
+
 export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled }) {
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
   // Khana ban chuka tha → stock wapas nahi jayega, wastage report me aayega
   const [addToWastage, setAddToWastage] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Branch admin ne approval ON kiya ho to staff ka cancel "pending" rehta hai
+  const cancelRequestStatus = useCancelRequestStatus(isOpen ? orderId : null);
+  const isPending = cancelRequestStatus === "pending";
 
   const reason = selectedReason === "Other" ? customReason : selectedReason;
   const client = useQueryClient();
@@ -53,7 +67,14 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
         add_to_wastage: addToWastage,
       });
 
-      if (res?.data?.success) {
+      if (res?.data?.success && res?.data?.pending) {
+        // Order cancel nahi hua, admin approval ka wait
+        toast.success(res.data.message || "Cancel request sent to admin");
+        client.invalidateQueries(["cancel_request_status", orderId]);
+        setAddToWastage(false);
+        client.refetchQueries("get_table");
+        onClose();
+      } else if (res?.data?.success) {
         toast.success(res?.data?.message || "Order cancelled!");
         setAddToWastage(false);
         client.refetchQueries("get_table");
@@ -103,7 +124,11 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
 
           {/* Warning */}
           <div className="cancel_order_message" >
-            This order will be permanently canceled. The table will become free.
+            {isPending
+              ? "⏳ Cancel request pending — waiting for admin approval. Order stays active until approved."
+              : cancelRequestStatus === "rejected"
+                ? "Admin rejected the earlier cancel request. You can request again."
+                : "This order will be permanently canceled. The table will become free."}
           </div>
 
           {/* Reason buttons */}
@@ -171,7 +196,7 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
 
           <button
             onClick={handleCancel}
-            disabled={loading || !reason.trim()}
+            disabled={loading || isPending || !reason.trim()}
             className="px-6 py-2.5 rounded-xl text-sm font-bold transition disabled:opacity-40"
             style={{
               background: "linear-gradient(135deg, #dc2626, #b91c1c)",
@@ -179,7 +204,7 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
               boxShadow: "0 4px 20px rgba(220,38,38,0.4)",
             }}
           >
-            {loading ? "Cancelling..." : "🚫 Confirm Cancel"}
+            {loading ? "Cancelling..." : isPending ? "⏳ Cancel Pending" : "🚫 Confirm Cancel"}
           </button>
         </div>
       </div>
