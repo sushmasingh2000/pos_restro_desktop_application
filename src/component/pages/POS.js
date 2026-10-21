@@ -450,6 +450,15 @@ const POS = () => {
       }
     }
 
+    // Takeaway ke liye mobile number zaroori hai
+    if (type === "take-away") {
+      if (!/^\d{10}$/.test((customerPhone || "").trim())) {
+        toast.error("Enter a valid 10-digit mobile number for takeaway");
+        setShowModal(true);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     const newItems = orderItems.filter((item) => {
       const prev = previousItems.find((p) => p.id === item.id);
