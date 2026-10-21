@@ -23,8 +23,8 @@ export default function PendingOrder() {
   const tabs = [
     "ALL SECTIONS",
     "DINE IN",
-    features.table_order && "TAKE AWAY",
-    features.door_delivery && "DOOR DELIVERY",
+    "TAKE AWAY",
+    "DOOR DELIVERY",
     features.table_qr && "TABLE QR",
     features.takeaway && "QR ORDER",
     // "PARK ITEMS",

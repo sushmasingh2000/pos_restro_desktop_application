@@ -132,7 +132,7 @@ const PosTab = () => {
 
   const navItems = [
     { name: "DINE IN", path: "/userdashboard", count: counts.dineIn },
-    features.table_order && { name: "TAKE AWAY", path: "/pos/take-away", count: counts.takeaway },
+    { name: "TAKE AWAY", path: "/pos/take-away", count: counts.takeaway },
     { name: "DOOR DELIVERY", path: "/pos/delivery", count: counts.doorDelivery },
     features.door_delivery && { name: "ONLINE DELIVERY", path: "/online-delivery-order", count: counts.delivery },
     features.table_qr && { name: "TABLE QR", path: "/qr-order", count: counts.tableQr },
