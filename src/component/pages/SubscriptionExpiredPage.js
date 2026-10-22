@@ -21,7 +21,11 @@ export const SubscriptionGuard = ({ children }) => {
 
   if (isMaster || isOffline) return children;
 
-  if (isLoading) {
+  // A cached subscription lets us render instantly on reload; the server
+  // answer replaces it as soon as it arrives.
+  const hasCache = !!localStorage.getItem(SUB_CACHE_KEY);
+
+  if (isLoading && !hasCache) {
     return (
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center",
