@@ -75,7 +75,7 @@ const AddQtyRemarkModal = ({ isOpen, onClose, item, orderItems, onUpdate }) => {
               <div className="modal_header_icon">🚚</div>
               <div>
               <h2>{item.dg09_name}</h2>
-              <p> ₹{item.price} • Qty: {item.qty}</p>
+              <p> ₹{Number(item.price).toFixed(2)} • Qty: {item.qty}</p>
             </div>
           </div>
           <button onClick={onClose}>×</button>

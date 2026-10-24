@@ -120,7 +120,11 @@ const PosTab = () => {
   useEffect(() => {
     fetchCounts();
     const interval = setInterval(fetchCounts, 30000);
-    return () => clearInterval(interval);
+    window.addEventListener("orders-updated", fetchCounts);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("orders-updated", fetchCounts);
+    };
   }, [fetchCounts]);
 
   const { data: branchProfileData } = useQuery(

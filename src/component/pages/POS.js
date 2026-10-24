@@ -679,12 +679,12 @@ const POS = () => {
                 {offer ? (
                   <h3>
                     <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.75em", marginRight: 6 }}>
-                      ₹{item.dg09_price}
+                      ₹{Number(item.dg09_price).toFixed(2)}
                     </span>
-                    ₹{offer.price}
+                    ₹{Number(offer.price).toFixed(2)}
                   </h3>
                 ) : (
-                  <h3>₹{item.dg09_price}</h3>
+                  <h3>₹{Number(item.dg09_price).toFixed(2)}</h3>
                 )}
               </div>
             );

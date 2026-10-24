@@ -177,11 +177,18 @@ const TakeAway = () => {
             <Col md={3}>
               <div className="main_input">
                 <label>Mode of Payment <span className="text-red-500">*</span></label>
-                <select onChange={(e) =>  setFilters({ ...filters, paymentMethod: e.target.value }) } >
-                  <option >Mode of Payment</option>
+                <select
+                  value={filters.paymentMethod}
+                  onChange={(e) => {
+                    setPage(1);
+                    setFilters({ ...filters, paymentMethod: e.target.value });
+                  }}
+                >
+                  <option value="">Mode of Payment</option>
                   <option value="Cash" >Cash</option>
                   <option value="Card" >Card</option>
                   <option value="UPI">UPI</option>
+                  <option value="Lending">Lending</option>
                 </select>
               </div>
             </Col>

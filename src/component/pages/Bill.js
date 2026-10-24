@@ -48,6 +48,7 @@ export default function BillPage() {
     phone: deliveryCustomerPhone || "",
     address: deliveryCustomerAddress || "",
   });
+  const [phoneError, setPhoneError] = useState("");
 
   // ── Wallet ────────────────────────────────────────
   const [walletBalance, setWalletBalance] = useState(0);
@@ -83,14 +84,9 @@ export default function BillPage() {
   const [savedBillId, setSavedBillId] = useState(existingBillId);
   const [savedBillNo, setSavedBillNo] = useState(null);
   const isReprint = !!savedBillId;
-  // Order close ho chuka — bill mein koi change nahi (backend bhi reject karta hai)
   const isOrderClosed = isReprint && currentStatus === "completed";
   const [reprintRemainingDue, setReprintRemainingDue] = useState(0);
   const [billCreatedAt, setBillCreatedAt] = useState(null);
-  // Reprint ke liye bill ke saath jo subtotal/tax/discount/total actually
-  // save hua tha, wahi frozen values yahan store hoti hain — reprint screen
-  // ab live menu/tax-rate se dobara calculate nahi karta (warna menu me baad
-  // me tax/price badalne par purane bills ka total badal jaata tha).
   const [frozenBillTotals, setFrozenBillTotals] = useState(null);
   const billDateTime = isReprint && billCreatedAt
     ? new Date(billCreatedAt).toLocaleString("en-IN")
@@ -108,12 +104,17 @@ export default function BillPage() {
   const queryClient = useQueryClient();
   const cancelRequestPending = useCancelRequestStatus(orderId) === "pending";
 
-  // Single payment ke liye amount auto-normalize (empty amount fix).
-  // Pehle ye sirf Cash/UPI/Card ke liye chalta tha (!isLending) — Lending
-  // single-split is se bahar thi, isliye jab mode select karte waqt ka
-  // stale amount (discount/tax final hone se pehle ka snapshot) hi
-  // seedha save ho jaata tha, live total se match nahi karta tha (₹1 tak
-  // ka farak dekha gaya). Ab Lending bhi live afterWalletTotal use karegi.
+  const validateCustomerPhone = () => {
+    const phone = customer.phone.trim();
+    if (phone && !/^[6-9]\d{9}$/.test(phone)) {
+      setPhoneError("Invalid Mobile Number");
+      toast.error("Invalid Mobile Number");
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
   const getFinalSplits = () => {
     if (!isAdvance && paymentSplits.length === 1) {
       return [{ mode: paymentSplits[0].mode, amount: afterWalletTotal.toFixed(2) }];
@@ -123,18 +124,12 @@ export default function BillPage() {
 
   // ── Sirf Close Table ke liye validation ──
   const validateForClose = () => {
+    if (!validateCustomerPhone()) return false;
     if (!paymentSplits[0]?.mode?.trim()) {
       toast.error("Select payment method!");
       return false;
     }
-    // Single-split (Cash/UPI/Card) ka amount input hamesha readOnly hota hai
-    // aur live afterWalletTotal dikhata hai — jo submit hota hai wo bhi
-    // hamesha getFinalSplits() se live afterWalletTotal hi hota hai, kabhi
-    // paymentSplits[0].amount nahi. Isliye us (stale) value ko yahan check
-    // karna galat tha: payment mode select karne ke BAAD discount badalne
-    // par amount ka snapshot purana reh jaata tha aur "Payment zyada nahi ho
-    // sakta" bol kar Close Table/Save hi block kar deta tha, chahe asal me
-    // koi mismatch na ho.
+
     if (!isLending && !isAdvance && paymentSplits.length > 1) {
       const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
       if (!allModesSelected) {
@@ -172,10 +167,8 @@ export default function BillPage() {
     return true;
   };
 
-  // ── Print Bill ke liye ──
-  // Payment method yahan compulsory NAHI — bill bina payment method ke bhi print ho.
-  // Payment method Close Table (validateForClose) pe check hota hai.
-  const validateForPrint = () => {
+const validateForPrint = () => {
+    if (!validateCustomerPhone()) return false;
     if (!isLending && !isAdvance && paymentSplits.length > 1) {
       const allModesSelected = paymentSplits.every((p) => p.mode?.trim());
       if (!allModesSelected) {
@@ -190,8 +183,6 @@ export default function BillPage() {
         return false;
       }
     }
-    // Split-lending: lending split + non-lending splits must add up to the bill total,
-    // otherwise paid_amount/remaining_amount saved against the bill won't match its total.
     if (isSplitLending) {
       const splitSum = parseFloat((nonLendingPaid + lendingSplitAmt).toFixed(2));
       if (Math.abs(splitSum - afterWalletTotal) > 0.5) {
@@ -256,9 +247,7 @@ export default function BillPage() {
           phone: bill.customer_phone || "",
           address: bill.customer_address || "",
         });
-        // Given Amount ab saved cash_given_amount se prefill hota hai (agar
-        // pehli baar bill Cash ke saath save hua tha) — staff chahe to
-        // reprint pe amount badal bhi sakta hai.
+   
         setGivenAmount(
           bill.cash_given_amount != null ? String(bill.cash_given_amount) : ""
         );
@@ -268,8 +257,7 @@ export default function BillPage() {
           setDiscountMode("percent");
           setDiscountPct(((discAmt / sub) * 100).toFixed(2));
         }
-        // Bill ke saath jo total actually save hua tha, wahi freeze kar lo —
-        // isi se Grand Total banega, live menu/tax se dobara nahi.
+       
         setFrozenBillTotals({
           subtotal: sub,
           tax: parseFloat(bill.tax_amount || 0),
@@ -364,9 +352,6 @@ export default function BillPage() {
     !i.tax_group_id ? acc + i.price * i.qty : acc, 0
   );
 
-  // Reprint mode: bill ke saath jo subtotal/tax already save hua tha wahi
-  // dikhao — live menu/tax-rate se dobara mat nikalo (menu baad me badal
-  // sakta hai, jisse purane bill ka total galat ban jaata tha).
   const subTotal =
     isReprint && frozenBillTotals
       ? frozenBillTotals.subtotal
@@ -418,19 +403,6 @@ export default function BillPage() {
     0
   );
 
-  // Discount staff yahan reprint ke baad bhi badal sakta hai (jaise bill
-  // close hone se pehle discount adjust karna) — isliye jab tak order close
-  // NAHI hua, ye LIVE rehta hai. Bas jis subtotal par % lagta hai wo reprint
-  // me frozen wala (subTotal, jo upar se already frozen hai) hota hai,
-  // live-menu wala discountableSubTotal nahi — isse discount % badalne par
-  // bhi grandTotal sahi hi rehta hai, menu baad me badla ho tab bhi.
-  //
-  // Order close (completed) ho chuka ho to inputs already fieldset-disabled
-  // hain (upar isOrderClosed) — ab discount/total bhi 100% FROZEN (bill ke
-  // saath save hua wahi) dikhao, dobara live recompute mat karo. Warna
-  // paisa to settle ho chuka tha wahi reh jaata hai, bas rounding chhote
-  // intermediate-precision farak ki wajah se reprint har baar ₹1 idhar-udhar
-  // dikha sakta tha (jaisa ek purane bill pe actually hua).
   const discountAmount =
     isOrderClosed && frozenBillTotals
       ? frozenBillTotals.discount
@@ -466,14 +438,6 @@ export default function BillPage() {
     ? (isSplitLending ? lendingSplitAmt : Math.max(0, afterWalletTotal - givenAmt))
     : 0;
 
-  // ── Active offers ─────────────────────────────────
-  // "ItemPrice" offers (jaise "Cappuccino @ Rs79") POS pe item add karte
-  // waqt hi automatic lag chuke hote hain — inhe yahan coupon ki tarah
-  // dobara "apply" karne dena double-discount kar deta (item pe already
-  // offer price hai, phir coupon se ek aur discount kat jaata). Isliye
-  // is list se hamesha hata do. Query hamesha chalao (sirf coupon tab
-  // khulne par nahi) — offer-item detection (neeche) ko bhi in data ki
-  // zaroorat hai, chahe staff "Discount" tab hi dekh raha ho.
   const { data: offersData } = useQuery(
     ["active_offers_bill"],
     () => apiConnectorGet(endpoint.get_active_offers_api),
@@ -486,9 +450,7 @@ export default function BillPage() {
   const activeOffers = allActiveOffers.filter(
     (o) => !AUTO_OFFER_TYPES.includes(o.dg037_offer_type)
   );
-  // Auto item/category offers (fixed price, flat ₹ off, or % off) auto-apply
-  // just like ItemPrice — union all of them into one menu_id set for offer
-  // detection.
+ 
   const itemPriceMenuIds = new Set([
     ...allActiveOffers
       .filter((o) => AUTO_ITEM_TYPES.includes(o.dg037_offer_type) && o.dg037_menu_id)
@@ -499,16 +461,6 @@ export default function BillPage() {
       .map((id) => String(id)),
   ]);
 
-  // ── Offer-priced items already in the cart ─────────
-  // Agar cart mein koi item pehle se offer-price ke saath hai, to us order
-  // pe coupon bilkul nahi lagne dena (double-discount ka risk) — discount
-  // sirf tab allow karo jab cart mein koi non-offer item bhi ho.
-  //
-  // "isOfferItem" flag sirf usी POS session mein turant-add-kiye items pe
-  // milta hai — agar staff table dobara khole (order backend se reload
-  // hua), ye flag nahi hota. Isliye menu_id ko live active offers se bhi
-  // match karo, chahe item kahin se bhi aaya ho (naya add ho ya pehle se
-  // saved order se load hua ho).
   const isItemOffered = (i) => {
     if (i.isOfferItem) return true;
     const menuId = i.id ?? i.dg09_menu_id ?? i.dg07_menu_id ?? i.menu_id;
@@ -823,12 +775,7 @@ export default function BillPage() {
         given_amount: hasCash && givenAmt > 0 ? givenAmt.toFixed(2) : "",
         return_amount: hasCash && givenAmt > 0 ? returnAmt.toFixed(2) : "",
         items: orderItems.map((i) => {
-          // i.basePrice = menu ka regular price; i.price = is order me
-          // actually charged price (offer lagi ho to offer-price). Receipt
-          // par hamesha jo actually charge hua wahi dikhna chahiye — isliye
-          // price ko pehle priority, basePrice sirf fallback ke liye (jab
-          // price missing ho). Pehle ulta tha, isliye offer-wale item ka
-          // receipt par bhi full/regular price dikh jaata tha.
+          
           const itemRate = parseFloat(i.price ?? i.basePrice);
           return {
             name: i.dg09_name,
@@ -914,15 +861,7 @@ export default function BillPage() {
           return;
         }
       }
-      // Pehle order "completed" (WhatsApp bill receipt yahi trigger karta
-      // hai — sirf jab status pehli baar completed ho raha ho). Table wala
-      // call sequential/baad me isliye — wo "Table Time" (table_busy_seconds)
-      // calculate karta hai aur orderId explicitly bhejte hain taaki wo is
-      // order ko dhoond le chahe status ab "completed" ho chuka ho. Pehle
-      // ye dono parallel (Promise.all) chalte the, jisse race lag jaata tha:
-      // kabhi table wala order ko "completed" set kar deta tha isse pehle ki
-      // order-status wala apna "already completed?" check kare — WhatsApp
-      // skip ho jata, aur table_busy_seconds bhi hamesha "--" reh jata.
+    
       await apiConnectorPost(endpoint.update_order_status_api, {
         orderId,
         status: "completed"
@@ -943,9 +882,7 @@ export default function BillPage() {
             : "Table closed successfully!"
       );
 
-      // Dashboard's table grid and today's stats are cached (refetchOnMount:
-      // false) so they wouldn't otherwise notice this table just closed —
-      // refresh just those instead of reloading the whole app.
+     
       queryClient.refetchQueries("get_table");
       queryClient.invalidateQueries("panel_dashboard_main");
       navigate("/userdashboard");
@@ -1034,9 +971,6 @@ export default function BillPage() {
             advanceRemaining={advanceRemaining}
           />
 
-          {/* Order close (completed) ho gaya to payment/customer/discount lock —
-              fieldset disabled sab inputs-buttons ko band kar deta hai, layout
-              wahi rehta hai (display: contents). */}
           <fieldset disabled={isOrderClosed} style={{ display: "contents", border: 0, padding: 0, margin: 0 }}>
           <BillPaymentSection
             paymentSplits={paymentSplits}
@@ -1058,6 +992,8 @@ export default function BillPage() {
         <BillRightPanel
           customer={customer}
           setCustomer={setCustomer}
+          phoneError={phoneError}
+          setPhoneError={setPhoneError}
           customerSearch={customerSearch}
           setCustomerSearch={setCustomerSearch}
           customerList={customerList}
@@ -1184,10 +1120,6 @@ export default function BillPage() {
           items: orderItems.map((i) => ({
             name: i.dg09_name,
             qty: i.qty,
-            // basePrice addon/option surcharge (jaise "Large" size) ya offer
-            // discount include nahi karta — bill ki Rate/Amt hamesha asli
-            // final per-unit price (price) se dikhao, warna line ka Rate x Qty
-            // Sub Total se match hi nahi karta.
             rate: Number(i.price ?? i.basePrice).toFixed(2),
             total: ((i.price ?? i.basePrice) * i.qty).toFixed(2),
             remark: [...(i.predefinedRemarks || []), i.qtyRemark || ""].filter(Boolean).join(", "),

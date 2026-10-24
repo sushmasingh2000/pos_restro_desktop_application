@@ -3,6 +3,8 @@ import React from "react";
 export default function BillRightPanel({
   customer,
   setCustomer,
+  phoneError,
+  setPhoneError,
   customerSearch,
   setCustomerSearch,
   customerList,
@@ -63,6 +65,7 @@ export default function BillRightPanel({
                 key={c.id}
                 onClick={() => {
                   setSelectedCustomerId(c.id);
+                  setPhoneError("");
                   setCustomer({
                     name: c.name,
                     phone: c.phone,
@@ -255,18 +258,31 @@ export default function BillRightPanel({
           </label>
           <input
             value={customer.phone}
-            onChange={(e) =>
-              setCustomer((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))
-            }
+            onChange={(e) => {
+              const phone = e.target.value.replace(/\D/g, "").slice(0, 10);
+              setCustomer((p) => ({ ...p, phone }));
+              setPhoneError(phone && !/^[6-9]\d{9}$/.test(phone) ? "Invalid Mobile Number" : "");
+            }}
+            onBlur={() => {
+              if (customer.phone && !/^[6-9]\d{9}$/.test(customer.phone.trim())) {
+                setPhoneError("Invalid Mobile Number");
+              }
+            }}
             placeholder="Phone number"
             type="tel"
             inputMode="numeric"
             maxLength={10}
-            className={`${inp} ${(isLending || isAdvance) && !customer.phone
+            aria-invalid={!!phoneError}
+            className={`${inp} ${phoneError || ((isLending || isAdvance) && !customer.phone)
               ? "border-red-400/50"
               : ""
               }`}
           />
+          {phoneError && (
+            <p role="alert" className="mt-1 text-xs text-red-500">
+              {phoneError}
+            </p>
+          )}
         </div>
         <div className="main_input">
           <label>Address</label>

@@ -93,7 +93,7 @@ export default function ItemOptionsModal({ isOpen, onClose, item, onConfirm }) {
         </div>
 
         <div className="base_price px-3 mb-3">
-          Base: ₹{item.dg09_price}
+          Base: ₹{Number(item.dg09_price).toFixed(2)}
           {extraPrice > 0 && <span className="text-green ml-2">+₹{extraPrice}</span>}
           <span className="font-bold ml-2">
             = ₹{(parseFloat(item.dg09_price) + extraPrice).toFixed(2)}

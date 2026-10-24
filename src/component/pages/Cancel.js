@@ -79,6 +79,9 @@ export default function CancelOrderModal({ isOpen, onClose, orderId, onCancelled
         setAddToWastage(false);
         client.refetchQueries("get_table");
         client.removeQueries("getOrdersByTable");
+        client.invalidateQueries(["pending-orders"]);
+        client.invalidateQueries(["pending-count"]);
+        window.dispatchEvent(new Event("orders-updated"));
         onCancelled?.();
         onClose();
       } else {
