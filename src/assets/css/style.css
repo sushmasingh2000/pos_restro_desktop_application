@@ -2943,6 +2943,10 @@ button.next_btn {
         max-width: 100%;
     }
 
+    .modal_footer .update_btn{
+        width: fit-content;
+    }
+
     .desktop_links {
         display: none !important;
     }
@@ -5306,4 +5310,11 @@ button.cancel_btn_main {
     border-radius: 10px;
     padding: 11px 12px;
     white-space: nowrap;
+}
+
+.Order_Details_modal_header .back_btns {
+    font-size: 13px;
+    width: fit-content;
+    padding: 8px 15px;
+    height: auto;
 }

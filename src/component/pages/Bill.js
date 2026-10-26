@@ -930,7 +930,7 @@ const validateForPrint = () => {
             </p>
           </div>
         </div>
-        <button onClick={() => navigate(-1)}>← Back</button>
+        <button onClick={() => navigate(-1)} className="back_btns">Back</button>
       </div>
 
       <div
@@ -1054,7 +1054,7 @@ const validateForPrint = () => {
               className="cancel_btn"
               style={{ background: "rgba(220,38,38,0.2)", border: "1px solid rgba(248,113,113,0.4)", color: "#f87171" }}
             >
-              {cancelRequestPending ? "⏳ Cancel Pending" : "🚫 Cancel Order"}
+              {cancelRequestPending ? "Cancel Pending" : "Cancel Order"}
             </button>
           )}
         <div className="flex justify-end gap-3" style={{ width: "50%" }}>
@@ -1074,12 +1074,12 @@ const validateForPrint = () => {
                 {loading
                   ? "Processing..."
                   : isLending
-                    ? "📋 Save Due & Close"
+                    ? "Save Due & Close"
                     : isAdvance && advanceRemaining > 0
                       ? `Save Advance & Close (Due: ₹${isReprint ? reprintRemainingDue.toFixed(2) : advanceRemaining.toFixed(2)})`
                       : orderType === "dine_in"
-                        ? "🔒 Close Table"
-                        : "✅ Delivery Done"}
+                        ? "Close Table"
+                        : "Delivery Done"}
               </button>
             )}
 
@@ -1091,8 +1091,8 @@ const validateForPrint = () => {
             {loading
               ? "Saving..."
               : isReprint
-                ? "⟳ Reprint Bill"
-                : "🖨 Print Bill"}
+                ? "Reprint Bill"
+                : "Print Bill"}
           </button>
         </div>
       </div>
