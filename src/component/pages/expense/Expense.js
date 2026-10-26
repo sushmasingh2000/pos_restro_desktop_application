@@ -9,6 +9,8 @@ import { endpoint } from "../../../utils/APIRoutes";
 import moment from "moment";
 import * as XLSX from "xlsx";
 import Pagination from "../../../Shared/Page";
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 
 const ExpenseManagementReport = () => {
@@ -128,28 +130,35 @@ const ExpenseManagementReport = () => {
       </div>
 
       {/* FILTERS */}
-      <div className="flex flex-wrap items-end gap-3 px-3 pb-3">
-        <div className="main_input mt-0">
-          <label>Start Date</label>
-          <input type="date" value={startDate} max={endDate || undefined} onChange={(e) => setStartDate(e.target.value)} />
-        </div>
-        <div className="main_input mt-0">
-          <label>End Date</label>
-          <input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} />
-        </div>
-        <div className="main_input mt-0">
-          <label>Category</label>
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.dg024_expense_category_id} value={c.dg024_expense_category_id}>
-                {c.dg024_name}
-              </option>
-            ))}
-          </select>
-        </div>
+      <Row className="items-end px-3 pb-3 pt-3">
+        <Col md={3}>
+          <div className="main_input mt-0">
+            <label>Start Date</label>
+            <input type="date" value={startDate} max={endDate || undefined} onChange={(e) => setStartDate(e.target.value)} />
+          </div>
+        </Col>
+        <Col md={3}>
+          <div className="main_input mt-0">
+            <label>End Date</label>
+            <input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} />
+          </div>
+        </Col>
+        <Col md={3}>
+          <div className="main_input mt-0">
+            <label>Category</label>
+            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+              <option value="">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.dg024_expense_category_id} value={c.dg024_expense_category_id}>
+                  {c.dg024_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </Col>
+        <Col md={3}>
         {(startDate || endDate || categoryId) && (
-          <button className="cancel_btn" onClick={handleClearFilters}>✕ Clear Filters</button>
+          <button className="cancel_btn_main" onClick={handleClearFilters}>Clear Filters</button>
         )}
 
         {/* CASH vs ONLINE SPLIT */}
@@ -166,7 +175,8 @@ const ExpenseManagementReport = () => {
             ))}
           </div>
         )}
-      </div>
+        </Col>
+      </Row>
 
       {/* TABLE CONTAINER */}
       <div className="main_table_container  border-0" style={{borderRadius: '0px'}}>
