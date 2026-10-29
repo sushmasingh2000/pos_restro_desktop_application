@@ -237,7 +237,7 @@ export default function LendingStatementModal({ isOpen, onClose, customer, lendi
               padding: "10px 28px",
               borderRadius: 10,
               border: "none",
-              background: "rgba(124,58,237,0.9)",
+              background: "linear-gradient(180deg, #8A4E22, #4A2410)",
               color: "#fff",
               fontSize: 14,
               fontWeight: "bold",

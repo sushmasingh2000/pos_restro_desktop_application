@@ -11,6 +11,7 @@ export const endpoint = {
   generate_kot_api: `${domain}/api/v1/kot/generate`,
   update_table_status_api: `${domain}/api/v1/update-table-status`,
   order_branch_status_api: `${domain}/api/v1/order-by-branch-status`,
+  order_branch_status_counts_api: `${domain}/api/v1/order-by-branch-status-counts`,
   order_by_type: `${domain}/api/v1/order-by-type`,
   get_kitchen_kot_api: `${domain}/api/v1/kot/get-kitchen-kot`,
   update_kitchen_kot_api: `${domain}/api/v1/kot/update-kitchen-kot`,
@@ -20,6 +21,7 @@ export const endpoint = {
 
   // get_sales_summary: `${domain}/api/v1/monthly-dashboard`,
   item_options_pos_api: `${domain}/api/v1/item-options-pos/`,
+  item_options_pos_bulk_api: `${domain}/api/v1/item-options-pos-bulk`,
   active_offers_api: `${domain}/api/v1/offer/active-offers`,
 
   update_bill_details_api: `${domain}/api/v1/update-bill`,
