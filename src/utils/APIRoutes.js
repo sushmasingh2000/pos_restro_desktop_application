@@ -26,6 +26,7 @@ export const endpoint = {
 
   update_bill_details_api: `${domain}/api/v1/update-bill`,
   get_bill_by_id_api: `${domain}/api/v1/get-bill`,
+  ebill_link_api: `${domain}/api/v1/ebill-link`,
   tax_get_api: `${domain}/api/v1/bill/taxes`,
   charge_get_api: `${domain}/api/v1/bill/charges`,
   payment_mode_get_api: `${domain}/api/v1/bill/payment-modes`,

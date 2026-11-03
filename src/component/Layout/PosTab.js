@@ -129,14 +129,17 @@ const PosTab = () => {
   };
 
 
-  // PosTab har POS/orders page pe naya mount hota hai. Pehle har mount pe 2 API
-  // hit hoti thi; ab react-query cache se 20 sec tak wahi counts milte hain, aur
-  // 30 sec polling pehle jaisi hai.
+  // PosTab har POS/orders page pe naya mount hota hai. Order bahut jagah se badalte
+  // hain (bill, cancel, kitchen status...) aur kai jagah PosTab mounted hi nahi
+  // hota, isliye cache pe bharosa nahi — har mount pe fresh counts lao (pehle jaisa).
+  // react-query purane counts turant dikhata hai (flicker nahi) aur ek hi samay ki
+  // duplicate requests ko ek kar deta hai. 30 sec polling pehle jaisi hai.
   const { data: countsData, refetch: refetchCounts } = useQuery(
     ["pos_tab_counts", localStorage.getItem("token")],
     fetchCounts,
     {
-      staleTime: 20000,
+      staleTime: 0,
+      refetchOnMount: "always",
       refetchInterval: 30000,
       refetchOnWindowFocus: false,
       retry: false,

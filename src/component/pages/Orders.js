@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
-import { apiConnectorPost } from "../../utils/APIConnector";
+import { apiConnectorPost, apiConnectorGetLive } from "../../utils/APIConnector";
 import { endpoint } from "../../utils/APIRoutes";
 import { useNavigate } from "react-router-dom";
 import Row from "react-bootstrap/esm/Row";
@@ -165,6 +165,25 @@ const Orders = () => {
     o.orderId?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Customer wala public e-bill link — live server se (bill wahin se bhejna hai).
+  const handleInvoice = async (order) => {
+    if (!order.billId) { toast.error("Bill not generated yet"); return; }
+    const tid = toast.loading("Getting invoice link...");
+    try {
+      const res = await apiConnectorGetLive(`${endpoint.ebill_link_api}/${order.billId}`);
+      toast.dismiss(tid);
+      if (res?.data?.success && res.data.url) {
+        try { await navigator.clipboard.writeText(res.data.url); toast.success("Invoice link copied"); } catch { /* clipboard blocked */ }
+        window.open(res.data.url, "_blank");
+      } else {
+        toast.error(res?.data?.message || "Invoice link not available");
+      }
+    } catch {
+      toast.dismiss(tid);
+      toast.error("Server error");
+    }
+  };
+
   const handleView = (order) => {
     navigate("/bill", {
       state: {
@@ -324,7 +343,7 @@ const Orders = () => {
               <tr>
                 {["S.No.",
                   "Order Id", "Date", "Time", "Type", "Table No", "SubTotal", "Discount", "Charge",
-                  "Tax", "Paid", "MOP", "Status", "Action"
+                  "Tax", "Paid", "MOP", "Status", "Invoice", "Action"
                 ].map((h) => (
                   <th key={h} >{h}</th>
                 ))}
@@ -336,13 +355,13 @@ const Orders = () => {
 
               {isLoading ? (
                 <tr>
-                  <td colSpan="14" className="text-center p-6 text-white/50">
+                  <td colSpan="15" className="text-center p-6 text-white/50">
                     Loading orders...
                   </td>
                 </tr>
               ) : formattedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="14" className="text-center p-6 text-white/40">
+                  <td colSpan="15" className="text-center p-6 text-white/40">
                     No orders found
                   </td>
                 </tr>
@@ -382,6 +401,18 @@ const Orders = () => {
                         >
                           {order.status}
                         </span>
+                      </td>
+
+                      <td>
+                        {order.status === "completed" && order.billId ? (
+                          <button
+                            onClick={() => handleInvoice(order)}
+                            className="main_btn"
+                            style={{ fontSize: 11, padding: "4px 10px" }}
+                          >
+                            🧾 Invoice
+                          </button>
+                        ) : "--"}
                       </td>
 
                       <td>
