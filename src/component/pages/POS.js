@@ -27,6 +27,17 @@ function formatReceiptDateTime() {
   return `${yyyy}-${mm}-${dd}, ${hh}:${min}:${ss}`;
 }
 
+// Table ke naam aur item options bahut kam badalte hain — POS har baar kholne pe
+// inhe dobara server se na mangwao. Module-level cache 5 min tak chalta hai
+// (page reload / app restart pe apne aap fresh).
+const POS_STATIC_TTL = 5 * 60 * 1000;
+// Cache login token se bandha hai — dusra user/branch login kare to purana cache
+// kabhi use nahi hota.
+let tableNameMapCache = { map: null, at: 0, key: null };
+let optionsBulkCache = { map: null, at: 0, key: null };
+const cacheKey = () => localStorage.getItem("token");
+const cacheFresh = (c) => !!c.map && c.key === cacheKey() && Date.now() - c.at < POS_STATIC_TTL;
+
 const POS = () => {
   const location = useLocation();
   const { type } = useParams();
@@ -76,11 +87,17 @@ const POS = () => {
   // ── Fetch tables ──────────────────────────────────────────
   useEffect(() => {
     const fetchTables = async () => {
+      if (cacheFresh(tableNameMapCache)) {
+        setTableNameMap(tableNameMapCache.map);
+        return;
+      }
       try {
         const res = await apiConnectorPost(endpoint.table_branch_api);
         const tables = res?.data?.result || [];
         const map = {};
         tables.forEach((t) => { map[t.dg05_table_id] = t.dg05_table_name; });
+        // Sirf tab cache karo jab asli response aaya ho (fail pe khaali map nahi)
+        if (res?.data?.success && tables.length) tableNameMapCache = { map, at: Date.now(), key: cacheKey() };
         setTableNameMap(map);
       } catch (err) {
         console.error("Error fetching tables:", err);
@@ -212,13 +229,42 @@ const POS = () => {
     return items;
   }, [selectedCategory, itemsData, categories, searchTerm]);
 
-  const { data: orderData } = useQuery(
+  const { data: orderData, isFetching: orderFetching } = useQuery(
     ["getOrdersByTable", table],
     () => apiConnectorPost(endpoint.get_orders_by_table_api, { tableId: table }),
     // cacheTime 0 — table close hone ke baad purana cached order (items + bill id)
     // dobara table kholne pe flash hokar screen pe atak jata tha. Hamesha fresh lo.
     { enabled: !!table && type === "dine-in", cacheTime: 0 }
   );
+
+  // Item options ko ek hi bulk request me background me cache kar lo. Warna har
+  // item ke pehle click pe addToOrder network call ka wait karta hai. Per-item
+  // prefetch bade menu (100+ items) pe server ko requests se bhar deta tha, isliye
+  // sirf ek request, aur wo bhi table ka order aane ke baad.
+  useEffect(() => {
+    if (!itemsData.length || orderFetching) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        let map;
+        if (cacheFresh(optionsBulkCache)) {
+          map = optionsBulkCache.map;
+        } else {
+          const res = await apiConnectorGet(endpoint.item_options_pos_bulk_api);
+          if (!res?.data?.success || !res.data.result || typeof res.data.result !== "object") return;
+          map = res.data.result;
+          optionsBulkCache = { map, at: Date.now(), key: cacheKey() };
+        }
+        if (cancelled) return;
+        itemsData.forEach((m) => {
+          if (itemOptionsCache.current[m.dg09_menu_id] === undefined) {
+            itemOptionsCache.current[m.dg09_menu_id] = map[m.dg09_menu_id] || [];
+          }
+        });
+      } catch (e) { /* click pe per-item call chalega */ }
+    })();
+    return () => { cancelled = true; };
+  }, [data, orderFetching]);
 
   useEffect(() => {
     setPreviousItems([]);
@@ -495,6 +541,8 @@ const POS = () => {
       });
 
       if (res?.data?.success) {
+        // PosTab ke badge counts turant refresh ho (wo ab 20 sec cache karta hai)
+        window.dispatchEvent(new Event("orders-updated"));
         const orderId = res?.data?.order?.orderId ?? res?.data?.order?.offlineOrderId;
         const kotNo = res?.data?.order?.kotNo || 1;
         const captainName = res?.data?.order?.captainName || "—";
@@ -604,101 +652,171 @@ const POS = () => {
   };
 
 
+  // Menu grid ko memoize karo — cart update (orderItems) pe 100+ cards dobara
+  // render nahi hone chahiye. addToOrder ref se call hota hai taaki grid
+  // sirf menu/offer/search change pe hi rebuild ho.
+  const addToOrderRef = React.useRef(addToOrder);
+  addToOrderRef.current = addToOrder;
+  // Cart me jo items hain unki menu-id wise total qty — menu card highlight ke liye
+  const qtyByMenuId = React.useMemo(() => {
+    const map = {};
+    orderItems.forEach((i) => { map[i.id] = (map[i.id] || 0) + i.qty; });
+    return map;
+  }, [orderItems]);
+  const menuGrid = React.useMemo(
+    () => (
+          filteredItems.map((item) => {
+            const offer = offerByMenuId[item.dg09_menu_id];
+            const selectedQty = qtyByMenuId[item.dg09_menu_id] || 0;
+            return (
+              <div
+                key={item.dg09_menu_id}
+                onClick={() => addToOrderRef.current(item)}
+                className="main_card main_card_2"
+                style={{
+                  ...(offer ? { position: "relative", border: "1.5px solid #f59e0b" } : {}),
+                  ...(selectedQty > 0
+                    ? { position: "relative", border: "2px solid #8a4e22", background: "#f3dfc4", boxShadow: "0 0 0 2px rgba(138,78,34,0.2)" }
+                    : {}),
+                }}
+              >
+                {selectedQty > 0 && (
+                  <div
+                    style={{
+                      position: "absolute", top: 0, left: 0, zIndex: 2,
+                      background: "#8a4e22", color: "#fff",
+                      fontSize: "11px", fontWeight: 700,
+                      minWidth: "10px", width: "auto", height: "15px", lineHeight: "16px",
+                      textAlign: "center", borderRadius: "11px", padding: "0 6px",
+                      display: "block", overflow: "visible",
+                    }}
+                  >
+                    {selectedQty}
+                  </div>
+                )}
+                {offer && (
+                  <span
+                    title={offer.name}
+                    style={{
+                      position: "absolute", top: -8, right: -8,
+                      background: "#f59e0b", color: "#fff",
+                      fontSize: 10, fontWeight: 700,
+                      padding: "2px 7px", borderRadius: 20,
+                      boxShadow: "0 2px 6px rgba(245,158,11,0.5)",
+                    }}
+                  >
+                    🔥 OFFER
+                  </span>
+                )}
+
+                {/* <img
+                  src={domain + item.dg09_image_url}
+                  alt={item.dg09_image_url}
+                  className="w-full h-16 object-cover rounded"
+                /> */}
+                <h6>{item.dg09_name}</h6>
+                {offer ? (
+                  <h3>
+                    <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.75em", marginRight: 6 }}>
+                      ₹{Number(item.dg09_price).toFixed(2)}
+                    </span>
+                    ₹{Number(offer.price).toFixed(2)}
+                  </h3>
+                ) : (
+                  <h3>₹{Number(item.dg09_price).toFixed(2)}</h3>
+                )}
+              </div>
+            );
+          })
+    ),
+    [filteredItems, offerByMenuId, qtyByMenuId]
+  );
+
   // ── UI ────────────────────────────────────────────────────
   return (
     <div>
       <PosTab />
-      <div className="flex main_take_away gap-3">
-        <div className="order_table_main_box">
-          <div className="d-flex align-items-center justify-content-between mb-3 mt-1">
-            <div className="menu_categroy_heading">
-              <h5>Menu Categories</h5>
-              <p>Select a category to add items</p>
+      <div className="flex main_take_away">
+        {/* LEFT — CATEGORIES */}
+        <div className="w-[15%] h-full list_category_btnt">
+          <div
+            className="list_items_btn"
+            onClick={() => setSelectedCategory("All")}
+          >
+            All
+          </div>
+          {categories.map((cat) => (
+            <div
+              key={cat.dg08_category_id}
+              onClick={() => setSelectedCategory(cat.dg08_category_name)}
+              className={`list_items_btn
+                  ${selectedCategory === cat.dg08_category_name
+                  ? "gold_bg"
+                  : ""}`}
+            >
+              {cat.dg08_category_name}
             </div>
-            {/* SEARCH BAR */}
-            <div className="search-bar-wrap">
-              <div className="search-bar">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input
-                  type="text"
-                  placeholder="Search menu items..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className=""
-                />
-              </div>
+          ))}
+        </div>
+
+        {/* CENTER — MENU ITEMS */}
+        <div className="w-3/5 h-full overflow-y-auto p-3 pt-0 grid grid-cols-3 gap-3 content-start">
+          {/* SEARCH BAR */}
+          <div className="search-bar-wrap w-full col-span-3">
+            <div className="search-bar">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input
+                type="text"
+                placeholder="Search menu items..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className=""
+              />
             </div>
           </div>
-          <div className="d-flex justify-content-between">
-            {/* LEFT — CATEGORIES */}
-            <div className="h-full list_category_btnt">
+          {filteredItems.map((item) => {
+            const offer = offerByMenuId[item.dg09_menu_id];
+            return (
               <div
-                className="list_items_btn"
-                onClick={() => setSelectedCategory("All")}
+                key={item.dg09_menu_id}
+                onClick={() => addToOrder(item)}
+                className="main_card main_card_2"
+                style={offer ? { position: "relative", border: "1.5px solid #f59e0b" } : undefined}
               >
-                <i class="ri-arrow-right-double-line"></i>  All
-              </div>
-              {categories.map((cat) => (
-                <div
-                  key={cat.dg08_category_id}
-                  onClick={() => setSelectedCategory(cat.dg08_category_name)}
-                  className={`list_items_btn
-                        ${selectedCategory === cat.dg08_category_name
-                      ? "gold_bg"
-                      : ""}`}
-                >
-                  <i class="ri-arrow-right-double-line"></i> {cat.dg08_category_name}
-                </div>
-              ))}
-            </div>
-            {/* CENTER — MENU ITEMS */}
-            <div className="overflow-x-auto p-3 pt-0 grid-container gap-3 content-start w-100">
-
-              {filteredItems.map((item) => {
-                const offer = offerByMenuId[item.dg09_menu_id];
-                return (
-                  <div
-                    key={item.dg09_menu_id}
-                    onClick={() => addToOrder(item)}
-                    className="main_card main_card_2"
-                    style={offer ? { position: "relative", border: "1.5px solid #f59e0b" } : undefined}
+                {offer && (
+                  <span
+                    title={offer.name}
+                    style={{
+                      position: "absolute", top: -8, right: -8,
+                      background: "#f59e0b", color: "#fff",
+                      fontSize: 10, fontWeight: 700,
+                      padding: "2px 7px", borderRadius: 20,
+                      boxShadow: "0 2px 6px rgba(245,158,11,0.5)",
+                    }}
                   >
-                    {offer && (
-                      <span
-                        title={offer.name}
-                        style={{
-                          position: "absolute", top: -8, right: -8,
-                          background: "#f59e0b", color: "#fff",
-                          fontSize: 10, fontWeight: 700,
-                          padding: "2px 7px", borderRadius: 20,
-                          boxShadow: "0 2px 6px rgba(245,158,11,0.5)",
-                        }}
-                      >
-                        🔥 OFFER
-                      </span>
-                    )}
+                    🔥 OFFER
+                  </span>
+                )}
 
-                    {/* <img
-                        src={domain + item.dg09_image_url}
-                        alt={item.dg09_image_url}
-                        className="w-full h-16 object-cover rounded"
-                      /> */}
-                    <h6>{item.dg09_name}</h6>
-                    {offer ? (
-                      <h3>
-                        <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.75em", marginRight: 6 }}>
-                          ₹{Number(item.dg09_price).toFixed(2)}
-                        </span>
-                        ₹{Number(offer.price).toFixed(2)}
-                      </h3>
-                    ) : (
-                      <h3>₹{Number(item.dg09_price).toFixed(2)}</h3>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                {/* <img
+                  src={domain + item.dg09_image_url}
+                  alt={item.dg09_image_url}
+                  className="w-full h-16 object-cover rounded"
+                /> */}
+                <h6>{item.dg09_name}</h6>
+                {offer ? (
+                  <h3>
+                    <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.75em", marginRight: 6 }}>
+                      ₹{Number(item.dg09_price).toFixed(2)}
+                    </span>
+                    ₹{Number(offer.price).toFixed(2)}
+                  </h3>
+                ) : (
+                  <h3>₹{Number(item.dg09_price).toFixed(2)}</h3>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* RIGHT — BILL PANEL */}
@@ -755,8 +873,13 @@ const POS = () => {
             <div class="cart-col-h"></div>
           </div>
           <div className="cart-items">
+            {orderFetching && orderItems.length === 0 && (
+              <div style={{ padding: "14px 0", textAlign: "center", fontSize: 12, color: "#8a4e22" }}>
+                Loading order…
+              </div>
+            )}
             {orderItems.map((item) => (
-              <div className="cart-row">
+              <div className="cart-row" key={`${item.id}-${item.dg09_name}`}>
                 <div className="cart-item-name">{item.dg09_name}</div>
                 <div className="cart-qty-wrap">
                   {modifyMode ? (

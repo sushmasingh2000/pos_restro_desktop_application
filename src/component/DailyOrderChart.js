@@ -9,41 +9,8 @@ const BLUE = {
   100: "#f9ead4", 50: "#fbf0e0",
 };
 
-const WEEK_DATA = [
-  { day: "Mon", restaurant: 42, online: 18 },
-  { day: "Tue", restaurant: 55, online: 27 },
-  { day: "Wed", restaurant: 38, online: 21 },
-  { day: "Thu", restaurant: 67, online: 34 },
-  { day: "Fri", restaurant: 91, online: 48 },
-  { day: "Sat", restaurant: 83, online: 52 },
-  { day: "Sun", restaurant: 60, online: 31 },
-];
-
-const MONTH_DATA = Array.from({ length: 30 }, (_, i) => ({
-  day: `${i + 1}`,
-  restaurant: Math.round(30 + Math.random() * 70),
-  online: Math.round(10 + Math.random() * 40),
-}));
-
-const TODAY_DATA = [
-  { hour: "9am", restaurant: 4, online: 1 },
-  { hour: "10am", restaurant: 7, online: 3 },
-  { hour: "11am", restaurant: 12, online: 5 },
-  { hour: "12pm", restaurant: 22, online: 11 },
-  { hour: "1pm", restaurant: 18, online: 9 },
-  { hour: "2pm", restaurant: 10, online: 4 },
-  { hour: "3pm", restaurant: 6, online: 3 },
-  { hour: "4pm", restaurant: 8, online: 5 },
-  { hour: "5pm", restaurant: 14, online: 7 },
-  { hour: "6pm", restaurant: 20, online: 10 },
-  { hour: "7pm", restaurant: 25, online: 13 },
-  { hour: "8pm", restaurant: 16, online: 8 },
-];
-
 const RANGES = ["Today", "This week", "This month"];
 const CHART_TYPES = ["Bar", "Line"];
-
-
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -76,8 +43,6 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function DailyOrdersChart({ data = [] }) {
   const [range, setRange] = useState("This week");
   const [chartType, setChartType] = useState("Bar");
-  const [fromDate, setFromDate] = useState("2026-06-04");
-  const [toDate, setToDate] = useState("2026-06-04");
 
 const chartData = useMemo(() => {
   return (data || []).map(item => ({
@@ -91,13 +56,6 @@ const chartData = useMemo(() => {
 }, [data]);
 
   const xKey = range === "Today" ? "hour" : "day";
-
-  const totals = useMemo(() => ({
-    total: chartData.reduce((s, d) => s + d.restaurant + d.online, 0),
-    restaurant: chartData.reduce((s, d) => s + d.restaurant, 0),
-    online: chartData.reduce((s, d) => s + d.online, 0),
-  }), [chartData]);
-
   const barRadius = range === "This month" ? [2, 2, 0, 0] : [5, 5, 0, 0];
 
   return (

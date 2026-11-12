@@ -867,11 +867,14 @@ const validateForPrint = () => {
         status: "completed"
       });
       if (orderType === "dine_in" && tableId) {
-        await apiConnectorPost(endpoint.update_table_status_api, {
+        const tableRes = await apiConnectorPost(endpoint.update_table_status_api, {
           tableId,
           orderId,
           status: "Available",
         });
+        if (tableRes?.data?.code === "TABLE_HAS_UNBILLED_ORDER") {
+          toast.error(tableRes.data.message);
+        }
       }
 
       toast.success(
