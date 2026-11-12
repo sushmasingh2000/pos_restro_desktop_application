@@ -26,7 +26,7 @@ export default function Sidebar() {
         </div>
         <div>
           <h1>Platter Way</h1>
-          <p>Smart Restaurant Solutions.</p>
+          <p>Smart POS. Better Business.</p>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export default function Sidebar() {
       </ul>
 
       
-      <div className="email_sidebar">
+      <div className="">
         <UserProfileMenu
           apiGet={apiConnectorGet}
           apiPost={apiConnectorPost}

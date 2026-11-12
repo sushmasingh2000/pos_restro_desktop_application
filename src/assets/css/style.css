@@ -290,7 +290,7 @@ input.login_input::placeholder {
     border-radius: 10px;
     font-size: 15px;
     font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -325,7 +325,7 @@ input.login_input::placeholder {
     border-radius: 10px;
     font-size: 14px;
     font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -428,10 +428,10 @@ input.login_input::placeholder {
 
 
 .main_sidebar {
-    background: #ffffff;
-    background-size: cover;
+    background: url(../images/logo/siderimg.png);
     position: relative;
     border-right: 1px solid #F0E5D5;
+    background-size: cover;
 }
 
 .sidebar_logo {
@@ -439,7 +439,7 @@ input.login_input::placeholder {
     align-items: center;
     gap: 10px;
     padding: 10px 15px;
-    border-bottom: 1px solid #F0E5D5;
+    border-bottom: 1px solid #f0e5d51f;
     margin-bottom: 20px;
 }
 
@@ -453,17 +453,17 @@ input.login_input::placeholder {
 }
 
 .sidebar_logo h1 {
-    font-size: 23px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 700;
     margin: 0;
-    color: #4A2410;
-    line-height: 23px;
+    color: #ffffff;
+    line-height: 24px;
 }
 
 .sidebar_logo p {
-    font-size: 10px;
+    font-size: 11px;
     margin: 0;
-    color: #8A705C;
+    color: #d1ab88;
 }
 
 .main_sidebar .sidebar_links {
@@ -476,17 +476,16 @@ input.login_input::placeholder {
     margin: 0 10px !important;
 }
 
-.main_sidebar .sidebar_links li a,
-.main_sidebar .sidebar_links li button {
+.main_sidebar .sidebar_links li a, .main_sidebar .sidebar_links li button {
     text-decoration: none;
     border: 0 !important;
     background: transparent;
     font-size: 14px !important;
-    color: #5C4433;
-    padding: 8px 8px;
+    color: #ffe7d7;
+    padding: 11px 13px;
     gap: 10px;
     border-radius: 10px;
-    margin: 6px 0px;
+    margin: 2px 0px;
 }
 
 .main_sidebar .sidebar_links li a span,
@@ -495,49 +494,39 @@ input.login_input::placeholder {
     font-weight: 500;
 }
 
-.main_sidebar .sidebar_links li a span svg,
-.main_sidebar .sidebar_links li button div svg {
-    width: 30px;
-    height: 30px;
-    background: #F5EADB;
-    border-radius: 5px;
-    padding: 6px;
-    color: #5C4433;
-    border: 1px solid #EADCC8;
+.main_sidebar .sidebar_links li a span svg, .main_sidebar .sidebar_links li button div svg {
+    height: 20px;
+    color: #e6b162;
 }
 
 .main_sidebar .sidebar_links li a[aria-current="page"] {
-    background: linear-gradient(180deg, #F3E3CE, #EFDCC2);
     color: #4A2410 !important;
+    background: linear-gradient(45deg, #fce9c5, #e4ac59);
 }
 
 .main_sidebar .sidebar_links li a[aria-current="page"] span svg {
-    background: #8A4E22;
-    color: #fff;
+    color: #3d200c;
 }
 
-.main_sidebar .sidebar_links li a:hover,
-.main_sidebar .sidebar_links li button:hover {
-    background: #F7EEE1;
+.main_sidebar .sidebar_links li a:hover, .main_sidebar .sidebar_links li button:hover {
+    color: #4A2410 !important;
+    background: linear-gradient(45deg, #fce9c5, #e4ac59);
 }
 
-.main_sidebar .sidebar_links li a:hover span svg,
-.main_sidebar .sidebar_links li button:hover div svg {
-    background: #8A4E22;
-    color: #fff;
+.main_sidebar .sidebar_links li a:hover span svg, .main_sidebar .sidebar_links li button:hover div svg {
+    color: #3d200c;
 }
 
 
 .email_sidebar {
     position: fixed;
-    bottom: 0;
-    padding: 13px 15px;
+    bottom: 8px;
+    padding: 8px 15px 13px 15px;
     display: flex;
     align-items: center;
     gap: 13px;
     width: 256px;
-    border-top: 1px solid #eadcc8;
-    background: #ffffff;
+    border-top: 1px solid #eadcc814;
     z-index: 10;
     left: 0;
 }
@@ -556,10 +545,10 @@ input.login_input::placeholder {
 }
 
 .email_sidebar h6 {
-    font-size: 15px;
+    font-size: 14px;
     margin: 0;
-    color: #4A2410;
-    font-weight: 800;
+    color: #af9482;
+    font-weight: 600;
 }
 
 .email_sidebar p {
@@ -870,15 +859,16 @@ nav {
 }
 
 .chart_header button {
-    font-size: 11px;
-    color: 8A705C;
+    font-size: 12px;
+    color: #7a4002;
     padding: 5px;
     border-radius: 7px;
+    font-weight: 600;
 }
 
 .chart_header button.active_tab {
-    background: var(--primary-color);
-    color: #fff;
+       color: #fff7e9 !important;
+    background: linear-gradient(181deg, #a15400, #361b05);
 }
 
 .chart_header .flex.gap-2 {
@@ -1383,16 +1373,6 @@ nav {
     background: #eadcc8;
 }
 
-.main_table_container table thead tr th {
-    font-size: 13px;
-    padding: 10px 15px;
-    border-radius: 0;
-    font-weight: 600;
-    white-space: nowrap;
-    color: #8A705C;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-}
 
 
 .main_table_container table tbody tr td {
@@ -1960,20 +1940,25 @@ button.add_item {
 } */
 
 .main_tabs button {
-    padding: 10px 15px;
+    padding: 11px 25px;
     color: #8b7864;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
+    border-radius: 50px;
 }
 
 .main_tabs {
-    border-bottom: 1.5px solid #EADCC8;
+    background: #fff;
+    border-radius: 50px;
+    width: fit-content;
 }
 
 button.acive_tab {
-    color: var(--primary-color);
-    border-bottom: 2px solid var(--primary-color);
+    color: #fff7e9 !important;
+    background: linear-gradient(181deg, #a15400, #361b05);
 }
+
+
 
 .table_card {
     background: #fff;
@@ -2117,34 +2102,29 @@ button.acive_tab {
     height: 645px;
 }
 
-.list_category_btnt {
-    background: linear-gradient(180deg, #8A4E22, #4A2410) !important;
-    border-top: 0;
-    padding: 0px 0px;
-    height: 645px;
-    overflow-y: scroll;
-}
+
 
 .list_category_btnt .list_items_btn {
-    padding: 7px 0px;
-    color: #ffffff;
+    padding: 9px 15px;
+    color: #3a1c05;
     font-size: 12px;
     font-weight: 500;
     transition: all .15s;
     width: 100%;
-    display: flex;
     cursor: pointer;
     white-space: nowrap;
     border-radius: 7px;
-    justify-content: center;
+    text-transform: capitalize;
+    background: #fbf0e3;
+    margin: 5px 0px;
+    display: flex;
+    gap: 5px;
 }
 
 .list_items_btn.gold_bg {
-    background: var(--primary-color);
-    color: #fff;
-    border-color: var(--primary-color);
+    color: #fff7e9 !important;
+    background: linear-gradient(181deg, #a15400, #361b05);
 }
-
 .main_food_type_btn {
     background: var(--primary-color);
     padding: 6px 18px;
@@ -3354,15 +3334,14 @@ button.delete_btn:hover {
 
 
 .main_cards table thead tr th {
-    background: #FAF2E6;
+    background: #faecdb;
     padding: 10px 14px;
-    font-size: 11px;
+    font-size: 13.5px;
     font-weight: 600;
-    color: #8A705C;
-    letter-spacing: .5px;
-    text-transform: uppercase;
+    color: #805436;
     border-top: 1px solid #F0E5D5;
     border-bottom: 1px solid #F0E5D5;
+    white-space: nowrap;
 }
 
 .main_cards table tbody tr td {
@@ -4295,16 +4274,17 @@ button.delete_btn:hover {
 }
 
 .table_dsb {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    padding: 15px;
-    background: #ffffff;
-    border-radius: 15px;
-    border: 1px solid #EADCC8;
-    position: relative;
     z-index: 1;
     overflow: hidden;
+    background: rgb(255, 255, 255);
+    position: relative;
+    border: 1px solid #eadcc8;
+    border-radius: 14px;
+    padding: 17px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: rgba(0, 0, 0, 0.06) 0px 2px 8px;
 }
 
 .table_dsb::before {
@@ -4324,17 +4304,18 @@ button.delete_btn:hover {
 .table_dsb .main_icon {
     width: 50px;
     height: 50px;
-    background: #eff5ff;
+    background: linear-gradient(
+181deg, #a15400, #361b05);
     min-width: 50px;
     padding: 7px;
-    border-radius: 8px;
-    border: 1px solid #eadcc8;
+    border-radius: 10px;
 }
 
 .table_dsb h4 {
     font-weight: 700;
     font-size: 20px;
     margin-bottom: 2px;
+    color: #381b05;
 }
 
 .table_dsb p {
@@ -4358,7 +4339,7 @@ button.delete_btn:hover {
 .search-box svg {
     width: 15px;
     height: 15px;
-    stroke: #d9c19f;
+    stroke: #a98e69;
     stroke-width: 2;
     fill: none;
     flex-shrink: 0;
@@ -4374,7 +4355,7 @@ button.delete_btn:hover {
 }
 
 .search-box input::placeholder {
-    color: #d9c19f;
+    color: #a98e69;
     font-size: 13px;
 }
 
@@ -4470,23 +4451,17 @@ button.delete_btn:hover {
     background: #eadcc8;
 }
 
-.search-bar-wrap {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    padding: 15px 0px 10px 0;
-}
+
 
 .search-bar {
     display: flex;
     align-items: center;
     gap: 9px;
-    background: #FFFCF8;
-    border: 1px solid #EADCC8;
+    background: #f6eee3;
+    border: 1px solid #eadcc8;
     border-radius: 10px;
     padding: 9px 14px;
     width: 100%;
-    box-shadow: 0 1px 4px rgba(37, 99, 235, .06);
     transition: border-color .15s, box-shadow .15s;
 }
 
@@ -4507,13 +4482,14 @@ button.delete_btn:hover {
     color: #623417;
     width: 100%;
 }
+.search-bar input::placeholder{
+    color:  #884d218f;
+}
 
 .cart_post {
     background: #ffffff;
-    border-left: 1px solid #EADCC8;
-    box-shadow: -2px 0 12px rgba(37, 99, 235, .06);
-    height: 645px;
-    overflow-y: scroll;
+    border-radius: 15px;
+    border: 1px solid #eadcc8;
 }
 
 .cart-items {
@@ -4534,10 +4510,9 @@ button.delete_btn:hover {
 }
 
 .cart-col-h {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
-    color: #a96e43;
-    letter-spacing: .6px;
+    color: #7b4925;
     text-transform: uppercase;
 }
 
@@ -4749,19 +4724,20 @@ button.delete_btn:hover {
 /* ── User Profile Menu ─────────────────────────────────────── */
 
 .profile-avatar-sm {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
     font-weight: 700;
     font-size: 13px;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
     cursor: pointer;
     transition: box-shadow .2s;
+    color: #4A2410 !important;
+    background: linear-gradient(45deg, #fce9c5, #e4ac59) !important;
 }
 
 .profile-avatar-sm:hover {
@@ -4797,7 +4773,7 @@ button.delete_btn:hover {
 .profile-display-name {
     font-size: 13px;
     font-weight: 600;
-    color: #185FA5;
+    color: #af9482;
     max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -5230,7 +5206,7 @@ button.delete_btn:hover {
     flex: 1;
     height: 48px;
     padding: 0 16px;
-    font: 400 14px "DM Sans", sans-serif;
+    font: 400 14px "Inter", sans-serif;
     color: #2b1b10;
     background: #faf4ea;
     border: 1px solid #eadcc8;
@@ -5317,4 +5293,64 @@ button.cancel_btn_main {
     width: fit-content;
     padding: 8px 15px;
     height: auto;
+}
+
+.chart_img {
+    position: absolute;
+    right: 0;
+    bottom: -5px;
+}
+
+.chart_img img {
+    width: 100%;
+    max-width: 135px;
+}
+
+.order_table_main_box {
+    border: 1px solid #eadcc8;
+    padding: 15px;
+    border-radius: 15px;
+    background: #fff;
+        width: 73%;
+}
+
+.menu_categroy_heading h5 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #361a05;
+    margin-bottom: 1px;
+}
+
+.menu_categroy_heading p {
+    font-size: 12px;
+    margin: 0;
+    color: #5f2b00;
+}
+
+.main_gold_btn {
+    padding: 10px 17px;
+    font-size: 13px;
+    border-radius: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: #4A2410 !important;
+    background: linear-gradient(45deg, #fce9c5, #e4ac59);
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1100px) {
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+  }
 }

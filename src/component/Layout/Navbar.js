@@ -267,7 +267,7 @@ const Navbar = ({ toggleSidebar }) => {
           </div>
           <div>
             <h1>Platter Way</h1>
-            <p>Smart Restaurant Solutions.</p>
+            <p>Smart POS. Better Business.</p>
           </div>
         </div>
         <div className="breadcrumb_text">
@@ -302,9 +302,9 @@ const Navbar = ({ toggleSidebar }) => {
         {branchName && (
           <div className="desktop_links" style={{
             display: "flex", alignItems: "center", gap: 5,
-            background: "#faf4ea",
-            border: "1px solid #eadcc8",
-            borderRadius: 8, padding: "4px 10px",
+            background: "#f8e4c8",
+            border: "1px solid #f4cd96",
+            borderRadius: 8, padding: "6px 13px",
             fontSize: 12, color: "#5c4433", fontWeight: 600,
             whiteSpace: "nowrap",
           }}>

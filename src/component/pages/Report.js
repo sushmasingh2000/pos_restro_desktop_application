@@ -351,12 +351,7 @@ export default function CustomerReport() {
       {/* ── TOP BAR ── */}
       <div style={{ background: "#fff", border: "1px solid #eadcc8", borderRadius: "10px 10px 0px 0px", padding: "10px 18px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
         <span style={{ fontSize: 15, fontWeight: 700, marginRight: 4, color: "#4A2410" }}> Customer Report</span>
-        <input
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search by name / phone..."
-          style={{ padding: "7px 12px", color: "#4A2410", border: "1px solid #eadcc8", background: "#fbeee65c", borderRadius: 8, fontSize: 13, width: 230, outline: "none" }}
-        />
+        
         <span style={{ fontSize: 12, color: "#fff" }}>{filtered.length} customers</span>
         <button
           onClick={() => loadList(search)}
@@ -375,7 +370,7 @@ export default function CustomerReport() {
             <input
               value={localQ}
               onChange={(e) => handleLocal(e.target.value)}
-              placeholder="🔍 Filter list..."
+              placeholder="Filter list..."
               style={{ width: "100%", padding: "7px 10px", color: "#4A2410", background: "#fbeee65c", border: "1px solid #eadcc8", borderRadius: 8, fontSize: 13, outline: "none" }}
             />
           </div>

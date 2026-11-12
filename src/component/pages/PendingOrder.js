@@ -187,7 +187,7 @@ export default function PendingOrder() {
 
         {/* TABLE */}
         <div className="main_table_container" style={{ borderRadius: "0", border: "0" }}>
-          <div className="overflow-y-auto">
+          <div className="overflow-x-auto">
 
             <table className="w-full ">
               <thead >

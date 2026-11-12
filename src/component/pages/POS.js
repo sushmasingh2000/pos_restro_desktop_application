@@ -608,91 +608,101 @@ const POS = () => {
   return (
     <div>
       <PosTab />
-      <div className="flex main_take_away">
-        {/* LEFT — CATEGORIES */}
-        <div className="w-[15%] h-full list_category_btnt">
-          <div
-            className="list_items_btn"
-            onClick={() => setSelectedCategory("All")}
-          >
-            All
-          </div>
-          {categories.map((cat) => (
-            <div
-              key={cat.dg08_category_id}
-              onClick={() => setSelectedCategory(cat.dg08_category_name)}
-              className={`list_items_btn
-                  ${selectedCategory === cat.dg08_category_name
-                  ? "gold_bg"
-                  : ""}`}
-            >
-              {cat.dg08_category_name}
+      <div className="flex main_take_away gap-3">
+        <div className="order_table_main_box">
+          <div className="d-flex align-items-center justify-content-between mb-3 mt-1">
+            <div className="menu_categroy_heading">
+              <h5>Menu Categories</h5>
+              <p>Select a category to add items</p>
             </div>
-          ))}
-        </div>
-
-        {/* CENTER — MENU ITEMS */}
-        <div className="w-3/5 h-full overflow-y-auto p-3 pt-0 grid grid-cols-3 gap-3 content-start">
-          {/* SEARCH BAR */}
-          <div className="search-bar-wrap w-full col-span-3">
-            <div className="search-bar">
-              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input
-                type="text"
-                placeholder="Search menu items..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className=""
-              />
-            </div>
-          </div>
-          {filteredItems.map((item) => {
-            const offer = offerByMenuId[item.dg09_menu_id];
-            return (
-              <div
-                key={item.dg09_menu_id}
-                onClick={() => addToOrder(item)}
-                className="main_card main_card_2"
-                style={offer ? { position: "relative", border: "1.5px solid #f59e0b" } : undefined}
-              >
-                {offer && (
-                  <span
-                    title={offer.name}
-                    style={{
-                      position: "absolute", top: -8, right: -8,
-                      background: "#f59e0b", color: "#fff",
-                      fontSize: 10, fontWeight: 700,
-                      padding: "2px 7px", borderRadius: 20,
-                      boxShadow: "0 2px 6px rgba(245,158,11,0.5)",
-                    }}
-                  >
-                    🔥 OFFER
-                  </span>
-                )}
-
-                {/* <img
-                  src={domain + item.dg09_image_url}
-                  alt={item.dg09_image_url}
-                  className="w-full h-16 object-cover rounded"
-                /> */}
-                <h6>{item.dg09_name}</h6>
-                {offer ? (
-                  <h3>
-                    <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.75em", marginRight: 6 }}>
-                      ₹{Number(item.dg09_price).toFixed(2)}
-                    </span>
-                    ₹{Number(offer.price).toFixed(2)}
-                  </h3>
-                ) : (
-                  <h3>₹{Number(item.dg09_price).toFixed(2)}</h3>
-                )}
+            {/* SEARCH BAR */}
+            <div className="search-bar-wrap">
+              <div className="search-bar">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input
+                  type="text"
+                  placeholder="Search menu items..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className=""
+                />
               </div>
-            );
-          })}
+            </div>
+          </div>
+          <div className="d-flex justify-content-between">
+            {/* LEFT — CATEGORIES */}
+            <div className="h-full list_category_btnt">
+              <div
+                className="list_items_btn"
+                onClick={() => setSelectedCategory("All")}
+              >
+                <i class="ri-arrow-right-double-line"></i>  All
+              </div>
+              {categories.map((cat) => (
+                <div
+                  key={cat.dg08_category_id}
+                  onClick={() => setSelectedCategory(cat.dg08_category_name)}
+                  className={`list_items_btn
+                        ${selectedCategory === cat.dg08_category_name
+                      ? "gold_bg"
+                      : ""}`}
+                >
+                  <i class="ri-arrow-right-double-line"></i> {cat.dg08_category_name}
+                </div>
+              ))}
+            </div>
+            {/* CENTER — MENU ITEMS */}
+            <div className="overflow-x-auto p-3 pt-0 grid-container gap-3 content-start w-100">
+
+              {filteredItems.map((item) => {
+                const offer = offerByMenuId[item.dg09_menu_id];
+                return (
+                  <div
+                    key={item.dg09_menu_id}
+                    onClick={() => addToOrder(item)}
+                    className="main_card main_card_2"
+                    style={offer ? { position: "relative", border: "1.5px solid #f59e0b" } : undefined}
+                  >
+                    {offer && (
+                      <span
+                        title={offer.name}
+                        style={{
+                          position: "absolute", top: -8, right: -8,
+                          background: "#f59e0b", color: "#fff",
+                          fontSize: 10, fontWeight: 700,
+                          padding: "2px 7px", borderRadius: 20,
+                          boxShadow: "0 2px 6px rgba(245,158,11,0.5)",
+                        }}
+                      >
+                        🔥 OFFER
+                      </span>
+                    )}
+
+                    {/* <img
+                        src={domain + item.dg09_image_url}
+                        alt={item.dg09_image_url}
+                        className="w-full h-16 object-cover rounded"
+                      /> */}
+                    <h6>{item.dg09_name}</h6>
+                    {offer ? (
+                      <h3>
+                        <span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: "0.75em", marginRight: 6 }}>
+                          ₹{Number(item.dg09_price).toFixed(2)}
+                        </span>
+                        ₹{Number(offer.price).toFixed(2)}
+                      </h3>
+                    ) : (
+                      <h3>₹{Number(item.dg09_price).toFixed(2)}</h3>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* RIGHT — BILL PANEL */}
-        <div className="w-2/6 cart_post flex flex-col">
+        <div className="cart_post flex flex-col">
 
           {/* Split order tabs */}
           {allOrders.length > 1 && (
@@ -727,7 +737,7 @@ const POS = () => {
             {(type === "delivery" || type === "take-away") && (
               <div
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 cursor-pointer bg-white/10 px-3 py-1 rounded-full"
+                className="flex items-center gap-2 cursor-pointer bg-white/10 px-2 py-1 rounded-full"
               >
                 <Person className="text-dark" />
               </div>
@@ -779,8 +789,8 @@ const POS = () => {
                 {cancelRequestPending ? "⏳ Cancel Pending" : "Cancel Order"}
               </button>
             )}
-            <div className="mt-2 text-right font-semibold text-gold ml-auto px-3">
-              Total: ₹{totalAmount.toFixed(2)}
+            <div className="py-2 d-flex justify-content-between align-items-center font-semibold text-gold w-100 px-3" style={{borderTop: "1px solid #eadcc8"}}>
+              Total Amount: <span>₹{totalAmount.toFixed(2)}</span>
             </div>
           </div>
 
@@ -791,7 +801,7 @@ const POS = () => {
           )}
 
           {/* ACTION BUTTONS */}
-          <div className="mt-3 mb-3 flex flex-col gap-2 px-3">
+          <div className="mt-1 mb-3 flex flex-col gap-2 px-3">
             <button
               onClick={handleSaveKOT}
               className="main_btn flex justify-center items-center "
@@ -806,14 +816,14 @@ const POS = () => {
                   ? "gold_bg"
                   : " cursor-not-allowed"}`}
             >
-              🖨 View / Print Bill
+              View / Print Bill
             </button>
 
             <button
               onClick={() => setModifyMode(!modifyMode)}
-              className="main_btn_3 d-flex justify-center items-center"
+              className="main_gold_btn d-flex justify-center items-center"
             >
-              {modifyMode ? " Done" : "✏️ Modify"}
+              {modifyMode ? " Done" : " Modify"}
             </button>
           </div>
         </div>

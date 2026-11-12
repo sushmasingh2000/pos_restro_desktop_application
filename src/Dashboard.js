@@ -15,6 +15,12 @@ import total_table from "./assets/images/dashbord/total-tables.png";
 import available from "./assets/images/dashbord/available.png";
 import busy from "./assets/images/dashbord/busy.png";
 import utilisationi from "./assets/images/dashbord/utilisation.png";
+import bill from "./assets/images/dashbord/bill.png";
+import increase from "./assets/images/dashbord/increase.png";
+import interest from "./assets/images/dashbord/interest.png";
+import expenses from "./assets/images/dashbord/expenses.png";
+import charts from "./assets/images/dashbord/Golden-Growth.png";
+import charts2 from "./assets/images/dashbord/dard-Growth.png";
 import { todayLocal } from "./Shared/helper";
 
 
@@ -321,49 +327,41 @@ const Dashboard = () => {
     {
       label: "Today's Bills",
       value: main.total_bills ?? "—",
-      color: "#2563eb",
-      bg: "#EFF6FF",
-      border: "#DBEAFE",
+      color: "#381b05",
+      bg: "#fff",
+      border: "#EADCC8",
       icon: (
-        <svg width="22" height="22" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
-          <rect x="3" y="3" width="18" height="18" rx="3" /><line x1="8" y1="9" x2="16" y2="9" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="12" y2="17" />
-        </svg>
+        <img src={bill} width={30} alt="bills" />
       ),
     },
     {
       label: "Today's Revenue",
       value: main.revenue != null ? `₹${Number(main.revenue).toLocaleString("en-IN")}` : "—",
-      color: "#16a34a",
-      bg: "#F0FDF4",
-      border: "#BBF7D0",
+      color: "#381b05",
+      bg: "#fff",
+      border: "#EADCC8",
       icon: (
-        <svg width="22" height="22" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="9" /><path d="M12 7v1m0 8v1m-3-5h6m-6 0a3 3 0 1 0 6 0" />
-        </svg>
+        <img src={increase} width={30} alt="revenue" />
       ),
     },
     {
       label: "Today's Expense",
       value: main.sales_records?.total_expense != null ? `₹${Number(main.sales_records.total_expense).toLocaleString("en-IN")}` : "—",
-      color: "#dc2626",
-      bg: "#FEF2F2",
-      border: "#FECACA",
+      color: "#381b05",
+      bg: "#fff",
+      border: "#EADCC8",
       icon: (
-        <svg width="22" height="22" fill="none" stroke="#dc2626" strokeWidth="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="9" /><path d="M15 9h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9m3-10v1m0 8v1" />
-        </svg>
+        <img src={interest} width={30} alt="expense" />
       ),
     },
     {
       label: "Lending Amount",
       value: main.lending_amount != null ? `₹${Number(main.lending_amount).toLocaleString("en-IN")}` : "—",
-      color: "#d97706",
-      bg: "#FFFBEB",
-      border: "#FDE68A",
+      color: "#381b05",
+      bg: "#fff",
+      border: "#EADCC8",
       icon: (
-        <svg width="22" height="22" fill="none" stroke="#d97706" strokeWidth="2" viewBox="0 0 24 24">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
+        <img src={expenses} width={30}  alt="lending" />
       ),
     },
     // {
@@ -538,16 +536,19 @@ const Dashboard = () => {
   return (
     <div className="main_dashboard">
       {/* ── Dynamic Sales Stats ── */}
-      <Row className="mb-3">
+      <Row className="">
         {summaryStats.map((s) => (
           <Col xl={3} lg={6} md={6} sm={6} className="mb-3" key={s.label}>
-            <div style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 14, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 8px rgba(0,0,0,.06)" }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 2px 8px ${s.border}` }}>
+            <div style={{ background: s.bg, position: "relative", border: `1px solid ${s.border}`, borderRadius: 14, padding: "17px 17px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 8px rgba(0,0,0,.06)" }}>
+              <div style={{ width: 45, height: 45, borderRadius: 12, background: "linear-gradient(45deg, #fce9c5, #e4ac59)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, }}>
                 {s.icon}
               </div>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: s.color, lineHeight: 1.2 }}>{s.value}</div>
-                <div style={{ fontSize: 12, color: "#8b7464", marginTop: 2 }}>{s.label}</div>
+                <div style={{ fontSize: 12, color: "#b39c8c", marginTop: 2 }}>{s.label}</div>
+              </div>
+              <div className="chart_img">
+                <img src={charts} alt="arrow" />
               </div>
             </div>
           </Col>
@@ -564,33 +565,42 @@ const Dashboard = () => {
             <h4>{totalTables}</h4>
               <p>Total Tables</p>
             </div>
+             <div className="chart_img">
+                <img src={charts2} alt="arrow" />
+              </div>
           </div>
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb">
-            <div className="main_icon" style={{ background: "#dcfce7", borderColor: "#caffdc", }}>
+            <div className="main_icon">
               <img src={available} />
             </div>
             <div>
               <h4>{availableTables}</h4>
               <p>Available</p>
             </div>
+            <div className="chart_img">
+                <img src={charts2} alt="arrow" />
+              </div>
           </div>
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb">
-            <div className="main_icon" style={{ background: "#fee2e2", borderColor: "#fcd7d7", }}>
+            <div className="main_icon">
               <img src={busy} />
             </div>
             <div>
               <h4>{busyTables}</h4>
               <p>Busy</p>
             </div>
+            <div className="chart_img">
+                <img src={charts2} alt="arrow" />
+              </div>
           </div>
         </Col>
         <Col xl={3} lg={4} md={6} sm={6} className="mb-3">
           <div className="table_dsb" style={{ cursor: "pointer" }} onClick={() => navigate("/pos/delivery")}>
-            <div className="main_icon" style={{ background: main.pending_delivery_orders > 0 ? "#fef6e2" : "#fde6c2", borderColor: main.pending_delivery_orders > 0 ? "#fef6e2" : "#fde6c2" }}>
+            <div className="main_icon" >
               <img src={utilisationi} />
             </div>
             <div>
@@ -599,13 +609,16 @@ const Dashboard = () => {
               </h4>
               <p>Pending Delivery</p>
             </div>
+            <div className="chart_img">
+                <img src={charts2} alt="arrow" />
+              </div>
           </div>
         </Col>
       </Row>
       {/* LEGEND */}
       <PosTab />
      
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 mb-6 mt-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 mb-6">
         <div class="legendse">
           <div class="leg"><div class="leg-dot avail"></div>Available</div>
           <div class="leg"><div class="leg-dot busy"></div>Busy</div>
@@ -769,5 +782,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
 
