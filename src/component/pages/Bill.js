@@ -156,7 +156,7 @@ export default function BillPage() {
       toast.error("Customer select for Advance payment!");
       return false;
     }
-    if (isAdvance && walletBalance <= 0) {
+    if (isAdvance && walletBalance <= 0 && !(isReprint && reprintWalletUsed > 0)) {
       toast.error("Your wallet balance is zero!");
       return false;
     }
@@ -202,7 +202,7 @@ const validateForPrint = () => {
       toast.error("Customer select for Advance payment!");
       return false;
     }
-    if (isAdvance && walletBalance <= 0) {
+    if (isAdvance && walletBalance <= 0 && !(isReprint && reprintWalletUsed > 0)) {
       toast.error("Your wallet balance is zero!");
       return false;
     }
@@ -425,7 +425,14 @@ const validateForPrint = () => {
       ? frozenBillTotals.roundOff
       : parseFloat((grandTotal - beforeRound).toFixed(2));
 
-  const maxWalletUse = useWallet ? Math.min(walletBalance, grandTotal) : 0;
+  // Saved bill par advance pehle hi wallet se cut ho chuka hai (print ke time) —
+  // current walletBalance (jo ab 0 hai) ki jagah saved advance amount use karo.
+  const reprintAdvanceApplied = isReprint && isAdvance && reprintWalletUsed > 0;
+  const maxWalletUse = reprintAdvanceApplied
+    ? Math.min(reprintWalletUsed, grandTotal)
+    : useWallet
+      ? Math.min(walletBalance, grandTotal)
+      : 0;
   const afterWalletTotal = Math.max(0, grandTotal - maxWalletUse);
   const advanceRemaining = isAdvance ? afterWalletTotal : 0;
 
@@ -555,7 +562,7 @@ const validateForPrint = () => {
       toast.error("Select Customer  for Advance payment!");
       return false;
     }
-    if (isAdvance && walletBalance <= 0) {
+    if (isAdvance && walletBalance <= 0 && !(isReprint && reprintWalletUsed > 0)) {
       toast.error("Your wallet balance is zero!");
       return false;
     }
@@ -983,6 +990,7 @@ const validateForPrint = () => {
             isAdvance={isAdvance}
             isReprint={isReprint}
             afterWalletTotal={afterWalletTotal}
+            advanceApplied={maxWalletUse}
             givenAmount={givenAmount}
             setGivenAmount={setGivenAmount}
             lendingRemaining={lendingRemaining}

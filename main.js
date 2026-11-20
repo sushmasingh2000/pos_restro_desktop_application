@@ -147,7 +147,26 @@ function createWindow() {
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
 
+// Single instance lock — app do baar khul jaye to dono apna backend (port 9036)
+// start karte the; ek EADDRINUSE se mar jata tha aur jab pehli app band hoti
+// thi to uska backend bhi kill ho jata tha => "ECONNREFUSED 127.0.0.1:9036",
+// printers [] aur "No BILL printer configured". Ab dusri instance seedha band
+// hogi aur pehli wali window aage aa jayegi.
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
 app.whenReady().then(() => {
+  if (!gotSingleInstanceLock) return;
   log("App ready, log file:", logFile);
   startBackend();
   autoUpdater.on('update-downloaded', () => {

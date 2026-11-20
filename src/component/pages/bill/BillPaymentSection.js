@@ -8,6 +8,7 @@ export default function BillPaymentSection({
   isAdvance,
   isReprint,
   afterWalletTotal,
+  advanceApplied = 0,
   givenAmount,
   setGivenAmount,
   lendingRemaining,
@@ -174,7 +175,12 @@ export default function BillPaymentSection({
                 <div className="main_input">
                   <input
                     type="number"
-                    value={paymentSplits.length === 1 ? afterWalletTotal.toFixed(2) : split.amount}
+                    value={
+                      // Saved bill me Advance wale box me wallet se kata hua amount dikhao (0 nahi)
+                      isReprint && isAdvance && advanceApplied > 0 && split.mode?.toLowerCase() === "advance"
+                        ? advanceApplied.toFixed(2)
+                        : paymentSplits.length === 1 ? afterWalletTotal.toFixed(2) : split.amount
+                    }
                     onChange={(e) => {
                       const updated = [...paymentSplits];
                       updated[idx].amount = e.target.value;
@@ -182,7 +188,10 @@ export default function BillPaymentSection({
                     }}
                     placeholder="Amount"
                     // Single split mein amount readonly (auto = total)
-                    readOnly={paymentSplits.length === 1}
+                    readOnly={
+                      paymentSplits.length === 1 ||
+                      (isReprint && isAdvance && advanceApplied > 0 && split.mode?.toLowerCase() === "advance")
+                    }
                   />
                 </div>
                 {/* Remove button — first split nahi hata sakte */}
@@ -210,8 +219,13 @@ export default function BillPaymentSection({
 
         {/* Split summary + Add button */}
         {(() => {
+          // Advance wallet wala hissa afterWalletTotal me pehle hi minus ho chuka hai,
+          // isliye Advance-mode split ka amount (negative/stale ho sakta hai) count nahi karte.
           const totalSplitPaid = paymentSplits.reduce(
-            (s, p) => s + parseFloat(p.amount || 0),
+            (s, p) =>
+              p.mode?.toLowerCase() === "advance"
+                ? s
+                : s + parseFloat(p.amount || 0),
             0
           );
           const splitRemaining = parseFloat(
