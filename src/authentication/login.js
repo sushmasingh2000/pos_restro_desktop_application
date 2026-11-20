@@ -164,7 +164,7 @@ const Login = ({ role = "staff" }) => {
                   </div>
                   <div>
                     <h1>Platter Way</h1>
-                      <p>Smart Restaurant Solutions.</p>
+                      <p>Smart POS. Better Business.</p>
                   </div>
                 </div>
                 <h3>Manage your restaurant <span>with confidence</span></h3>

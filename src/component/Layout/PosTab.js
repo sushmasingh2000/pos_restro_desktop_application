@@ -173,7 +173,7 @@ const PosTab = () => {
   ].filter(Boolean);
 
   return (
-    <div className="flex gap-1 main_tabs">
+    <div className="flex gap-1 main_tabs mb-2">
       {navItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
